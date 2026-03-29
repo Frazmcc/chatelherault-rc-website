@@ -190,7 +190,7 @@
             Sunday Trail Weather Forecast
                     </h2>
 <p class="text-on-surface-variant text-sm font-body mt-1">Met Office Forecast: Chatelherault Country Park</p>
-<p class="text-on-surface-variant text-xs font-label mt-1" id="weather-target-time">Forecast target: Sunday 14:00</p>
+<p class="text-on-surface-variant text-xs font-label mt-1" id="weather-target-time">Forecast date: Upcoming Sunday</p>
 </div>
 <div class="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-sm border border-primary/20">
 <span class="material-symbols-outlined text-primary text-sm">info</span>
@@ -275,15 +275,16 @@
       const nowLondon = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/London' }))
       const day = nowLondon.getDay() // Sunday = 0
       const hour = nowLondon.getHours()
+      const minute = nowLondon.getMinutes()
 
       let daysUntilSunday = (7 - day) % 7
-      if (day === 0 && hour >= 14) {
+      if (day === 0 && (hour > 13 || (hour === 13 && minute > 0))) {
         daysUntilSunday = 7
       }
 
       const target = new Date(nowLondon)
       target.setDate(nowLondon.getDate() + daysUntilSunday)
-      target.setHours(14, 0, 0, 0)
+      target.setHours(13, 0, 0, 0)
       return target
     }
 
@@ -325,18 +326,11 @@
       `
     }
 
-    // Always target the upcoming Sunday at 14:00 UK time.
-    // If it is already Sunday 14:00+, roll to next Sunday.
+    // Always target the upcoming Sunday.
+    // If it is already past Sunday 13:00 UK time, roll to next Sunday.
     const target = getNextSundayTarget()
 
-    const dateText = target.toLocaleDateString('en-GB', {
-      timeZone: 'Europe/London',
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    })
-
-    targetEl.textContent = `Forecast target: ${formatSundayDate(target)}`
+    targetEl.textContent = `Forecast date: ${formatSundayDate(target)}`
 
     const targetKey = target.toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
 
@@ -367,7 +361,7 @@
         }
 
         const resolutionLabel = formatResolutionLabel(payload.resolution)
-        targetEl.textContent = `Forecast target: ${formatSundayDate(target)} (${resolutionLabel})`
+        targetEl.textContent = `Forecast date: ${formatSundayDate(target)} (${resolutionLabel})`
 
         renderRows(rowsToRender)
       })
