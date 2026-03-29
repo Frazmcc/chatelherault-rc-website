@@ -18,6 +18,135 @@ function json(data, init = {}) {
   return new Response(JSON.stringify(data), { ...init, headers })
 }
 
+function toBase64Utf8(value) {
+  const bytes = new TextEncoder().encode(value)
+  let binary = ''
+
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  }
+
+  return btoa(binary)
+}
+
+async function githubApiRequest(env, path, init = {}) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO_OWNER || !env.GITHUB_REPO_NAME) {
+    throw new Error('GitHub sync is not configured.')
+  }
+
+  const response = await fetch(`https://api.github.com${path}`, {
+    ...init,
+    headers: {
+      authorization: `Bearer ${env.GITHUB_TOKEN}`,
+      accept: 'application/vnd.github+json',
+      'user-agent': 'chatelherault-rc-worker',
+      ...(init.headers || {}),
+    },
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`GitHub API ${path} failed (${response.status}): ${body.slice(0, 280)}`)
+  }
+
+  if (response.status === 204) {
+    return null
+  }
+
+  return response.json()
+}
+
+async function getRepoFileSha(env, path, branch) {
+  try {
+    const data = await githubApiRequest(
+      env,
+      `/repos/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/contents/${path}?ref=${encodeURIComponent(branch)}`,
+      { method: 'GET' }
+    )
+    return data?.sha || null
+  } catch (error) {
+    if (String(error).includes('failed (404)')) {
+      return null
+    }
+    throw error
+  }
+}
+
+async function upsertRepoFile(env, path, content, message, branch) {
+  const sha = await getRepoFileSha(env, path, branch)
+
+  const payload = {
+    message,
+    content: toBase64Utf8(content),
+    branch,
+  }
+
+  if (sha) {
+    payload.sha = sha
+  }
+
+  await githubApiRequest(
+    env,
+    `/repos/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/contents/${path}`,
+    {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(payload),
+    }
+  )
+}
+
+async function syncLiveEditsToGit(env, meta = {}) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO_OWNER || !env.GITHUB_REPO_NAME) {
+    return
+  }
+
+  const branch = env.GITHUB_BRANCH || 'main'
+
+  const [contentRows, mediaRows] = await Promise.all([
+    env.DB.prepare(
+      `SELECT page, key, value, updated_by, updated_at FROM content ORDER BY datetime(updated_at) DESC`
+    ).all(),
+    env.DB.prepare(
+      `SELECT title, url, type, added_by, created_at FROM media ORDER BY datetime(created_at) DESC`
+    ).all(),
+  ])
+
+  const contentSnapshot = JSON.stringify(
+    [
+      {
+        results: contentRows.results || [],
+        generated_at: new Date().toISOString(),
+        source: 'cloudflare-d1-live',
+      },
+    ],
+    null,
+    2
+  )
+
+  const mediaSnapshot = JSON.stringify(
+    [
+      {
+        results: mediaRows.results || [],
+        generated_at: new Date().toISOString(),
+        source: 'cloudflare-d1-live',
+      },
+    ],
+    null,
+    2
+  )
+
+  const actor = meta.actor || 'unknown'
+  const operation = meta.operation || 'edit'
+  const pageOrScope = meta.scope || 'site'
+  const message = `Sync live ${operation} by ${actor} (${pageOrScope})`
+
+  await Promise.all([
+    upsertRepoFile(env, 'data/live-content-overrides.json', contentSnapshot, message, branch),
+    upsertRepoFile(env, 'data/live-media-overrides.json', mediaSnapshot, message, branch),
+  ])
+}
+
 function redirect(location, clearSession = false) {
   const headers = new Headers({ location })
 
@@ -469,7 +598,7 @@ async function handleListMedia(request, env) {
   return json({ ok: true, media: results })
 }
 
-async function handleAddMedia(request, env) {
+async function handleAddMedia(request, env, executionCtx) {
   const session = await getSession(request, env)
   if (!hasRole(session, 'owner', 'admin', 'mod')) return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
 
@@ -500,10 +629,20 @@ async function handleAddMedia(request, env) {
     .bind(title, url, type, session.username)
     .run()
 
+  const syncJob = syncLiveEditsToGit(env, {
+    actor: session.username,
+    operation: 'media add',
+    scope: 'media',
+  }).catch((error) => console.error('Git sync failed after media add:', error))
+
+  if (executionCtx?.waitUntil) {
+    executionCtx.waitUntil(syncJob)
+  }
+
   return json({ ok: true, id: result.meta.last_row_id })
 }
 
-async function handleDeleteMedia(request, env) {
+async function handleDeleteMedia(request, env, executionCtx) {
   const session = await getSession(request, env)
   if (!hasRole(session, 'owner', 'admin', 'mod')) return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
 
@@ -512,6 +651,17 @@ async function handleDeleteMedia(request, env) {
   if (!id) return json({ ok: false, message: 'Invalid media id.' }, { status: 400 })
 
   await env.DB.prepare(`DELETE FROM media WHERE id = ?`).bind(id).run()
+
+  const syncJob = syncLiveEditsToGit(env, {
+    actor: session.username,
+    operation: 'media delete',
+    scope: 'media',
+  }).catch((error) => console.error('Git sync failed after media delete:', error))
+
+  if (executionCtx?.waitUntil) {
+    executionCtx.waitUntil(syncJob)
+  }
+
   return json({ ok: true })
 }
 
@@ -528,7 +678,7 @@ async function handleListContent(request, env) {
   return json({ ok: true, content: results })
 }
 
-async function handlePutContent(request, env) {
+async function handlePutContent(request, env, executionCtx) {
   const session = await getSession(request, env)
   if (!hasRole(session, 'owner', 'admin', 'mod')) return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
 
@@ -556,6 +706,16 @@ async function handlePutContent(request, env) {
   )
     .bind(page, key, value, session.username)
     .run()
+
+  const syncJob = syncLiveEditsToGit(env, {
+    actor: session.username,
+    operation: 'content save',
+    scope: page,
+  }).catch((error) => console.error('Git sync failed after content save:', error))
+
+  if (executionCtx?.waitUntil) {
+    executionCtx.waitUntil(syncJob)
+  }
 
   return json({ ok: true })
 }
@@ -616,7 +776,7 @@ async function guardOwnerOnlySiteRoute(request, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, executionCtx) {
     const url = new URL(request.url)
 
     if (url.pathname === '/admin/root-login.html') {
@@ -650,12 +810,12 @@ export default {
 
     // Media management (admin / mod / owner)
     if (url.pathname === '/api/media' && request.method === 'GET') return handleListMedia(request, env)
-    if (url.pathname === '/api/media' && request.method === 'POST') return handleAddMedia(request, env)
-    if (/^\/api\/media\/\d+$/.test(url.pathname) && request.method === 'DELETE') return handleDeleteMedia(request, env)
+    if (url.pathname === '/api/media' && request.method === 'POST') return handleAddMedia(request, env, executionCtx)
+    if (/^\/api\/media\/\d+$/.test(url.pathname) && request.method === 'DELETE') return handleDeleteMedia(request, env, executionCtx)
 
     // Content management (admin / mod / owner)
     if (url.pathname === '/api/content' && request.method === 'GET') return handleListContent(request, env)
-    if (url.pathname === '/api/content' && request.method === 'PUT') return handlePutContent(request, env)
+    if (url.pathname === '/api/content' && request.method === 'PUT') return handlePutContent(request, env, executionCtx)
 
     const adminBlockResponse = await guardAdminRoute(request, env)
 
