@@ -4,9 +4,23 @@
       {
         "page": "home",
         "key": "panel-2-fields",
-        "value": "[\"Next Run\",\"Sunday Trail\",\"schedule\",\"Arrival Window: 09:00am\",\"rocket_launch\",\"Rollout Target: 09:30am\",\"location_on\",\"Meet Point: Chatelherault Allotments Car Park\",\"grid_3x3\",\"///lively.woes.tinsel\",\"What to Bring\",\"Suggested Checklist\",\"check_circle\",\"(Waterproof trail shoes are popular)\",\"check_circle\",\"check_circle\",\"(not required)\",\"check_circle\",\"check_circle\",\"(not required but recommended)\",\"satellite_alt\",\"Tactical view of the rendezvous point. Look for the technical staging area adjacent to the North Entrance loop.\",\"Coordinates: 55.76278, -4.010164\",\"Open in Google Maps\"]",
+        "value": "[\"Next Meet\",\"Sunday Trails\",\"schedule\",\"Arrival Window: 09:00am\",\"rocket_launch\",\"Rollout Target: 10:00am\",\"location_on\",\"Meet Point: Chatelherault Allotments Car Park\",\"grid_3x3\",\"///lively.woes.tinsel\",\"What to Bring\",\"Operator Checklist\",\"check_circle\",\"(Waterproof trail shoes are popular)\",\"check_circle\",\"check_circle\",\"(not required)\",\"check_circle\",\"check_circle\",\"(not required but recommended)\",\"satellite_alt\",\"Tactical view of the rendezvous point. Look for the technical staging area adjacent to the North Entrance loop.\",\"Coordinates: 55.76278, -4.010164\",\"Open in Google Maps\"]",
         "updated_by": "Frazer",
-        "updated_at": "2026-03-29 20:44:16"
+        "updated_at": "2026-03-29 21:24:55"
+      },
+      {
+        "page": "home",
+        "key": "panel-1-fields",
+        "value": "[\"Est. Hamilton, Scotland\",\"Terrain\",\"The premier destination for scale trail driving and rock crawling enthusiasts. Join our community for technical precision, engineering, and shared outdoor adventures.\",\"arrow_forward\",\"Current Location\",\"Hamilton / ML3\",\"Surface Type\",\"Gravel / Sandstone\",\"Next Event\",\"Sunday 09:30 AM\"]",
+        "updated_by": "Frazer",
+        "updated_at": "2026-03-29 20:58:37"
+      },
+      {
+        "page": "home",
+        "key": "panel-1-media",
+        "value": "https://lh3.googleusercontent.com/aida-public/AB6AXuDZBrqQvz3wqsiP68KKnHOXCgK43ZvA8tOdzFI0yV4YRLWeYeZvUUV2bnkTdl0RMwWPSnYyerj3M-aVv5I9EUvoJ0LM01RKFDem9ByWmMXzrtE6lomOxRA0Kll59eEiem2t9XyBoziW7I3zrQe6uiL94VxTPFt72BuHEfSyJWAAMbnQZv3knG5xfh1Ow0GkgPZc5ZQxdF6h8ZoZ-AXdcuBnuoul67W4UgtkIWgRV7PZB4a-yPtBNixFArjsMUuCXPiTWoFIXM-kRxM",
+        "updated_by": "Frazer",
+        "updated_at": "2026-03-29 20:58:37"
       },
       {
         "page": "home",
@@ -14,20 +28,6 @@
         "value": "https://maps.google.com/maps?q=55.76278,-4.010164&t=k&z=18&ie=UTF8&iwloc=&output=embed",
         "updated_by": "Frazer",
         "updated_at": "2026-03-29 20:44:16"
-      },
-      {
-        "page": "home",
-        "key": "panel-1-fields",
-        "value": "[\"Location\",\"Trail\",\"Join the collective at Chatelherault Country Park. Our weekly meetups cover technical rock crawling, high-speed trail runs, and relaxed trails. All ages and skill levels welcome.\"]",
-        "updated_by": "Frazer",
-        "updated_at": "2026-03-29 20:43:47"
-      },
-      {
-        "page": "home",
-        "key": "panel-1-media",
-        "value": "https://lh3.googleusercontent.com/aida-public/AB6AXuDZBrqQvz3wqsiP68KKnHOXCgK43ZvA8tOdzFI0yV4YRLWeYeZvUUV2bnkTdl0RMwWPSnYyerj3M-aVv5I9EUvoJ0LM01RKFDem9ByWmMXzrtE6lomOxRA0Kll59eEiem2t9XyBoziW7I3zrQe6uiL94VxTPFt72BuHEfSyJWAAMbnQZv3knG5xfh1Ow0GkgPZc5ZQxdF6h8ZoZ-AXdcuBnuoul67W4UgtkIWgRV7PZB4a-yPtBNixFArjsMUuCXPiTWoFIXM-kRxM",
-        "updated_by": "Frazer",
-        "updated_at": "2026-03-29 20:38:19"
       },
       {
         "page": "_pages_meetups",
@@ -51,23 +51,7 @@
         "updated_at": "2026-03-29 19:23:27"
       }
     ],
-    "success": true,
-    "meta": {
-      "served_by": "v3-prod",
-      "served_by_region": "WEUR",
-      "served_by_colo": "LHR",
-      "served_by_primary": true,
-      "timings": {
-        "sql_duration_ms": 0.2243
-      },
-      "duration": 0.2243,
-      "changes": 0,
-      "last_row_id": 0,
-      "changed_db": false,
-      "size_after": 40960,
-      "rows_read": 14,
-      "rows_written": 0,
-      "total_attempts": 1
-    }
+    "generated_at": "2026-03-29T21:24:55.691Z",
+    "source": "cloudflare-d1-live"
   }
 ]
