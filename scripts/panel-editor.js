@@ -64,7 +64,7 @@
       return
     }
 
-    const base = window.location.pathname.startsWith('/pages/') ? '../pages/super-user.html' : 'pages/super-user.html'
+    const base = window.location.pathname.startsWith('/pages/') ? '../pages/super-user' : 'pages/super-user'
     const link = document.createElement('a')
     link.href = base
     link.className = 'font-headline tracking-tight uppercase transition-colors text-slate-400 hover:text-slate-100'

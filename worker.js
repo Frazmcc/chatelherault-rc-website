@@ -10,7 +10,7 @@ import {
 } from './functions/_lib/auth.js'
 
 const PUBLIC_ADMIN_PATHS = new Set(['/admin/login.html', '/admin/root-login.html'])
-const OWNER_ONLY_SITE_PATHS = new Set(['/pages/super-user.html'])
+const OWNER_ONLY_SITE_PATHS = new Set(['/pages/super-user.html', '/pages/super-user'])
 
 function json(data, init = {}) {
   const headers = new Headers(init.headers || {})

@@ -22,7 +22,7 @@
     <a data-account-login href="/admin/login.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors border-b border-white/5">
       Login
     </a>
-    <a data-account-superuser href="/pages/super-user.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors hidden">
+    <a data-account-superuser href="/pages/super-user" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors hidden">
       Super User
     </a>
     <button type="button" data-account-logout class="w-full text-left px-4 py-3 text-sm text-[#ffb5a0] hover:bg-white/5 transition-colors border-t border-white/5 hidden">
