@@ -104,9 +104,9 @@
 </div>
 </nav>
 <!-- Hero Section -->
-<header class="relative h-screen w-full flex items-center overflow-hidden">
+<header class="relative h-screen w-full flex items-center overflow-hidden" data-panel-lock-media="true">
 <div class="absolute inset-0 z-0">
-<img alt="Conquer the Terrain" class="w-full h-full object-cover grayscale-[0.2] contrast-[1.1]" data-alt="Close-up of a rugged RC trail truck climbing over jagged grey rocks with forest background in moody cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZBrqQvz3wqsiP68KKnHOXCgK43ZvA8tOdzFI0yV4YRLWeYeZvUUV2bnkTdl0RMwWPSnYyerj3M-aVv5I9EUvoJ0LM01RKFDem9ByWmMXzrtE6lomOxRA0Kll59eEiem2t9XyBoziW7I3zrQe6uiL94VxTPFt72BuHEfSyJWAAMbnQZv3knG5xfh1Ow0GkgPZc5ZQxdF6h8ZoZ-AXdcuBnuoul67W4UgtkIWgRV7PZB4a-yPtBNixFArjsMUuCXPiTWoFIXM-kRxM"/>
+<img alt="Illustrated RC crawler climbing a rocky sunset trail" class="w-full h-full object-cover grayscale-[0.2] contrast-[1.1]" data-alt="Custom no-text illustration of an RC crawler climbing jagged terrain with dramatic sunset lighting" id="home-hero-image" src="/assets/hero-rc-terrain.svg?v=20260330c"/>
 <div class="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent"></div>
 </div>
 <div class="relative z-10 max-w-7xl mx-auto px-6 w-full editorial-grid">
@@ -266,6 +266,22 @@
   })()
 </script>
 <script src="scripts/account-menu.js"></script>
-<script src="scripts/panel-editor.js"></script>
+<script>
+  (() => {
+    const forceHero = () => {
+      const image = document.getElementById('home-hero-image')
+      if (!image) return
+      const forcedSrc = '/assets/hero-rc-terrain.svg?v=20260330c'
+      if (!String(image.getAttribute('src') || '').includes('hero-rc-terrain.svg')) {
+        image.setAttribute('src', forcedSrc)
+      }
+    }
+
+    forceHero()
+    window.setTimeout(forceHero, 300)
+    window.setTimeout(forceHero, 1200)
+  })()
+</script>
+<script src="scripts/panel-editor.js?v=20260330c"></script>
 <script src="scripts/url-title-lock.js"></script>
 </body></html>

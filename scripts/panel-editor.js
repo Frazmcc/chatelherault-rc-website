@@ -186,6 +186,7 @@
       const mediaKey = `${pageId}::panel-${panelId}-media`
       const storedFields = storedByKey[`${pageId}::panel-${panelId}-fields`] || storedByKey[fieldsKey]
       const storedMedia = storedByKey[`${pageId}::panel-${panelId}-media`] || storedByKey[mediaKey]
+      const mediaLocked = panel.getAttribute('data-panel-lock-media') === 'true'
 
       const parsedFields = safeParseJson(storedFields)
       if (Array.isArray(parsedFields)) {
@@ -202,7 +203,7 @@
         }
       }
 
-      if (typeof storedMedia === 'string' && storedMedia.length > 0) {
+      if (!mediaLocked && typeof storedMedia === 'string' && storedMedia.length > 0) {
         const target = panel.querySelector('img, iframe, video source, video')
         if (target) {
           if (target.tagName.toLowerCase() === 'source') {
