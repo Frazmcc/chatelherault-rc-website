@@ -130,6 +130,90 @@ function hasRole(session, ...allowed) {
   return Boolean(session && allowed.includes(session.role))
 }
 
+function normalizeWeatherCode(code) {
+  const table = {
+    0: 'Clear night',
+    1: 'Sunny day',
+    2: 'Partly cloudy',
+    3: 'Partly cloudy',
+    5: 'Mist',
+    6: 'Fog',
+    7: 'Cloudy',
+    8: 'Overcast',
+    9: 'Light rain shower',
+    10: 'Light rain shower',
+    11: 'Drizzle',
+    12: 'Light rain',
+    13: 'Heavy rain shower',
+    14: 'Heavy rain shower',
+    15: 'Heavy rain',
+    16: 'Sleet shower',
+    17: 'Sleet shower',
+    18: 'Sleet',
+    19: 'Hail shower',
+    20: 'Hail shower',
+    21: 'Hail',
+    22: 'Light snow shower',
+    23: 'Light snow shower',
+    24: 'Light snow',
+    25: 'Heavy snow shower',
+    26: 'Heavy snow shower',
+    27: 'Heavy snow',
+    28: 'Thunder shower',
+    29: 'Thunder shower',
+    30: 'Thunder',
+  }
+
+  return table[Number(code)] || 'Unknown'
+}
+
+async function handleMetOfficeForecast(env) {
+  if (!env.METOFFICE_API_KEY) {
+    return json({ ok: false, message: 'Met Office API key is not configured.' }, { status: 503 })
+  }
+
+  const endpoint = new URL('https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly')
+  endpoint.searchParams.set('latitude', '55.76278')
+  endpoint.searchParams.set('longitude', '-4.010164')
+  endpoint.searchParams.set('includeLocationName', 'true')
+
+  const response = await fetch(endpoint.toString(), {
+    method: 'GET',
+    headers: {
+      apikey: env.METOFFICE_API_KEY,
+      accept: 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    return json(
+      { ok: false, message: `Met Office request failed (${response.status}).` },
+      { status: 502 }
+    )
+  }
+
+  const payload = await response.json()
+  const series = payload?.features?.[0]?.properties?.timeSeries || []
+
+  const rows = series.map((entry) => {
+    const tempC = entry?.screenTemperature ?? entry?.airTemperature ?? entry?.feelsLikeTemperature
+    const precipPct = entry?.probOfPrecipitation ?? entry?.probabilityOfPrecipitation
+    const windSpeedRaw = entry?.windSpeed10m ?? entry?.windSpeed
+    const windMph = Number.isFinite(Number(windSpeedRaw)) ? Number(windSpeedRaw) * 2.23694 : null
+    const weatherCode = entry?.significantWeatherCode ?? entry?.weatherType
+
+    return {
+      time: entry?.time,
+      condition: normalizeWeatherCode(weatherCode),
+      tempC: Number.isFinite(Number(tempC)) ? Number(tempC) : null,
+      precipPct: Number.isFinite(Number(precipPct)) ? Number(precipPct) : null,
+      windMph: Number.isFinite(Number(windMph)) ? Math.round(windMph) : null,
+    }
+  })
+
+  return json({ ok: true, rows })
+}
+
 // --- User management (owner only) ---
 
 async function handleListUsers(request, env) {
@@ -377,6 +461,10 @@ export default {
 
     if (url.pathname === '/api/session' && request.method === 'GET') {
       return handleSession(request, env)
+    }
+
+    if (url.pathname === '/api/metoffice-forecast' && request.method === 'GET') {
+      return handleMetOfficeForecast(env)
     }
 
     // User management (owner only)
