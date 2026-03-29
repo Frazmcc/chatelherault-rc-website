@@ -219,30 +219,45 @@
 </div>
 </div>
 </div>
-<!-- Credential Management -->
+<!-- Account Management (Owner Only) -->
 <div class="lg:col-span-8 bg-surface-container-low p-6 rounded-sm">
 <div class="flex justify-between items-start mb-6">
 <h3 class="font-headline font-bold text-sm tracking-widest uppercase flex items-center gap-2">
-<span class="material-symbols-outlined text-orange-500">key</span> Credential Management
-                        </h3>
-<button class="text-orange-500 font-label text-[10px] font-bold tracking-widest uppercase hover:underline">Rotate All Keys</button>
+<span class="material-symbols-outlined text-orange-500">manage_accounts</span> Account Management
+</h3>
+<button id="show-add-user-btn" class="text-orange-500 font-label text-[10px] font-bold tracking-widest uppercase border border-orange-500/30 px-3 py-1 rounded-sm hover:bg-orange-600/10 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">person_add</span> Add Account
+</button>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-<div class="p-4 bg-surface-container-highest border-b-2 border-primary rounded-sm">
-<p class="text-slate-500 font-label text-[9px] uppercase tracking-widest mb-2">API_KEY_PUBLIC</p>
-<code class="text-xs font-mono text-on-surface bg-background p-2 block rounded-sm truncate">OP_LIVE_8a72...f9e1</code>
+<!-- Add User Form (hidden by default) -->
+<div id="add-user-form" class="hidden mb-6 p-4 bg-surface-container-high rounded-sm border border-orange-500/20">
+<p class="text-[10px] font-label font-bold tracking-widest text-orange-500 uppercase mb-4">New Account</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+<div>
+<label class="text-[10px] font-label text-slate-500 uppercase tracking-widest block mb-1">Username</label>
+<input id="new-username" type="text" autocomplete="off" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none" placeholder="username"/>
 </div>
-<div class="p-4 bg-surface-container-highest border-b-2 border-orange-600 rounded-sm">
-<p class="text-slate-500 font-label text-[9px] uppercase tracking-widest mb-2">DATABASE_MASTER_PASS</p>
-<div class="flex items-center justify-between bg-background p-2 rounded-sm">
-<code class="text-xs font-mono text-on-surface">••••••••••••••••</code>
-<span class="material-symbols-outlined text-xs text-slate-500 cursor-pointer">visibility</span>
+<div>
+<label class="text-[10px] font-label text-slate-500 uppercase tracking-widest block mb-1">Role</label>
+<select id="new-role" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none">
+<option value="admin">Admin</option>
+<option value="mod">Mod</option>
+</select>
 </div>
 </div>
+<div class="mb-4">
+<label class="text-[10px] font-label text-slate-500 uppercase tracking-widest block mb-1">Password (min 8 chars)</label>
+<input id="new-password" type="password" autocomplete="new-password" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none" placeholder="••••••••"/>
 </div>
-<div class="mt-6 flex items-center gap-4 p-4 bg-primary-container/20 border border-primary-container/30 rounded-sm">
-<span class="material-symbols-outlined text-primary">verified_user</span>
-<p class="text-xs font-body text-on-primary-container">Encryption standard: AES-256-GCM. Hardware security module (HSM) is online.</p>
+<div id="add-user-error" class="hidden text-xs text-error mb-3 font-label"></div>
+<div class="flex gap-3">
+<button id="submit-add-user" class="bg-orange-600 text-white px-4 py-2 text-[10px] font-label font-bold tracking-widest uppercase rounded-sm hover:bg-orange-500 transition-colors active:scale-95">Create Account</button>
+<button id="cancel-add-user" class="bg-surface-container-highest text-slate-400 px-4 py-2 text-[10px] font-label font-bold tracking-widest uppercase rounded-sm hover:text-slate-100 transition-colors active:scale-95">Cancel</button>
+</div>
+</div>
+<!-- User List -->
+<div id="user-list" class="space-y-3">
+<p class="text-xs text-slate-500 font-label animate-pulse">Loading accounts...</p>
 </div>
 </div>
 <!-- Site Analytics (High Level) -->
@@ -361,4 +376,127 @@
 </button>
 </nav>
 <script src="../scripts/account-menu.js"></script>
+<script>
+  // ── Account Management ─────────────────────────────────────────────────────
+
+  const userList = document.getElementById('user-list')
+  const addUserForm = document.getElementById('add-user-form')
+  const addUserError = document.getElementById('add-user-error')
+
+  function roleChip(role) {
+    const colours = { admin: 'bg-primary/20 text-primary', mod: 'bg-secondary-container text-secondary' }
+    return `<span class="px-2 py-0.5 rounded-sm text-[9px] font-label font-bold uppercase tracking-widest ${colours[role] || 'bg-surface-bright text-slate-400'}">${role}</span>`
+  }
+
+  function renderUsers(users) {
+    if (!users.length) {
+      userList.innerHTML = '<p class="text-xs text-slate-500 font-label italic">No admin or mod accounts yet.</p>'
+      return
+    }
+    userList.innerHTML = users.map(u => `
+      <div class="flex items-center justify-between p-4 bg-surface-container-high rounded-sm" data-user-id="${u.id}">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-slate-400" style="font-size:20px">person</span>
+          <div>
+            <p class="text-sm font-headline font-bold text-on-surface">${escHtml(u.username)}</p>
+            <p class="text-[10px] text-slate-500 font-label mt-0.5">${new Date(u.created_at).toLocaleDateString()}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          ${roleChip(u.role)}
+          <button data-delete-user="${u.id}" title="Remove account"
+            class="p-1.5 text-slate-500 hover:text-error hover:bg-error-container/20 rounded-sm transition-colors active:scale-95">
+            <span class="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
+      </div>`).join('')
+
+    userList.querySelectorAll('[data-delete-user]').forEach(btn => {
+      btn.addEventListener('click', () => deleteUser(Number(btn.dataset.deleteUser)))
+    })
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+  }
+
+  async function loadUsers() {
+    userList.innerHTML = '<p class="text-xs text-slate-500 font-label animate-pulse">Loading accounts...</p>'
+    try {
+      const res = await fetch('/api/users', { credentials: 'include' })
+      if (!res.ok) { userList.innerHTML = '<p class="text-xs text-error font-label">Failed to load accounts.</p>'; return }
+      const { users } = await res.json()
+      renderUsers(users)
+    } catch {
+      userList.innerHTML = '<p class="text-xs text-error font-label">Network error.</p>'
+    }
+  }
+
+  async function deleteUser(id) {
+    if (!confirm('Remove this account? This cannot be undone.')) return
+    const res = await fetch(`/api/users/${id}`, { method: 'DELETE', credentials: 'include' })
+    if (res.ok) {
+      loadUsers()
+    } else {
+      const { message } = await res.json().catch(() => ({}))
+      alert(message || 'Failed to delete account.')
+    }
+  }
+
+  document.getElementById('show-add-user-btn').addEventListener('click', () => {
+    addUserForm.classList.toggle('hidden')
+    addUserError.classList.add('hidden')
+  })
+
+  document.getElementById('cancel-add-user').addEventListener('click', () => {
+    addUserForm.classList.add('hidden')
+    document.getElementById('new-username').value = ''
+    document.getElementById('new-password').value = ''
+    addUserError.classList.add('hidden')
+  })
+
+  document.getElementById('submit-add-user').addEventListener('click', async () => {
+    const username = document.getElementById('new-username').value.trim()
+    const password = document.getElementById('new-password').value
+    const role = document.getElementById('new-role').value
+
+    addUserError.classList.add('hidden')
+
+    if (!username || !password) {
+      addUserError.textContent = 'Username and password are required.'
+      addUserError.classList.remove('hidden')
+      return
+    }
+
+    const btn = document.getElementById('submit-add-user')
+    btn.disabled = true
+    btn.textContent = 'Creating...'
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ username, password, role }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        addUserError.textContent = data.message || 'Failed to create account.'
+        addUserError.classList.remove('hidden')
+        return
+      }
+
+      addUserForm.classList.add('hidden')
+      document.getElementById('new-username').value = ''
+      document.getElementById('new-password').value = ''
+      loadUsers()
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Create Account'
+    }
+  })
+
+  loadUsers()
+</script>
 </body></html>

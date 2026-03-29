@@ -159,6 +159,14 @@ export async function verifyPassword(password, user, pepper) {
   return timingSafeEqual(hash, user.password_hash)
 }
 
+export async function createPasswordRecord(password, pepper) {
+  const saltBytes = new Uint8Array(16)
+  crypto.getRandomValues(saltBytes)
+  const salt = encodeBase64Url(saltBytes)
+  const hash = await hashPassword(password, salt, 210000, pepper)
+  return { salt, hash, iterations: 210000 }
+}
+
 export async function createSessionToken(sessionData, env) {
   const ttl = getSessionTtlSeconds(env)
   const payload = {

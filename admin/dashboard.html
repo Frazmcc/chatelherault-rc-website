@@ -297,58 +297,81 @@
 </div>
 </div>
 </section>
-<!-- Quick Site Config (Technical Inputs) -->
-<section class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-<div class="bg-surface-container-low p-8 rounded-lg relative overflow-hidden">
-<div class="absolute top-0 left-0 w-1 h-full bg-orange-600"></div>
-<h3 class="font-headline text-xl font-bold mb-6">Environment Variables</h3>
-<div class="space-y-6">
-<div class="group">
-<label class="block font-['Inter'] text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2">Global Feed Alert Text</label>
-<input class="w-full bg-surface-container-highest border-none border-b-2 border-transparent focus:border-orange-500 focus:ring-0 px-4 py-3 text-sm font-body text-slate-200 transition-all" type="text" value="New trail open at South Gate — Proceed with caution."/>
+<!-- Media Library -->
+<section class="mb-16">
+<div class="flex items-baseline justify-between mb-8">
+<h3 class="font-['Space_Grotesk'] text-2xl font-bold tracking-tight">Media Library</h3>
+<div class="h-px flex-1 bg-white/5 mx-8"></div>
+<button id="show-add-media-btn" class="text-orange-500 font-['Inter'] text-[10px] uppercase tracking-widest font-bold border border-orange-500/30 px-3 py-1 rounded-sm hover:bg-orange-600/10 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">add_photo_alternate</span> Add Media
+</button>
 </div>
-<div class="group">
-<label class="block font-['Inter'] text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-2">Featured Rig ID</label>
-<div class="flex gap-2">
-<input class="flex-1 bg-surface-container-highest border-none border-b-2 border-transparent focus:border-orange-500 focus:ring-0 px-4 py-3 text-sm font-body text-slate-200" type="text" value="TRX4-DEF-01"/>
-<button class="px-6 py-3 bg-primary-container text-on-primary-container font-bold text-xs uppercase tracking-widest rounded-sm">Update</button>
-</div>
-</div>
-</div>
-</div>
-<div class="flex flex-col gap-4">
-<div class="p-6 bg-surface-container-high rounded-lg border border-white/5 flex items-center justify-between">
-<div class="flex items-center gap-4">
-<div class="w-10 h-10 rounded-sm bg-orange-600/20 flex items-center justify-center">
-<span class="material-symbols-outlined text-orange-500" data-icon="hub">hub</span>
+<!-- Add Media Form -->
+<div id="add-media-form" class="hidden mb-6 p-6 bg-surface-container-low rounded-lg border border-orange-500/20">
+<p class="text-[10px] font-['Inter'] font-bold tracking-widest text-orange-500 uppercase mb-4">Add Media by URL</p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+<div>
+<label class="text-[10px] font-['Inter'] text-slate-500 uppercase tracking-widest block mb-1">Title</label>
+<input id="media-title" type="text" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none" placeholder="e.g. Trail Run - Oct 2024"/>
 </div>
 <div>
-<h4 class="font-headline font-bold">Content API</h4>
-<p class="text-xs text-slate-500 font-body">Public endpoint synchronization</p>
-</div>
-</div>
-<div class="text-right">
-<p class="text-sm font-bold text-primary">Synchronized</p>
-<p class="text-[10px] text-slate-500 font-['Inter']">Last update 2m ago</p>
-</div>
-</div>
-<div class="p-6 bg-surface-container-high rounded-lg border border-white/5 flex items-center justify-between">
-<div class="flex items-center gap-4">
-<div class="w-10 h-10 rounded-sm bg-slate-800 flex items-center justify-center">
-<span class="material-symbols-outlined text-slate-400" data-icon="storage">storage</span>
+<label class="text-[10px] font-['Inter'] text-slate-500 uppercase tracking-widest block mb-1">URL</label>
+<input id="media-url" type="url" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none" placeholder="https://..."/>
 </div>
 <div>
-<h4 class="font-headline font-bold">Asset Storage</h4>
-<p class="text-xs text-slate-500 font-body">Bucket utilization for 2023</p>
+<label class="text-[10px] font-['Inter'] text-slate-500 uppercase tracking-widest block mb-1">Type</label>
+<select id="media-type" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none">
+<option value="image">Image</option>
+<option value="video">Video</option>
+</select>
 </div>
 </div>
-<div class="text-right">
-<p class="text-sm font-bold text-slate-300">42.8 GB / 100 GB</p>
-<div class="w-24 h-1 bg-background rounded-full mt-2">
-<div class="w-[42%] h-full bg-slate-500"></div>
+<div id="add-media-error" class="hidden text-xs text-error mb-3 font-['Inter']"></div>
+<div class="flex gap-3">
+<button id="submit-add-media" class="bg-orange-600 text-white px-4 py-2 text-[10px] font-['Inter'] font-bold tracking-widest uppercase rounded-sm hover:bg-orange-500 transition-colors active:scale-95">Add to Library</button>
+<button id="cancel-add-media" class="bg-surface-container-highest text-slate-400 px-4 py-2 text-[10px] font-['Inter'] font-bold tracking-widest uppercase rounded-sm hover:text-slate-100 transition-colors active:scale-95">Cancel</button>
 </div>
 </div>
+<!-- Media Grid -->
+<div id="media-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<p class="text-xs text-slate-500 font-['Inter'] animate-pulse col-span-full">Loading media...</p>
 </div>
+</section>
+<!-- Content Editor -->
+<section class="mb-16">
+<div class="flex items-baseline justify-between mb-8">
+<h3 class="font-['Space_Grotesk'] text-2xl font-bold tracking-tight">Content Editor</h3>
+<div class="h-px flex-1 bg-white/5 mx-8"></div>
+<button id="show-add-content-btn" class="text-orange-500 font-['Inter'] text-[10px] uppercase tracking-widest font-bold border border-orange-500/30 px-3 py-1 rounded-sm hover:bg-orange-600/10 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">add</span> Add Entry
+</button>
+</div>
+<!-- Add Content Form -->
+<div id="add-content-form" class="hidden mb-6 p-6 bg-surface-container-low rounded-lg border border-orange-500/20">
+<p class="text-[10px] font-['Inter'] font-bold tracking-widest text-orange-500 uppercase mb-4">New Content Entry</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+<div>
+<label class="text-[10px] font-['Inter'] text-slate-500 uppercase tracking-widest block mb-1">Page</label>
+<input id="content-page" type="text" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none" placeholder="e.g. home, meetups, about"/>
+</div>
+<div>
+<label class="text-[10px] font-['Inter'] text-slate-500 uppercase tracking-widest block mb-1">Key</label>
+<input id="content-key" type="text" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none" placeholder="e.g. hero_title, welcome_text"/>
+</div>
+</div>
+<div class="mb-4">
+<label class="text-[10px] font-['Inter'] text-slate-500 uppercase tracking-widest block mb-1">Value</label>
+<textarea id="content-value" rows="3" class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none resize-y" placeholder="Enter content text..."></textarea>
+</div>
+<div id="add-content-error" class="hidden text-xs text-error mb-3 font-['Inter']"></div>
+<div class="flex gap-3">
+<button id="submit-add-content" class="bg-orange-600 text-white px-4 py-2 text-[10px] font-['Inter'] font-bold tracking-widest uppercase rounded-sm hover:bg-orange-500 transition-colors active:scale-95">Save Entry</button>
+<button id="cancel-add-content" class="bg-surface-container-highest text-slate-400 px-4 py-2 text-[10px] font-['Inter'] font-bold tracking-widest uppercase rounded-sm hover:text-slate-100 transition-colors active:scale-95">Cancel</button>
+</div>
+</div>
+<!-- Content List -->
+<div id="content-list" class="space-y-3">
+<p class="text-xs text-slate-500 font-['Inter'] animate-pulse">Loading content...</p>
 </div>
 </section>
 </main>
@@ -376,4 +399,227 @@
 </a>
 </nav>
 <script src="../scripts/account-menu.js"></script>
+<script>
+  // ── Shared helpers ────────────────────────────────────────────────────────
+
+  function escHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+  }
+
+  // ── Media Library ─────────────────────────────────────────────────────────
+
+  const mediaGrid = document.getElementById('media-grid')
+  const addMediaForm = document.getElementById('add-media-form')
+  const addMediaError = document.getElementById('add-media-error')
+
+  function renderMedia(items) {
+    if (!items.length) {
+      mediaGrid.innerHTML = '<p class="text-xs text-slate-500 font-[\'Inter\'] italic col-span-full">No media yet. Add the first item above.</p>'
+      return
+    }
+    mediaGrid.innerHTML = items.map(m => `
+      <div class="bg-surface-container-low rounded-lg overflow-hidden border border-white/5 group" data-media-id="${m.id}">
+        ${m.type === 'image'
+          ? `<div class="aspect-video overflow-hidden bg-background"><img src="${escHtml(m.url)}" alt="${escHtml(m.title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy"/></div>`
+          : `<div class="aspect-video bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-slate-500">play_circle</span></div>`
+        }
+        <div class="p-4 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-bold text-on-surface truncate max-w-[160px]">${escHtml(m.title)}</p>
+            <p class="text-[10px] text-slate-500 font-['Inter'] uppercase tracking-wider mt-0.5">${m.type} · ${escHtml(m.added_by || '—')}</p>
+          </div>
+          <button data-delete-media="${m.id}" title="Remove"
+            class="p-1.5 text-slate-500 hover:text-error hover:bg-error-container/20 rounded-sm transition-colors active:scale-95 shrink-0">
+            <span class="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
+      </div>`).join('')
+
+    mediaGrid.querySelectorAll('[data-delete-media]').forEach(btn => {
+      btn.addEventListener('click', () => deleteMedia(Number(btn.dataset.deleteMedia)))
+    })
+  }
+
+  async function loadMedia() {
+    mediaGrid.innerHTML = '<p class="text-xs text-slate-500 font-[\'Inter\'] animate-pulse col-span-full">Loading media...</p>'
+    try {
+      const res = await fetch('/api/media', { credentials: 'include' })
+      if (!res.ok) { mediaGrid.innerHTML = '<p class="text-xs text-error font-[\'Inter\'] col-span-full">Failed to load media.</p>'; return }
+      const { media } = await res.json()
+      renderMedia(media)
+    } catch {
+      mediaGrid.innerHTML = '<p class="text-xs text-error font-[\'Inter\'] col-span-full">Network error.</p>'
+    }
+  }
+
+  async function deleteMedia(id) {
+    if (!confirm('Remove this media item?')) return
+    const res = await fetch(`/api/media/${id}`, { method: 'DELETE', credentials: 'include' })
+    if (res.ok) { loadMedia() } else { alert('Failed to remove media.') }
+  }
+
+  document.getElementById('show-add-media-btn').addEventListener('click', () => {
+    addMediaForm.classList.toggle('hidden')
+    addMediaError.classList.add('hidden')
+  })
+
+  document.getElementById('cancel-add-media').addEventListener('click', () => {
+    addMediaForm.classList.add('hidden')
+    document.getElementById('media-title').value = ''
+    document.getElementById('media-url').value = ''
+    addMediaError.classList.add('hidden')
+  })
+
+  document.getElementById('submit-add-media').addEventListener('click', async () => {
+    const title = document.getElementById('media-title').value.trim()
+    const url = document.getElementById('media-url').value.trim()
+    const type = document.getElementById('media-type').value
+    addMediaError.classList.add('hidden')
+
+    if (!title || !url) {
+      addMediaError.textContent = 'Title and URL are required.'
+      addMediaError.classList.remove('hidden')
+      return
+    }
+
+    const btn = document.getElementById('submit-add-media')
+    btn.disabled = true; btn.textContent = 'Adding...'
+
+    try {
+      const res = await fetch('/api/media', {
+        method: 'POST', credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title, url, type }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        addMediaError.textContent = data.message || 'Failed to add media.'
+        addMediaError.classList.remove('hidden')
+        return
+      }
+      addMediaForm.classList.add('hidden')
+      document.getElementById('media-title').value = ''
+      document.getElementById('media-url').value = ''
+      loadMedia()
+    } finally {
+      btn.disabled = false; btn.textContent = 'Add to Library'
+    }
+  })
+
+  // ── Content Editor ────────────────────────────────────────────────────────
+
+  const contentList = document.getElementById('content-list')
+  const addContentForm = document.getElementById('add-content-form')
+  const addContentError = document.getElementById('add-content-error')
+
+  function renderContent(items) {
+    if (!items.length) {
+      contentList.innerHTML = '<p class="text-xs text-slate-500 font-[\'Inter\'] italic">No content entries yet.</p>'
+      return
+    }
+    contentList.innerHTML = items.map(c => `
+      <div class="p-4 bg-surface-container-low rounded-lg border border-white/5" data-content-id="${c.id}">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+              <span class="px-2 py-0.5 bg-orange-600/15 text-orange-500 text-[9px] font-['Inter'] font-bold uppercase tracking-widest rounded-sm">${escHtml(c.page)}</span>
+              <span class="text-[10px] text-slate-500 font-['Inter'] font-mono">${escHtml(c.key)}</span>
+            </div>
+            <textarea data-content-value="${c.id}" rows="2"
+              class="w-full bg-background border border-slate-700 rounded-sm px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-orange-500 focus:outline-none resize-y font-body"
+            >${escHtml(c.value)}</textarea>
+            <p class="text-[9px] text-slate-600 font-['Inter'] mt-1">Updated by ${escHtml(c.updated_by || '—')} · ${new Date(c.updated_at).toLocaleString()}</p>
+          </div>
+          <div class="flex flex-col gap-2 shrink-0">
+            <button data-save-content="${c.id}" data-page="${escHtml(c.page)}" data-key="${escHtml(c.key)}"
+              title="Save" class="p-1.5 text-primary hover:bg-primary/10 rounded-sm transition-colors active:scale-95">
+              <span class="material-symbols-outlined text-sm">save</span>
+            </button>
+          </div>
+        </div>
+      </div>`).join('')
+
+    contentList.querySelectorAll('[data-save-content]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.saveContent
+        const textarea = contentList.querySelector(`[data-content-value="${id}"]`)
+        await saveContent(btn.dataset.page, btn.dataset.key, textarea.value)
+      })
+    })
+  }
+
+  async function loadContent() {
+    contentList.innerHTML = '<p class="text-xs text-slate-500 font-[\'Inter\'] animate-pulse">Loading content...</p>'
+    try {
+      const res = await fetch('/api/content', { credentials: 'include' })
+      if (!res.ok) { contentList.innerHTML = '<p class="text-xs text-error font-[\'Inter\']">Failed to load content.</p>'; return }
+      const { content } = await res.json()
+      renderContent(content)
+    } catch {
+      contentList.innerHTML = '<p class="text-xs text-error font-[\'Inter\']">Network error.</p>'
+    }
+  }
+
+  async function saveContent(page, key, value) {
+    const res = await fetch('/api/content', {
+      method: 'PUT', credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ page, key, value }),
+    })
+    if (res.ok) { loadContent() } else { alert('Failed to save content.') }
+  }
+
+  document.getElementById('show-add-content-btn').addEventListener('click', () => {
+    addContentForm.classList.toggle('hidden')
+    addContentError.classList.add('hidden')
+  })
+
+  document.getElementById('cancel-add-content').addEventListener('click', () => {
+    addContentForm.classList.add('hidden')
+    document.getElementById('content-page').value = ''
+    document.getElementById('content-key').value = ''
+    document.getElementById('content-value').value = ''
+    addContentError.classList.add('hidden')
+  })
+
+  document.getElementById('submit-add-content').addEventListener('click', async () => {
+    const page = document.getElementById('content-page').value.trim()
+    const key = document.getElementById('content-key').value.trim()
+    const value = document.getElementById('content-value').value
+    addContentError.classList.add('hidden')
+
+    if (!page || !key) {
+      addContentError.textContent = 'Page and key are required.'
+      addContentError.classList.remove('hidden')
+      return
+    }
+
+    const btn = document.getElementById('submit-add-content')
+    btn.disabled = true; btn.textContent = 'Saving...'
+
+    try {
+      const res = await fetch('/api/content', {
+        method: 'PUT', credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ page, key, value }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        addContentError.textContent = data.message || 'Failed to save.'
+        addContentError.classList.remove('hidden')
+        return
+      }
+      addContentForm.classList.add('hidden')
+      document.getElementById('content-page').value = ''
+      document.getElementById('content-key').value = ''
+      document.getElementById('content-value').value = ''
+      loadContent()
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Entry'
+    }
+  })
+
+  loadMedia()
+  loadContent()
+</script>
 </body></html>

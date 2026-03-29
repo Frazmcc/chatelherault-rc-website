@@ -26,7 +26,9 @@ function validatePasswordStrength(password) {
 
 function normalizeRole(role) {
   const value = String(role || '').toLowerCase()
-  return value === 'owner' ? 'owner' : 'admin'
+  if (value === 'owner') return 'owner'
+  if (value === 'mod') return 'mod'
+  return 'admin'
 }
 
 function escapeSql(value) {
