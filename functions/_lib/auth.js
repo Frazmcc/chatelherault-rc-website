@@ -1,24 +1,66 @@
 const textEncoder = new TextEncoder()
+const base64Alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+const base64Lookup = Object.fromEntries([...base64Alphabet].map((ch, index) => [ch, index]))
 
 const SESSION_COOKIE_NAME = 'chrc_session'
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 12
 
 function encodeBase64Url(bytes) {
-  let base64 = btoa(String.fromCharCode(...bytes))
+  let base64 = ''
+
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i]
+    const b = i + 1 < bytes.length ? bytes[i + 1] : 0
+    const c = i + 2 < bytes.length ? bytes[i + 2] : 0
+    const triple = (a << 16) | (b << 8) | c
+
+    base64 += base64Alphabet[(triple >> 18) & 63]
+    base64 += base64Alphabet[(triple >> 12) & 63]
+    base64 += i + 1 < bytes.length ? base64Alphabet[(triple >> 6) & 63] : '='
+    base64 += i + 2 < bytes.length ? base64Alphabet[triple & 63] : '='
+  }
+
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
 }
 
 function decodeBase64Url(value) {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
   const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
-  const binary = atob(padded)
-  const bytes = new Uint8Array(binary.length)
+  const output = []
 
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i)
+  for (let i = 0; i < padded.length; i += 4) {
+    const c1 = padded[i]
+    const c2 = padded[i + 1]
+    const c3 = padded[i + 2]
+    const c4 = padded[i + 3]
+
+    if (!(c1 in base64Lookup) || !(c2 in base64Lookup)) {
+      throw new Error('Invalid base64 value')
+    }
+
+    const n1 = base64Lookup[c1]
+    const n2 = base64Lookup[c2]
+    const n3 = c3 === '=' ? 0 : base64Lookup[c3]
+    const n4 = c4 === '=' ? 0 : base64Lookup[c4]
+
+    if ((c3 !== '=' && !(c3 in base64Lookup)) || (c4 !== '=' && !(c4 in base64Lookup))) {
+      throw new Error('Invalid base64 value')
+    }
+
+    const triple = (n1 << 18) | (n2 << 12) | (n3 << 6) | n4
+
+    output.push((triple >> 16) & 255)
+
+    if (c3 !== '=') {
+      output.push((triple >> 8) & 255)
+    }
+
+    if (c4 !== '=') {
+      output.push(triple & 255)
+    }
   }
 
-  return bytes
+  return new Uint8Array(output)
 }
 
 function timingSafeEqual(a, b) {
