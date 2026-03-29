@@ -10,7 +10,12 @@ import {
 } from './functions/_lib/auth.js'
 
 const PUBLIC_ADMIN_PATHS = new Set(['/admin/login.html', '/admin/root-login.html'])
-const OWNER_ONLY_SITE_PATHS = new Set(['/pages/super-user.html', '/pages/super-user'])
+const OWNER_ONLY_SITE_PATHS = new Set([
+  '/pages/super-user.html',
+  '/pages/super-user',
+  '/super-user.html',
+  '/super-user',
+])
 
 function json(data, init = {}) {
   const headers = new Headers(init.headers || {})
@@ -1035,12 +1040,22 @@ async function guardOwnerOnlySiteRoute(request, env) {
 function mapRootPagePath(pathname) {
   const normalized = pathname.toLowerCase()
   const pageMap = {
+    '/contact': '/pages/contact.html',
+    '/contact.html': '/pages/contact.html',
+    '/media': '/pages/media.html',
+    '/media.html': '/pages/media.html',
+    '/meetups': '/pages/meetups.html',
+    '/meetups.html': '/pages/meetups.html',
+    '/spotlight': '/pages/spotlight.html',
+    '/spotlight.html': '/pages/spotlight.html',
     '/register-rig': '/pages/register-rig.html',
     '/register-rig.html': '/pages/register-rig.html',
     '/members-rigs': '/pages/members-rigs.html',
     '/members-rigs.html': '/pages/members-rigs.html',
     '/rig-approvals': '/pages/rig-approvals.html',
     '/rig-approvals.html': '/pages/rig-approvals.html',
+    '/super-user': '/pages/super-user.html',
+    '/super-user.html': '/pages/super-user.html',
   }
 
   return pageMap[normalized] || null
