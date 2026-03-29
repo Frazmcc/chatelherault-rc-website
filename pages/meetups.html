@@ -187,9 +187,10 @@
 <div>
 <h2 class="font-headline text-2xl font-bold text-white uppercase tracking-tight flex items-center gap-3">
 <span class="material-symbols-outlined text-tertiary">wb_sunny</span>
-                        Deployment Weather
+            Sunday Trail Weather Forecast
                     </h2>
-<p class="text-on-surface-variant text-sm font-body mt-1">Met Office Forecast: Chatelherault Country Park (09:00 - 13:00 Window)</p>
+<p class="text-on-surface-variant text-sm font-body mt-1">Met Office Forecast: Chatelherault Country Park</p>
+<p class="text-on-surface-variant text-xs font-label mt-1" id="weather-target-time">Forecast target: Sunday 14:00</p>
 </div>
 <div class="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-sm border border-primary/20">
 <span class="material-symbols-outlined text-primary text-sm">info</span>
@@ -276,11 +277,6 @@
 </tbody>
 </table>
 </div>
-<div class="mt-8 p-4 bg-tertiary-container/20 border-l-2 border-tertiary-container">
-<p class="text-xs font-body text-on-tertiary-container leading-relaxed italic">
-                        "If weather conditions exceed Safety Protocol 4 (Heavy Rain/Gale), check the Status board or Deployment Alerts for cancellation intel."
-                    </p>
-</div>
 </div>
 </section>
 </main>
@@ -312,4 +308,38 @@
 </footer>
 <script src="../scripts/account-menu.js"></script>
 <script src="../scripts/panel-editor.js"></script>
+<script>
+  (() => {
+    const targetEl = document.getElementById('weather-target-time')
+
+    if (!targetEl) {
+      return
+    }
+
+    // Always target the upcoming Sunday at 14:00 UK time.
+    // If it is already Sunday 14:00+, roll to next Sunday.
+    const nowLondon = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/London' }))
+    const day = nowLondon.getDay() // Sunday = 0
+    const hour = nowLondon.getHours()
+
+    let daysUntilSunday = (7 - day) % 7
+    if (day === 0 && hour >= 14) {
+      daysUntilSunday = 7
+    }
+
+    const target = new Date(nowLondon)
+    target.setDate(nowLondon.getDate() + daysUntilSunday)
+    target.setHours(14, 0, 0, 0)
+
+    const dateText = target.toLocaleDateString('en-GB', {
+      timeZone: 'Europe/London',
+      weekday: 'long',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+
+    targetEl.textContent = `Forecast target: ${dateText} at 14:00`
+  })()
+</script>
 </body></html>
