@@ -255,6 +255,22 @@
       return
     }
 
+    function ordinal(day) {
+      if (day >= 11 && day <= 13) return `${day}th`
+      const last = day % 10
+      if (last === 1) return `${day}st`
+      if (last === 2) return `${day}nd`
+      if (last === 3) return `${day}rd`
+      return `${day}th`
+    }
+
+    function formatSundayDate(date) {
+      const day = Number(date.toLocaleDateString('en-GB', { timeZone: 'Europe/London', day: '2-digit' }))
+      const month = date.toLocaleDateString('en-GB', { timeZone: 'Europe/London', month: 'long' })
+      const year = date.toLocaleDateString('en-GB', { timeZone: 'Europe/London', year: 'numeric' })
+      return `${ordinal(day)} ${month} ${year}`
+    }
+
     function getNextSundayTarget() {
       const nowLondon = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/London' }))
       const day = nowLondon.getDay() // Sunday = 0
@@ -294,6 +310,13 @@
         .join('')
     }
 
+    function formatResolutionLabel(resolution) {
+      if (resolution === 'hourly') return 'Hourly forecast'
+      if (resolution === 'three-hourly') return '3-hourly forecast'
+      if (resolution === 'daily') return 'Daily forecast'
+      return 'Forecast'
+    }
+
     function renderError(message) {
       tableBody.innerHTML = `
         <tr class="group hover:bg-white/5 transition-colors">
@@ -308,36 +331,45 @@
 
     const dateText = target.toLocaleDateString('en-GB', {
       timeZone: 'Europe/London',
-      weekday: 'long',
       day: '2-digit',
-      month: 'short',
+      month: 'long',
       year: 'numeric',
     })
 
-    targetEl.textContent = `Forecast target: ${dateText} at 14:00`
+    targetEl.textContent = `Forecast target: ${formatSundayDate(target)}`
 
     const targetKey = target.toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
 
-    fetch('/api/metoffice-forecast', { method: 'GET' })
+    fetch(`/api/metoffice-forecast?targetDate=${encodeURIComponent(targetKey)}`, { method: 'GET' })
       .then(async (response) => {
         const payload = await response.json().catch(() => ({}))
         if (!response.ok || !payload?.ok || !Array.isArray(payload.rows)) {
           throw new Error(payload?.message || 'Unable to load weather data right now.')
         }
 
-        const sundayWindow = payload.rows
+        const entries = payload.rows
           .map((entry) => {
             const parts = toLondonParts(entry.time)
             return { ...entry, ...parts }
           })
-          .filter((entry) => entry.dateKey === targetKey && entry.hour >= 9 && entry.hour <= 13)
+          .filter((entry) => entry.dateKey === targetKey)
           .sort((a, b) => a.hour - b.hour)
 
-        if (!sundayWindow.length) {
+        if (!entries.length) {
           throw new Error('No Met Office forecast entries available yet for that Sunday window.')
         }
 
-        renderRows(sundayWindow.slice(0, 5))
+        // Hourly: prefer the trail window. Fallback modes: keep full day.
+        let rowsToRender = entries
+        if (payload.resolution === 'hourly') {
+          const windowRows = entries.filter((entry) => entry.hour >= 9 && entry.hour <= 13)
+          rowsToRender = windowRows.length ? windowRows : entries
+        }
+
+        const resolutionLabel = formatResolutionLabel(payload.resolution)
+        targetEl.textContent = `Forecast target: ${formatSundayDate(target)} (${resolutionLabel})`
+
+        renderRows(rowsToRender)
       })
       .catch((error) => {
         renderError(error.message || 'Unable to load weather data right now.')

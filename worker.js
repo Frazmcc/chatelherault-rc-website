@@ -167,51 +167,148 @@ function normalizeWeatherCode(code) {
   return table[Number(code)] || 'Unknown'
 }
 
-async function handleMetOfficeForecast(env) {
-  if (!env.METOFFICE_API_KEY) {
-    return json({ ok: false, message: 'Met Office API key is not configured.' }, { status: 503 })
+function formatDateKey(dateLike) {
+  return new Date(dateLike).toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
+}
+
+function pickNumber(...values) {
+  for (const value of values) {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) {
+      return parsed
+    }
   }
 
-  const endpoint = new URL('https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly')
-  endpoint.searchParams.set('latitude', '55.76278')
-  endpoint.searchParams.set('longitude', '-4.010164')
-  endpoint.searchParams.set('includeLocationName', 'true')
+  return null
+}
 
-  const response = await fetch(endpoint.toString(), {
+async function fetchMetOfficeSeries(url, apiKey) {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
-      apikey: env.METOFFICE_API_KEY,
+      apikey: apiKey,
       accept: 'application/json',
     },
   })
 
   if (!response.ok) {
-    return json(
-      { ok: false, message: `Met Office request failed (${response.status}).` },
-      { status: 502 }
-    )
+    return null
   }
 
   const payload = await response.json()
-  const series = payload?.features?.[0]?.properties?.timeSeries || []
+  return payload?.features?.[0]?.properties?.timeSeries || []
+}
 
-  const rows = series.map((entry) => {
-    const tempC = entry?.screenTemperature ?? entry?.airTemperature ?? entry?.feelsLikeTemperature
-    const precipPct = entry?.probOfPrecipitation ?? entry?.probabilityOfPrecipitation
-    const windSpeedRaw = entry?.windSpeed10m ?? entry?.windSpeed
-    const windMph = Number.isFinite(Number(windSpeedRaw)) ? Number(windSpeedRaw) * 2.23694 : null
-    const weatherCode = entry?.significantWeatherCode ?? entry?.weatherType
+function normalizeTimeSeriesRows(series) {
+  return series
+    .map((entry) => {
+      const tempC = pickNumber(
+        entry?.screenTemperature,
+        entry?.airTemperature,
+        entry?.feelsLikeTemperature,
+        entry?.dayMaxScreenTemperature,
+        entry?.dayMinScreenTemperature,
+        entry?.maxScreenAirTemp,
+        entry?.minScreenAirTemp
+      )
 
-    return {
-      time: entry?.time,
-      condition: normalizeWeatherCode(weatherCode),
-      tempC: Number.isFinite(Number(tempC)) ? Number(tempC) : null,
-      precipPct: Number.isFinite(Number(precipPct)) ? Number(precipPct) : null,
-      windMph: Number.isFinite(Number(windMph)) ? Math.round(windMph) : null,
+      const precipPct = pickNumber(
+        entry?.probOfPrecipitation,
+        entry?.probabilityOfPrecipitation,
+        entry?.dayProbabilityOfPrecipitation,
+        entry?.nightProbabilityOfPrecipitation
+      )
+
+      const windSpeedRaw = pickNumber(
+        entry?.windSpeed10m,
+        entry?.windSpeed,
+        entry?.dayMax10mWindSpeed,
+        entry?.nightMax10mWindSpeed
+      )
+
+      const weatherCode =
+        entry?.significantWeatherCode ??
+        entry?.weatherType ??
+        entry?.daySignificantWeatherCode ??
+        entry?.nightSignificantWeatherCode
+
+      return {
+        time: entry?.time,
+        condition: normalizeWeatherCode(weatherCode),
+        tempC,
+        precipPct,
+        windMph: Number.isFinite(Number(windSpeedRaw)) ? Math.round(Number(windSpeedRaw) * 2.23694) : null,
+      }
+    })
+    .filter((row) => Boolean(row.time))
+}
+
+function filterRowsForDate(rows, targetDate) {
+  return rows
+    .filter((row) => formatDateKey(row.time) === targetDate)
+    .sort((a, b) => new Date(a.time) - new Date(b.time))
+}
+
+async function handleMetOfficeForecast(request, env) {
+  if (!env.METOFFICE_API_KEY) {
+    return json({ ok: false, message: 'Met Office API key is not configured.' }, { status: 503 })
+  }
+
+  const targetDate = new URL(request.url).searchParams.get('targetDate')
+
+  if (!targetDate || !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+    return json({ ok: false, message: 'Missing or invalid targetDate (YYYY-MM-DD).' }, { status: 400 })
+  }
+
+  const base = 'https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point'
+  const buildUrl = (mode) => {
+    const endpoint = new URL(`${base}/${mode}`)
+    endpoint.searchParams.set('latitude', '55.76278')
+    endpoint.searchParams.set('longitude', '-4.010164')
+    endpoint.searchParams.set('includeLocationName', 'true')
+    return endpoint.toString()
+  }
+
+  // 1) Hourly (preferred)
+  const hourlySeries = await fetchMetOfficeSeries(buildUrl('hourly'), env.METOFFICE_API_KEY)
+  const hourlyRows = Array.isArray(hourlySeries) ? filterRowsForDate(normalizeTimeSeriesRows(hourlySeries), targetDate) : []
+
+  if (hourlyRows.length > 0) {
+    return json({ ok: true, resolution: 'hourly', rows: hourlyRows })
+  }
+
+  // 2) Three-hourly fallback
+  const threeHourlyCandidates = ['three-hourly', '3hourly', 'threehourly']
+  let threeHourlyRows = []
+
+  for (const mode of threeHourlyCandidates) {
+    const series = await fetchMetOfficeSeries(buildUrl(mode), env.METOFFICE_API_KEY)
+    const rows = Array.isArray(series) ? filterRowsForDate(normalizeTimeSeriesRows(series), targetDate) : []
+    if (rows.length > 0) {
+      threeHourlyRows = rows
+      break
     }
-  })
+  }
 
-  return json({ ok: true, rows })
+  if (threeHourlyRows.length > 0) {
+    return json({ ok: true, resolution: 'three-hourly', rows: threeHourlyRows })
+  }
+
+  // 3) Daily fallback (entire day summary)
+  const dailySeries = await fetchMetOfficeSeries(buildUrl('daily'), env.METOFFICE_API_KEY)
+  const dailyRows = Array.isArray(dailySeries) ? filterRowsForDate(normalizeTimeSeriesRows(dailySeries), targetDate) : []
+
+  if (dailyRows.length > 0) {
+    return json({ ok: true, resolution: 'daily', rows: dailyRows })
+  }
+
+  return json(
+    {
+      ok: false,
+      message: 'No hourly, 3-hourly, or daily forecast entries are available yet for the requested Sunday.',
+    },
+    { status: 404 }
+  )
 }
 
 // --- User management (owner only) ---
@@ -464,7 +561,7 @@ export default {
     }
 
     if (url.pathname === '/api/metoffice-forecast' && request.method === 'GET') {
-      return handleMetOfficeForecast(env)
+      return handleMetOfficeForecast(request, env)
     }
 
     // User management (owner only)
