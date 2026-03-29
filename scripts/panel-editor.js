@@ -339,10 +339,7 @@
       })
     })
 
-    const badge = document.createElement('div')
-    badge.className = 'fixed bottom-4 left-4 z-[181] rounded-sm border border-[#d97706]/40 bg-[#121416]/80 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#d97706]'
-    badge.textContent = `Edit Enabled: ${escapeHtml(session.role)}`
-    document.body.appendChild(badge)
+    // Ghosted panel edit buttons are the only visible edit affordance.
   }
 
   function bootstrap() {
