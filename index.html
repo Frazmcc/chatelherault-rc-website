@@ -174,12 +174,12 @@
 <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12">
 <div class="flex flex-col gap-2">
 <span class="font-label text-[10px] uppercase tracking-widest text-tertiary">Total Trails</span>
-<span class="font-headline text-4xl font-bold tracking-tighter">14+</span>
+<span class="font-headline text-4xl font-bold tracking-tighter" id="home-total-trails">10+</span>
 <div class="h-1 w-8 bg-surface-container-highest"></div>
 </div>
 <div class="flex flex-col gap-2">
 <span class="font-label text-[10px] uppercase tracking-widest text-tertiary">Community Members</span>
-<span class="font-headline text-4xl font-bold tracking-tighter">150</span>
+<span class="font-headline text-4xl font-bold tracking-tighter" id="home-community-members">232</span>
 <div class="h-1 w-8 bg-surface-container-highest"></div>
 </div>
 <div class="flex flex-col gap-2">
@@ -189,7 +189,7 @@
 </div>
 <div class="flex flex-col gap-2">
 <span class="font-label text-[10px] uppercase tracking-widest text-tertiary">Next Meetup</span>
-<span class="font-headline text-4xl font-bold tracking-tighter">04D</span>
+<span class="font-headline text-4xl font-bold tracking-tighter" id="home-next-meetup">00D</span>
 <div class="h-1 w-8 bg-surface-container-highest"></div>
 </div>
 </div>
@@ -221,11 +221,49 @@
 <a aria-label="Facebook Group" class="material-symbols-outlined text-slate-500 hover:text-[#d97706] cursor-pointer transition-colors" href="https://www.facebook.com/groups/281937597729380/" rel="noopener noreferrer" target="_blank">groups</a>
 </div>
 <p class="font-['Manrope'] text-xs text-slate-500 text-right mt-8">
-                    © 2024 Chatelherault RC. Engineered for the Terrain.
+                    © 2026 Chatelherault RC. Engineered for the Terrain.
                 </p>
 </div>
 </div>
 </footer>
+<script>
+  (() => {
+    const trailsEl = document.getElementById('home-total-trails')
+    const membersEl = document.getElementById('home-community-members')
+    const meetupEl = document.getElementById('home-next-meetup')
+
+    if (trailsEl) {
+      trailsEl.textContent = '10+'
+    }
+
+    if (meetupEl) {
+      const now = new Date()
+      const daysUntilSunday = (7 - now.getDay()) % 7
+      meetupEl.textContent = `${String(daysUntilSunday).padStart(2, '0')}D`
+    }
+
+    if (membersEl) {
+      const fallbackMemberCount = 232
+      membersEl.textContent = String(fallbackMemberCount)
+
+      fetch('/api/facebook-group-members?groupId=281937597729380', {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload) => {
+          if (!payload || typeof payload.count !== 'number') {
+            return
+          }
+
+          membersEl.textContent = new Intl.NumberFormat('en-GB').format(payload.count)
+        })
+        .catch(() => {
+          // Keep fallback value if Facebook blocks extraction.
+        })
+    }
+  })()
+</script>
 <script src="scripts/account-menu.js"></script>
 <script src="scripts/panel-editor.js"></script>
 <script src="scripts/url-title-lock.js"></script>

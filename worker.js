@@ -311,6 +311,81 @@ async function handleMetOfficeForecast(request, env) {
   )
 }
 
+function parseFacebookMemberCount(rawHtml) {
+  if (!rawHtml || typeof rawHtml !== 'string') {
+    return null
+  }
+
+  const patterns = [
+    /"group_member_count"\s*:\s*"?(\d+)"?/i,
+    /"group_members"\s*:\s*"?(\d+)"?/i,
+    /([0-9][0-9,\.]*)\s+members/i,
+  ]
+
+  for (const pattern of patterns) {
+    const match = rawHtml.match(pattern)
+    if (!match || !match[1]) {
+      continue
+    }
+
+    const normalized = match[1].replace(/[^0-9]/g, '')
+    const parsed = Number.parseInt(normalized, 10)
+
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed
+    }
+  }
+
+  return null
+}
+
+async function handleFacebookGroupMembers(request) {
+  const groupId = new URL(request.url).searchParams.get('groupId') || '281937597729380'
+
+  if (!/^\d+$/.test(groupId)) {
+    return json({ ok: false, message: 'Invalid groupId.' }, { status: 400 })
+  }
+
+  const facebookUrl = `https://www.facebook.com/groups/${groupId}/`
+
+  try {
+    const response = await fetch(facebookUrl, {
+      method: 'GET',
+      headers: {
+        'user-agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'accept-language': 'en-GB,en;q=0.9',
+      },
+    })
+
+    const html = await response.text()
+    const count = parseFacebookMemberCount(html)
+
+    const headers = new Headers({ 'cache-control': 'public, max-age=900' })
+
+    return json(
+      {
+        ok: true,
+        groupId,
+        count,
+        source: count ? 'facebook' : 'unavailable',
+      },
+      { headers }
+    )
+  } catch {
+    return json(
+      {
+        ok: true,
+        groupId,
+        count: null,
+        source: 'unavailable',
+      },
+      { headers: { 'cache-control': 'public, max-age=120' } }
+    )
+  }
+}
+
 // --- User management (owner only) ---
 
 async function handleListUsers(request, env) {
@@ -562,6 +637,10 @@ export default {
 
     if (url.pathname === '/api/metoffice-forecast' && request.method === 'GET') {
       return handleMetOfficeForecast(request, env)
+    }
+
+    if (url.pathname === '/api/facebook-group-members' && request.method === 'GET') {
+      return handleFacebookGroupMembers(request)
     }
 
     // User management (owner only)
