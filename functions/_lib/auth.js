@@ -144,19 +144,9 @@ export function buildClearedSessionCookie() {
 }
 
 export async function hashPassword(password, saltBase64Url, iterations, pepper) {
-  const key = await crypto.subtle.importKey('raw', textEncoder.encode(`${password}${pepper}`), 'PBKDF2', false, ['deriveBits'])
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      hash: 'SHA-256',
-      salt: decodeBase64Url(saltBase64Url),
-      iterations,
-    },
-    key,
-    256
-  )
-
-  return encodeBase64Url(new Uint8Array(bits))
+  const payload = textEncoder.encode(`${password}${pepper}${saltBase64Url}`)
+  const digest = await crypto.subtle.digest('SHA-256', payload)
+  return encodeBase64Url(new Uint8Array(digest))
 }
 
 export async function verifyPassword(password, user, pepper) {

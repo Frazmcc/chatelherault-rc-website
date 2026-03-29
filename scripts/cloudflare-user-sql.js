@@ -39,10 +39,11 @@ function base64Url(buffer) {
 
 function createPasswordHash(password, pepper, iterations = 210000) {
   const salt = crypto.randomBytes(16)
-  const hash = crypto.pbkdf2Sync(`${password}${pepper}`, salt, iterations, 32, 'sha256')
+  const saltBase64Url = base64Url(salt)
+  const hash = crypto.createHash('sha256').update(`${password}${pepper}${saltBase64Url}`).digest()
 
   return {
-    salt: base64Url(salt),
+    salt: saltBase64Url,
     hash: base64Url(hash),
     iterations,
   }
