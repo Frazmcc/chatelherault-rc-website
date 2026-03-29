@@ -194,14 +194,14 @@
       const parsedFields = safeParseJson(storedFields)
       if (Array.isArray(parsedFields)) {
         const nodes = getEditableNodes(panel)
-        if (parsedFields.length !== nodes.length) {
-          return
-        }
-        parsedFields.forEach((value, index) => {
+        const applyCount = Math.min(parsedFields.length, nodes.length)
+
+        for (let index = 0; index < applyCount; index += 1) {
+          const value = parsedFields[index]
           if (nodes[index]) {
             nodes[index].textContent = String(value)
           }
-        })
+        }
       }
 
       if (typeof storedMedia === 'string' && storedMedia.length > 0) {
