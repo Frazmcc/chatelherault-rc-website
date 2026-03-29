@@ -4,9 +4,9 @@
       {
         "page": "home",
         "key": "panel-1-fields",
-        "value": "[\"Est. Hamilton, Scotland\",\"Terrain\",\"The premier destination for scale trail driving and rock crawling enthusiasts. Join our community for technical precision, engineering, and shared outdoor adventures.\",\"arrow_forward\",\"Current Location\",\"Chatelherault Country Park, Carlisle Rd, Ferniegair, Hamilton ML3 7UE\",\"Surface Type\",\"Compacted Footpath /Loose Stone / Gravel / Mud\",\"Next Meet\",\"This Sunday meeting at 09:00am - 09:30am\"]",
+        "value": "[\"Est. Hamilton, Scotland\",\"Terrain\",\"The premier destination for scale trail driving and rock crawling enthusiasts. Join our community for technical precision, engineering, and shared outdoor adventures.\",\"arrow_forward\",\"Current Location\",\"Chatelherault Country Park, Carlisle Rd, Ferniegair, Hamilton ML3 7UE\",\"Surface Type\",\"Compacted Footpath / Loose Stone / Gravel / Mud\",\"Next Meet\",\"This Sunday meeting at 09:00am - 09:30am\"]",
         "updated_by": "Frazer",
-        "updated_at": "2026-03-29 22:16:12"
+        "updated_at": "2026-03-29 22:40:05"
       },
       {
         "page": "home",
@@ -37,9 +37,9 @@
       "served_by_colo": "LHR",
       "served_by_primary": true,
       "timings": {
-        "sql_duration_ms": 0.223
+        "sql_duration_ms": 0.1801
       },
-      "duration": 0.223,
+      "duration": 0.1801,
       "changes": 0,
       "last_row_id": 0,
       "changed_db": false,
