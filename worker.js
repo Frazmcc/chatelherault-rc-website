@@ -1032,6 +1032,20 @@ async function guardOwnerOnlySiteRoute(request, env) {
   return null
 }
 
+function mapRootPagePath(pathname) {
+  const normalized = pathname.toLowerCase()
+  const pageMap = {
+    '/register-rig': '/pages/register-rig.html',
+    '/register-rig.html': '/pages/register-rig.html',
+    '/members-rigs': '/pages/members-rigs.html',
+    '/members-rigs.html': '/pages/members-rigs.html',
+    '/rig-approvals': '/pages/rig-approvals.html',
+    '/rig-approvals.html': '/pages/rig-approvals.html',
+  }
+
+  return pageMap[normalized] || null
+}
+
 export default {
   async fetch(request, env, executionCtx) {
     const url = new URL(request.url)
@@ -1103,6 +1117,14 @@ export default {
 
     if (ownerOnlyBlockResponse) {
       return ownerOnlyBlockResponse
+    }
+
+    const mappedPath = mapRootPagePath(url.pathname)
+
+    if (mappedPath) {
+      const rewrittenUrl = new URL(request.url)
+      rewrittenUrl.pathname = mappedPath
+      return env.ASSETS.fetch(new Request(rewrittenUrl.toString(), request))
     }
 
     return env.ASSETS.fetch(request)
