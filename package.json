@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server/server.js",
     "create:user": "node scripts/create-user.js",
+    "cf:user-sql": "node scripts/cloudflare-user-sql.js",
     "build": "echo Static site: no build step required",
     "deploy": "echo Deploy is handled by Cloudflare Pages",
     "test": "echo \"No tests configured\""

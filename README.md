@@ -50,6 +50,21 @@ npx serve .
 
 Then open `http://localhost:3000/index.html` (or the port reported by your server).
 
+## Cloudflare deployment with auth
+
+This repo includes Cloudflare Pages Functions auth with D1-backed users.
+
+- Functions are under `functions/`
+- D1 schema is in `migrations/0001_create_users.sql`
+- Wrangler config is in `wrangler.toml`
+- Full walkthrough is in `CLOUDFLARE_SETUP.md`
+
+Admin route protection rules:
+
+- Public: `/admin/login.html`, `/admin/root-login.html`
+- Auth required: all other `/admin/*`
+- Owner role required: `/admin/root-owner.html`, `/admin/godmode.html`, `/admin/root-management.html`
+
 ## Notes
 
 - Primary top-navigation links on public pages are wired to internal HTML routes.
