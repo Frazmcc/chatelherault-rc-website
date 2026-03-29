@@ -190,9 +190,11 @@
       const parsedFields = safeParseJson(storedFields)
       if (Array.isArray(parsedFields)) {
         const nodes = getEditableNodes(panel)
-        const applyCount = Math.min(parsedFields.length, nodes.length)
+        if (parsedFields.length !== nodes.length) {
+          return
+        }
 
-        for (let index = 0; index < applyCount; index += 1) {
+        for (let index = 0; index < parsedFields.length; index += 1) {
           const value = parsedFields[index]
           if (nodes[index]) {
             nodes[index].textContent = String(value)
