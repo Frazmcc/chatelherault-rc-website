@@ -4,23 +4,23 @@
       {
         "page": "home",
         "key": "panel-2-fields",
-        "value": "[\"Next Meet\",\"Sunday Trails\",\"schedule\",\"Arrival Window: 09:00am\",\"rocket_launch\",\"Rollout Target: 09:30am\",\"location_on\",\"Meet Point: Chatelherault Allotments Car Park\",\"grid_3x3\",\"///lively.woes.tinsel\",\"What to Bring\",\"Suggested Checklist\",\"check_circle\",\"(Waterproof trail shoes are popular)\",\"check_circle\",\"check_circle\",\"(not required)\",\"check_circle\",\"check_circle\",\"(not required but recommended)\",\"satellite_alt\",\"Tactical view of the rendezvous point. Look for the technical staging area adjacent to the North Entrance loop.\",\"Coordinates: 55.76278, -4.010164\",\"Open in Google Maps\"]",
+        "value": "[\"Support\",\"Frequently Asked Questions\",\"How do I join a run?\",\"add\",\"All ages and skill groups are welcome at any meet!\",\"What equipment is mandatory?\",\"add\",\"Suitable footwear and waterproofing are highly recommended, given the Scottish climate.\",\"Are there membership fees?\",\"add\",\"Currently, we operate as a community collective. There are no mandatory fees, though we occasionally pool resources for new trails and trail maintenance.\",\"Can I bring a basher?\",\"add\",\"Our primary focus is technical crawling and trailing. High-speed bashers are generally not suitable for our organized trail runs for safety and pace reasons.\"]",
         "updated_by": "Frazer",
-        "updated_at": "2026-03-29 21:44:32"
+        "updated_at": "2026-03-29 21:58:09"
       },
       {
         "page": "home",
         "key": "panel-1-fields",
-        "value": "[\"Chatelherault RC\",\"Trails\",\"Join the collective at Chatelherault Country Park. Our weekly meetups cover technical rock crawling, high-speed trail runs, and relaxed strolls. All ages and skill levels welcome.\"]",
+        "value": "[\"Engineered for Connection\",\"Touch\",\"Whether you're looking to join our next technical climb or have specific questions about chassis setup, the Chatelherault crew is here to help.\",\"Social Frequency\",\"\",\"\",\"groups\"]",
         "updated_by": "Frazer",
-        "updated_at": "2026-03-29 21:43:54"
+        "updated_at": "2026-03-29 21:52:28"
       },
       {
         "page": "home",
         "key": "panel-2-media",
         "value": "https://maps.google.com/maps?q=55.76278,-4.010164&t=k&z=18&ie=UTF8&iwloc=&output=embed",
         "updated_by": "Frazer",
-        "updated_at": "2026-03-29 21:25:17"
+        "updated_at": "2026-03-29 21:44:32"
       },
       {
         "page": "home",
@@ -51,7 +51,7 @@
         "updated_at": "2026-03-29 19:23:27"
       }
     ],
-    "generated_at": "2026-03-29T21:44:32.247Z",
+    "generated_at": "2026-03-29T21:58:09.934Z",
     "source": "cloudflare-d1-live"
   }
 ]
