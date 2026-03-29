@@ -108,6 +108,10 @@
         return false
       }
 
+      if (node.closest('[data-editor-static="true"]')) {
+        return false
+      }
+
       // Keep only leaf text nodes to avoid duplicated parent/child text editing.
       if (node.querySelector(EDITABLE_SELECTOR)) {
         return false
@@ -190,6 +194,9 @@
       const parsedFields = safeParseJson(storedFields)
       if (Array.isArray(parsedFields)) {
         const nodes = getEditableNodes(panel)
+        if (parsedFields.length !== nodes.length) {
+          return
+        }
         parsedFields.forEach((value, index) => {
           if (nodes[index]) {
             nodes[index].textContent = String(value)
