@@ -49,6 +49,10 @@
   trigger.setAttribute('aria-expanded', 'false')
 
   function setMenuState(isLoggedIn, role) {
+    if (approvalsItem) {
+      approvalsItem.href = role === 'owner' ? '/pages/super-user#rig-approvals' : '/pages/rig-approvals.html'
+    }
+
     loginItem?.classList.toggle('hidden', isLoggedIn)
     approvalsItem?.classList.toggle('hidden', !(isLoggedIn && ['owner', 'admin', 'mod'].includes(role)))
     superUserItem?.classList.toggle('hidden', !(isLoggedIn && role === 'owner'))

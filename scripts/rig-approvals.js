@@ -3,6 +3,7 @@
   const statusEl = document.getElementById('rig-approvals-status')
   const refreshButton = document.getElementById('rig-refresh')
   const filterStatus = document.getElementById('rig-filter-status')
+  const isStandaloneApprovalsPage = /^\/pages\/rig-approvals(?:\.html)?$/i.test(window.location.pathname)
 
   if (!listEl || !statusEl || !refreshButton || !filterStatus) {
     return
@@ -101,6 +102,12 @@
 
     const sessionResp = await fetch('/api/session', { credentials: 'include' })
     const sessionPayload = await sessionResp.json().catch(() => ({}))
+
+    if (isStandaloneApprovalsPage && sessionResp.ok && sessionPayload.ok && sessionPayload.role === 'owner') {
+      window.location.replace('/pages/super-user#rig-approvals')
+      return
+    }
+
     if (!sessionResp.ok || !sessionPayload.ok || !['owner', 'admin', 'mod'].includes(sessionPayload.role)) {
       throw new Error('You must be logged in as owner/admin/mod to access approvals.')
     }
