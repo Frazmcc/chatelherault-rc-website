@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server/server.js",
     "create:user": "node scripts/create-user.js",
+    "build": "echo Static site: no build step required",
+    "deploy": "echo Deploy is handled by Cloudflare Pages",
     "test": "echo \"No tests configured\""
   },
   "repository": {
