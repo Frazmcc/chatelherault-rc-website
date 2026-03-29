@@ -1,8 +1,12 @@
 name = "chatelherault-rc-website"
 compatibility_date = "2026-03-29"
-pages_build_output_dir = "."
+main = "worker.js"
+
+[assets]
+directory = "."
+binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "chatelherault_auth"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "1731c3f6-84d0-4c75-bc64-1ee525e10054"

@@ -19,6 +19,9 @@
   menu.setAttribute('aria-label', 'Account menu')
 
   menu.innerHTML = `
+    <a href="/admin/login.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors">
+      Login
+    </a>
     <a href="/admin/index.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors">
       Profile
     </a>
