@@ -1,5 +1,6 @@
 (() => {
   const ALLOWED_ROLES = new Set(['owner', 'admin', 'mod'])
+  const EDITABLE_SELECTOR = 'h1, h2, h3, h4, h5, h6, p, li, a, button, span'
 
   function getPageId() {
     const path = window.location.pathname.toLowerCase()
@@ -9,16 +10,6 @@
     if (path.endsWith('/pages/spotlight.html')) return 'spotlight'
     if (path.endsWith('/pages/contact.html')) return 'contact'
     return path.replace(/[^a-z0-9]+/g, '_')
-  }
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (c) => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;',
-    })[c])
   }
 
   function isValidUrl(url) {
@@ -84,8 +75,9 @@
         </div>
         <div class="p-5 space-y-4">
           <div>
-            <label class="block text-[10px] uppercase tracking-widest text-slate-500 mb-1">Panel HTML</label>
-            <textarea data-panel-html rows="8" class="w-full bg-[#0f1114] border border-white/10 rounded-md px-3 py-2 text-sm text-slate-200"></textarea>
+            <label class="block text-[10px] uppercase tracking-widest text-slate-500 mb-1">Panel Text</label>
+            <p class="text-xs text-slate-500 mb-2">Edit plain text only. No code needed.</p>
+            <div data-panel-fields class="space-y-3"></div>
           </div>
           <div>
             <label class="block text-[10px] uppercase tracking-widest text-slate-500 mb-1">Primary Media URL (optional)</label>
@@ -104,6 +96,46 @@
     return modal
   }
 
+  function getEditableNodes(panel) {
+    const candidates = Array.from(panel.querySelectorAll(EDITABLE_SELECTOR))
+
+    return candidates.filter((node) => {
+      if (node.closest('[data-panel-editor-control]')) {
+        return false
+      }
+
+      if (node.closest('nav')) {
+        return false
+      }
+
+      // Keep only leaf text nodes to avoid duplicated parent/child text editing.
+      if (node.querySelector(EDITABLE_SELECTOR)) {
+        return false
+      }
+
+      const text = (node.textContent || '').trim()
+      return text.length > 0
+    })
+  }
+
+  function getFieldLabel(node, index) {
+    const tag = node.tagName.toLowerCase()
+    const role = tag === 'a' ? 'Link' : tag === 'button' ? 'Button' : 'Text'
+    return `${role} ${index + 1}`
+  }
+
+  function safeParseJson(value) {
+    if (!value) {
+      return null
+    }
+
+    try {
+      return JSON.parse(value)
+    } catch {
+      return null
+    }
+  }
+
   async function init(session) {
     if (!session?.ok || !ALLOWED_ROLES.has(session.role)) {
       return
@@ -118,7 +150,7 @@
     }
 
     const modal = createEditorModal()
-    const htmlField = modal.querySelector('[data-panel-html]')
+    const fieldsContainer = modal.querySelector('[data-panel-fields]')
     const mediaField = modal.querySelector('[data-panel-media]')
     const status = modal.querySelector('[data-panel-status]')
 
@@ -150,13 +182,19 @@
     }
 
     function applyPanelOverrides(panel, panelId) {
-      const htmlKey = `${pageId}::panel-${panelId}-html`
+      const fieldsKey = `${pageId}::panel-${panelId}-fields`
       const mediaKey = `${pageId}::panel-${panelId}-media`
-      const storedHtml = storedByKey[`${pageId}::panel-${panelId}-html`] || storedByKey[htmlKey]
+      const storedFields = storedByKey[`${pageId}::panel-${panelId}-fields`] || storedByKey[fieldsKey]
       const storedMedia = storedByKey[`${pageId}::panel-${panelId}-media`] || storedByKey[mediaKey]
 
-      if (typeof storedHtml === 'string' && storedHtml.length > 0) {
-        panel.innerHTML = storedHtml
+      const parsedFields = safeParseJson(storedFields)
+      if (Array.isArray(parsedFields)) {
+        const nodes = getEditableNodes(panel)
+        parsedFields.forEach((value, index) => {
+          if (nodes[index]) {
+            nodes[index].textContent = String(value)
+          }
+        })
       }
 
       if (typeof storedMedia === 'string' && storedMedia.length > 0) {
@@ -174,6 +212,32 @@
 
     let activePanel = null
     let activePanelId = null
+    let activeNodes = []
+
+    function renderFieldInputs(nodes) {
+      fieldsContainer.innerHTML = ''
+
+      if (!nodes.length) {
+        fieldsContainer.innerHTML = '<p class="text-xs text-slate-500">No editable text found in this panel.</p>'
+        return
+      }
+
+      nodes.forEach((node, index) => {
+        const wrapper = document.createElement('div')
+        wrapper.innerHTML = `
+          <label class="block text-[10px] uppercase tracking-widest text-slate-500 mb-1">${getFieldLabel(node, index)}</label>
+          <textarea data-panel-text-field="${index}" rows="2" class="w-full bg-[#0f1114] border border-white/10 rounded-md px-3 py-2 text-sm text-slate-200"></textarea>
+        `
+        fieldsContainer.appendChild(wrapper)
+
+        const textarea = wrapper.querySelector('textarea')
+        textarea.value = (node.textContent || '').trim()
+      })
+    }
+
+    function collectFieldValues() {
+      return Array.from(fieldsContainer.querySelectorAll('[data-panel-text-field]')).map((input) => input.value)
+    }
 
     async function saveContentValue(key, value) {
       const response = await fetch('/api/content', {
@@ -239,12 +303,12 @@
         return
       }
 
-      const htmlValue = htmlField.value
+      const textValues = collectFieldValues()
       const mediaValue = mediaField.value.trim()
       status.classList.add('hidden')
 
       try {
-        await saveContentValue(`panel-${activePanelId}-html`, htmlValue)
+        await saveContentValue(`panel-${activePanelId}-fields`, JSON.stringify(textValues))
 
         if (mediaValue) {
           if (!isValidUrl(mediaValue)) {
@@ -253,7 +317,12 @@
           await saveContentValue(`panel-${activePanelId}-media`, mediaValue)
         }
 
-        activePanel.innerHTML = htmlValue
+        textValues.forEach((value, index) => {
+          if (activeNodes[index]) {
+            activeNodes[index].textContent = value
+          }
+        })
+
         if (mediaValue) {
           const target = activePanel.querySelector('img, iframe, video source, video')
           if (target) {
@@ -267,7 +336,6 @@
         }
 
         closeModal()
-        init(session)
       } catch (error) {
         status.textContent = error.message || 'Failed to save panel.'
         status.classList.remove('hidden')
@@ -314,11 +382,16 @@
 
       applyPanelOverrides(panel, panelId)
 
+      if (panel.querySelector('[data-panel-editor-control="true"]')) {
+        return
+      }
+
       const button = document.createElement('button')
       button.type = 'button'
       button.className = 'absolute top-2 right-2 z-[180] rounded-sm border border-white/20 bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-200 opacity-35 hover:opacity-100 transition-opacity'
       button.innerHTML = 'edit'
       button.title = 'Edit this panel'
+      button.setAttribute('data-panel-editor-control', 'true')
 
       if (getComputedStyle(panel).position === 'static') {
         panel.style.position = 'relative'
@@ -329,7 +402,8 @@
       button.addEventListener('click', () => {
         activePanel = panel
         activePanelId = panelId
-        htmlField.value = panel.innerHTML
+        activeNodes = getEditableNodes(panel)
+        renderFieldInputs(activeNodes)
 
         const target = panel.querySelector('img, iframe, video source, video')
         mediaField.value = target ? (target.getAttribute('src') || '') : ''
