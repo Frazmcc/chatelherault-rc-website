@@ -3,17 +3,17 @@
     "results": [
       {
         "page": "home",
+        "key": "panel-2-fields",
+        "value": "[\"Next Meet\",\"Sunday Trails\",\"schedule\",\"Arrival Window: 09:00am\",\"rocket_launch\",\"Rollout Target: 09:30am\",\"location_on\",\"Meet Point: Chatelherault Allotments Car Park\",\"grid_3x3\",\"///lively.woes.tinsel\",\"What to Bring\",\"Suggested Checklist\",\"check_circle\",\"(Waterproof trail shoes are popular)\",\"check_circle\",\"check_circle\",\"(not required)\",\"check_circle\",\"check_circle\",\"(not required but recommended)\",\"satellite_alt\",\"Tactical view of the rendezvous point. Look for the technical staging area adjacent to the North Entrance loop.\",\"Coordinates: 55.76278, -4.010164\",\"Open in Google Maps\"]",
+        "updated_by": "Frazer",
+        "updated_at": "2026-03-29 21:44:32"
+      },
+      {
+        "page": "home",
         "key": "panel-1-fields",
         "value": "[\"Chatelherault RC\",\"Trails\",\"Join the collective at Chatelherault Country Park. Our weekly meetups cover technical rock crawling, high-speed trail runs, and relaxed strolls. All ages and skill levels welcome.\"]",
         "updated_by": "Frazer",
         "updated_at": "2026-03-29 21:43:54"
-      },
-      {
-        "page": "home",
-        "key": "panel-2-fields",
-        "value": "[\"Next Meet\",\"Sunday Trails\",\"schedule\",\"Arrival Window: 09:00am\",\"rocket_launch\",\"Rollout Target: 09:30am\",\"location_on\",\"Meet Point: Chatelherault Allotments Car Park\",\"grid_3x3\",\"///lively.woes.tinsel\",\"What to Bring\",\"Operator Checklist\",\"check_circle\",\"(Waterproof trail shoes are popular)\",\"check_circle\",\"check_circle\",\"(not required)\",\"check_circle\",\"check_circle\",\"(not required but recommended)\",\"satellite_alt\",\"Tactical view of the rendezvous point. Look for the technical staging area adjacent to the North Entrance loop.\",\"Coordinates: 55.76278, -4.010164\",\"Open in Google Maps\"]",
-        "updated_by": "Frazer",
-        "updated_at": "2026-03-29 21:25:17"
       },
       {
         "page": "home",
@@ -51,7 +51,7 @@
         "updated_at": "2026-03-29 19:23:27"
       }
     ],
-    "generated_at": "2026-03-29T21:43:54.553Z",
+    "generated_at": "2026-03-29T21:44:32.247Z",
     "source": "cloudflare-d1-live"
   }
 ]
