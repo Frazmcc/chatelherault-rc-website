@@ -19,21 +19,26 @@
   menu.setAttribute('aria-label', 'Account menu')
 
   menu.innerHTML = `
-    <a href="/admin/login.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors">
+    <a data-account-login href="/admin/login.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors border-b border-white/5">
       Login
     </a>
-    <a href="/admin/index.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors">
+    <a data-account-profile href="/admin/index.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors hidden">
       Profile
     </a>
-    <a href="/admin/index.html#account" role="menuitem" class="block px-4 py-3 text-sm text-slate-300 hover:bg-white/5 transition-colors border-t border-white/5">
+    <a data-account-details href="/admin/index.html#account" role="menuitem" class="block px-4 py-3 text-sm text-slate-300 hover:bg-white/5 transition-colors border-t border-white/5 hidden">
       Account Details
     </a>
-    <button type="button" data-account-logout class="w-full text-left px-4 py-3 text-sm text-[#ffb5a0] hover:bg-white/5 transition-colors border-t border-white/5">
+    <button type="button" data-account-logout class="w-full text-left px-4 py-3 text-sm text-[#ffb5a0] hover:bg-white/5 transition-colors border-t border-white/5 hidden">
       Logout
     </button>
   `
 
   document.body.appendChild(menu)
+
+  const loginItem = menu.querySelector('[data-account-login]')
+  const profileItem = menu.querySelector('[data-account-profile]')
+  const detailsItem = menu.querySelector('[data-account-details]')
+  const logoutItem = menu.querySelector('[data-account-logout]')
 
   if (!trigger.hasAttribute('tabindex')) {
     trigger.setAttribute('tabindex', '0')
@@ -42,6 +47,32 @@
   trigger.setAttribute('role', 'button')
   trigger.setAttribute('aria-haspopup', 'menu')
   trigger.setAttribute('aria-expanded', 'false')
+
+  function setMenuState(isLoggedIn) {
+    loginItem?.classList.toggle('hidden', isLoggedIn)
+    profileItem?.classList.toggle('hidden', !isLoggedIn)
+    detailsItem?.classList.toggle('hidden', !isLoggedIn)
+    logoutItem?.classList.toggle('hidden', !isLoggedIn)
+  }
+
+  async function loadSessionState() {
+    try {
+      const response = await fetch('/api/session', {
+        method: 'GET',
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        setMenuState(false)
+        return
+      }
+
+      const payload = await response.json()
+      setMenuState(Boolean(payload?.ok))
+    } catch {
+      setMenuState(false)
+    }
+  }
 
   function positionMenu() {
     const rect = trigger.getBoundingClientRect()
@@ -126,4 +157,7 @@
       closeMenu()
     }
   })
+
+  setMenuState(false)
+  loadSessionState()
 })()

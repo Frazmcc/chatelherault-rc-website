@@ -97,6 +97,25 @@ function handleLogout() {
   })
 }
 
+async function handleSession(request, env) {
+  const cookies = parseCookies(request.headers.get('cookie') || '')
+  const token = cookies[getSessionCookieName()]
+
+  if (!token) {
+    return json({ ok: false }, { status: 401 })
+  }
+
+  const session = await verifySessionToken(token, env)
+
+  if (!session) {
+    const headers = new Headers()
+    headers.append('set-cookie', buildClearedSessionCookie())
+    return json({ ok: false }, { status: 401, headers })
+  }
+
+  return json({ ok: true, username: session.username, role: session.role })
+}
+
 async function guardAdminRoute(request, env) {
   const url = new URL(request.url)
   const path = url.pathname.toLowerCase()
@@ -139,6 +158,10 @@ export default {
 
     if (url.pathname === '/api/logout' && request.method === 'POST') {
       return handleLogout()
+    }
+
+    if (url.pathname === '/api/session' && request.method === 'GET') {
+      return handleSession(request, env)
     }
 
     const adminBlockResponse = await guardAdminRoute(request, env)
