@@ -3,17 +3,17 @@
     "results": [
       {
         "page": "home",
+        "key": "panel-1-fields",
+        "value": "[\"Est. Hamilton, Scotland\",\"Terrain\",\"The premier destination for scale trail driving and rock crawling enthusiasts. Join our community for technical precision, engineering, and shared outdoor adventures.\",\"arrow_forward\",\"Current Location\",\"Hamilton / ML3\",\"Surface Type\",\"Loose Stone / Gravel / Mud\",\"Next Event\",\"This Sunday meeting 09:00 AM - 09:30 AM\"]",
+        "updated_by": "Frazer",
+        "updated_at": "2026-03-29 22:02:38"
+      },
+      {
+        "page": "home",
         "key": "panel-2-fields",
         "value": "[\"Support\",\"Frequently Asked Questions\",\"How do I join a run?\",\"add\",\"All ages and skill groups are welcome at any meet!\",\"What equipment is mandatory?\",\"add\",\"Suitable footwear and waterproofing are highly recommended, given the Scottish climate.\",\"Are there membership fees?\",\"add\",\"Currently, we operate as a community collective. There are no mandatory fees, though we occasionally pool resources for new trails and trail maintenance.\",\"Can I bring a basher?\",\"add\",\"Our primary focus is technical crawling and trailing. High-speed bashers are generally not suitable for our organized trail runs for safety and pace reasons.\"]",
         "updated_by": "Frazer",
         "updated_at": "2026-03-29 21:58:09"
-      },
-      {
-        "page": "home",
-        "key": "panel-1-fields",
-        "value": "[\"Engineered for Connection\",\"Touch\",\"Whether you're looking to join our next technical climb or have specific questions about chassis setup, the Chatelherault crew is here to help.\",\"Social Frequency\",\"\",\"\",\"groups\"]",
-        "updated_by": "Frazer",
-        "updated_at": "2026-03-29 21:52:28"
       },
       {
         "page": "home",
@@ -51,7 +51,7 @@
         "updated_at": "2026-03-29 19:23:27"
       }
     ],
-    "generated_at": "2026-03-29T21:58:09.934Z",
+    "generated_at": "2026-03-29T22:02:38.386Z",
     "source": "cloudflare-d1-live"
   }
 ]
