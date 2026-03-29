@@ -359,11 +359,11 @@
           throw new Error('No Met Office forecast entries available yet for that Sunday window.')
         }
 
-        // Hourly: prefer the trail window. Fallback modes: keep full day.
-        let rowsToRender = entries
-        if (payload.resolution === 'hourly') {
-          const windowRows = entries.filter((entry) => entry.hour >= 9 && entry.hour <= 13)
-          rowsToRender = windowRows.length ? windowRows : entries
+        // Always show the trail window only: Sunday 09:00 to 13:00.
+        const rowsToRender = entries.filter((entry) => entry.hour >= 9 && entry.hour <= 13)
+
+        if (!rowsToRender.length) {
+          throw new Error('No forecast entries are available for Sunday 09:00 to 13:00 yet.')
         }
 
         const resolutionLabel = formatResolutionLabel(payload.resolution)
