@@ -112,6 +112,18 @@ async function syncLiveEditsToGit(env, meta = {}) {
     ).all(),
   ])
 
+  let rigRows = { results: [] }
+
+  try {
+    rigRows = await env.DB.prepare(
+      `SELECT id, owner_name, chassis_model, battery, upgrades, blog_text, media_items, status, submitted_at, reviewed_by, reviewed_at, review_note
+       FROM rig_submissions
+       ORDER BY datetime(submitted_at) DESC`
+    ).all()
+  } catch {
+    // Table may not exist yet in older deployments.
+  }
+
   const contentSnapshot = JSON.stringify(
     [
       {
@@ -136,6 +148,40 @@ async function syncLiveEditsToGit(env, meta = {}) {
     2
   )
 
+  const rigSnapshotRows = (rigRows.results || []).map((row) => {
+    let media = []
+
+    try {
+      const parsed = JSON.parse(row.media_items || '[]')
+      media = Array.isArray(parsed)
+        ? parsed.map((item) => ({
+            name: item?.name || '',
+            type: item?.type || '',
+            size: item?.size || 0,
+          }))
+        : []
+    } catch {
+      media = []
+    }
+
+    return {
+      ...row,
+      media_items: media,
+    }
+  })
+
+  const rigSnapshot = JSON.stringify(
+    [
+      {
+        results: rigSnapshotRows,
+        generated_at: new Date().toISOString(),
+        source: 'cloudflare-d1-live',
+      },
+    ],
+    null,
+    2
+  )
+
   const actor = meta.actor || 'unknown'
   const operation = meta.operation || 'edit'
   const pageOrScope = meta.scope || 'site'
@@ -144,7 +190,197 @@ async function syncLiveEditsToGit(env, meta = {}) {
   await Promise.all([
     upsertRepoFile(env, 'data/live-content-overrides.json', contentSnapshot, message, branch),
     upsertRepoFile(env, 'data/live-media-overrides.json', mediaSnapshot, message, branch),
+    upsertRepoFile(env, 'data/live-rig-submissions.json', rigSnapshot, message, branch),
   ])
+}
+
+function encodeArrayBufferBase64(buffer) {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  }
+
+  return btoa(binary)
+}
+
+async function ensureRigSubmissionTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS rig_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      owner_name TEXT NOT NULL,
+      chassis_model TEXT NOT NULL,
+      battery TEXT,
+      upgrades TEXT,
+      blog_text TEXT,
+      media_items TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+      submitted_by_ip TEXT,
+      reviewed_by TEXT,
+      reviewed_at TEXT,
+      review_note TEXT
+    )`
+  ).run()
+}
+
+async function handleCreateRigSubmission(request, env, executionCtx) {
+  await ensureRigSubmissionTable(env)
+
+  const form = await request.formData()
+  const ownerName = String(form.get('owner') || '').trim()
+  const chassisModel = String(form.get('chassisModel') || '').trim()
+  const battery = String(form.get('battery') || '').trim()
+  const upgrades = String(form.get('upgrades') || '').trim()
+  const blogText = String(form.get('blog') || '').trim()
+
+  if (!ownerName || !chassisModel || !blogText) {
+    return json({ ok: false, message: 'Owner, Chassis/Model, and Blog are required.' }, { status: 400 })
+  }
+
+  const files = form.getAll('media').filter((entry) => entry instanceof File)
+
+  if (files.length > 8) {
+    return json({ ok: false, message: 'Maximum of 8 media files per submission.' }, { status: 400 })
+  }
+
+  const mediaItems = []
+  let totalBytes = 0
+
+  for (const file of files) {
+    if (!file.size) {
+      continue
+    }
+
+    if (!String(file.type).startsWith('image/') && !String(file.type).startsWith('video/')) {
+      return json({ ok: false, message: `Unsupported media type: ${file.type || 'unknown'}` }, { status: 400 })
+    }
+
+    totalBytes += Number(file.size)
+
+    if (totalBytes > 25 * 1024 * 1024) {
+      return json({ ok: false, message: 'Combined media payload is too large. Keep total under 25MB.' }, { status: 413 })
+    }
+
+    const buffer = await file.arrayBuffer()
+    const base64 = encodeArrayBufferBase64(buffer)
+
+    mediaItems.push({
+      name: file.name,
+      type: file.type || 'application/octet-stream',
+      size: file.size,
+      dataUrl: `data:${file.type || 'application/octet-stream'};base64,${base64}`,
+    })
+  }
+
+  const result = await env.DB.prepare(
+    `INSERT INTO rig_submissions (owner_name, chassis_model, battery, upgrades, blog_text, media_items, status, submitted_by_ip)
+     VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
+  )
+    .bind(
+      ownerName,
+      chassisModel,
+      battery,
+      upgrades,
+      blogText,
+      JSON.stringify(mediaItems),
+      request.headers.get('cf-connecting-ip') || ''
+    )
+    .run()
+
+  const syncJob = syncLiveEditsToGit(env, {
+    actor: ownerName,
+    operation: 'rig submission',
+    scope: 'rigs',
+  }).catch((error) => console.error('Git sync failed after rig submission:', error))
+
+  if (executionCtx?.waitUntil) {
+    executionCtx.waitUntil(syncJob)
+  }
+
+  return json({ ok: true, id: result.meta.last_row_id, status: 'pending' })
+}
+
+async function handleListRigSubmissions(request, env) {
+  await ensureRigSubmissionTable(env)
+
+  const session = await getSession(request, env)
+  if (!hasRole(session, 'owner', 'admin', 'mod')) {
+    return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
+  }
+
+  const status = new URL(request.url).searchParams.get('status')
+  const allowedStatuses = new Set(['pending', 'approved', 'rejected'])
+
+  const query = status && allowedStatuses.has(status)
+    ? env.DB.prepare(
+        `SELECT id, owner_name, chassis_model, battery, upgrades, blog_text, media_items, status, submitted_at, reviewed_by, reviewed_at, review_note
+         FROM rig_submissions
+         WHERE status = ?
+         ORDER BY datetime(submitted_at) DESC`
+      ).bind(status)
+    : env.DB.prepare(
+        `SELECT id, owner_name, chassis_model, battery, upgrades, blog_text, media_items, status, submitted_at, reviewed_by, reviewed_at, review_note
+         FROM rig_submissions
+         ORDER BY datetime(submitted_at) DESC`
+      )
+
+  const { results } = await query.all()
+  return json({ ok: true, submissions: results || [] })
+}
+
+async function handleRigSubmissionDecision(request, env, executionCtx) {
+  await ensureRigSubmissionTable(env)
+
+  const session = await getSession(request, env)
+  if (!hasRole(session, 'owner', 'admin', 'mod')) {
+    return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
+  }
+
+  const id = Number.parseInt(new URL(request.url).pathname.split('/').slice(-2)[0], 10)
+  if (!Number.isFinite(id) || id <= 0) {
+    return json({ ok: false, message: 'Invalid submission id.' }, { status: 400 })
+  }
+
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 })
+  }
+
+  const decision = String(body?.decision || '').toLowerCase()
+  const reviewNote = String(body?.note || '').trim()
+
+  if (!['approved', 'rejected'].includes(decision)) {
+    return json({ ok: false, message: 'Decision must be approved or rejected.' }, { status: 400 })
+  }
+
+  const existing = await env.DB.prepare(`SELECT id FROM rig_submissions WHERE id = ?`).bind(id).first()
+  if (!existing) {
+    return json({ ok: false, message: 'Submission not found.' }, { status: 404 })
+  }
+
+  await env.DB.prepare(
+    `UPDATE rig_submissions
+     SET status = ?, reviewed_by = ?, reviewed_at = datetime('now'), review_note = ?
+     WHERE id = ?`
+  )
+    .bind(decision, session.username, reviewNote, id)
+    .run()
+
+  const syncJob = syncLiveEditsToGit(env, {
+    actor: session.username,
+    operation: `rig ${decision}`,
+    scope: 'rigs',
+  }).catch((error) => console.error('Git sync failed after rig review:', error))
+
+  if (executionCtx?.waitUntil) {
+    executionCtx.waitUntil(syncJob)
+  }
+
+  return json({ ok: true })
 }
 
 function redirect(location, clearSession = false) {
@@ -809,6 +1045,18 @@ export default {
 
     if (url.pathname === '/api/facebook-group-members' && request.method === 'GET') {
       return handleFacebookGroupMembers(request)
+    }
+
+    if (url.pathname === '/api/rig-submissions' && request.method === 'POST') {
+      return handleCreateRigSubmission(request, env, executionCtx)
+    }
+
+    if (url.pathname === '/api/rig-submissions' && request.method === 'GET') {
+      return handleListRigSubmissions(request, env)
+    }
+
+    if (/^\/api\/rig-submissions\/\d+\/decision$/.test(url.pathname) && request.method === 'POST') {
+      return handleRigSubmissionDecision(request, env, executionCtx)
     }
 
     // User management (owner only)

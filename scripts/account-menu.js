@@ -22,6 +22,9 @@
     <a data-account-login href="/admin/login.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors border-b border-white/5">
       Edit Login
     </a>
+    <a data-account-rig-approvals href="/pages/rig-approvals.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors hidden">
+      Rig Approvals
+    </a>
     <a data-account-superuser href="/pages/super-user" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors hidden">
       Super User
     </a>
@@ -33,6 +36,7 @@
   document.body.appendChild(menu)
 
   const loginItem = menu.querySelector('[data-account-login]')
+  const approvalsItem = menu.querySelector('[data-account-rig-approvals]')
   const superUserItem = menu.querySelector('[data-account-superuser]')
   const logoutItem = menu.querySelector('[data-account-logout]')
 
@@ -46,6 +50,7 @@
 
   function setMenuState(isLoggedIn, role) {
     loginItem?.classList.toggle('hidden', isLoggedIn)
+    approvalsItem?.classList.toggle('hidden', !(isLoggedIn && ['owner', 'admin', 'mod'].includes(role)))
     superUserItem?.classList.toggle('hidden', !(isLoggedIn && role === 'owner'))
     logoutItem?.classList.toggle('hidden', !isLoggedIn)
   }
