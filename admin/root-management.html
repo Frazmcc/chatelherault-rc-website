@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed-dim": "#ffb5a0",
+              "on-secondary": "#243239",
+              "on-secondary-container": "#abbbc4",
+              "surface-dim": "#121416",
+              "on-tertiary": "#601500",
+              "inverse-surface": "#e2e2e5",
+              "secondary-fixed": "#d5e5ee",
+              "outline": "#8c928c",
+              "on-primary-fixed": "#072012",
+              "surface": "#121416",
+              "surface-container-low": "#1a1c1e",
+              "on-secondary-fixed-variant": "#3a4950",
+              "secondary": "#b9c9d2",
+              "on-primary-container": "#97b39e",
+              "surface-container": "#1e2022",
+              "inverse-on-surface": "#2f3133",
+              "surface-variant": "#333537",
+              "surface-container-highest": "#333537",
+              "secondary-container": "#3c4b53",
+              "surface-tint": "#b1ceb7",
+              "on-error": "#690005",
+              "tertiary-container": "#7c1e00",
+              "outline-variant": "#424843",
+              "secondary-fixed-dim": "#b9c9d2",
+              "primary-fixed-dim": "#b1ceb7",
+              "on-surface-variant": "#c2c8c1",
+              "on-surface": "#e2e2e5",
+              "on-primary-fixed-variant": "#334c3b",
+              "on-tertiary-fixed-variant": "#862201",
+              "primary": "#b1ceb7",
+              "primary-fixed": "#ccead2",
+              "surface-bright": "#37393b",
+              "surface-container-lowest": "#0c0e10",
+              "surface-container-high": "#282a2c",
+              "error": "#ffb4ab",
+              "tertiary-fixed": "#ffdbd1",
+              "background": "#121416",
+              "primary-container": "#2d4635",
+              "error-container": "#93000a",
+              "on-tertiary-fixed": "#3b0900",
+              "on-tertiary-container": "#ff8d6d",
+              "tertiary": "#ffb5a0",
+              "on-primary": "#1d3626",
+              "inverse-primary": "#4a6452",
+              "on-background": "#e2e2e5",
+              "on-secondary-fixed": "#0f1d24",
+              "on-error-container": "#ffdad6"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', sans-serif; }
+        .terminal-text { font-family: 'Inter', monospace; }
+    </style>
+</head>
+<body class="bg-background text-on-background selection:bg-tertiary selection:text-on-tertiary overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full border-b-0 bg-[#121416]/70 backdrop-blur-xl z-50 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold tracking-widest text-slate-100 font-['Space_Grotesk'] tracking-tighter uppercase">CHATELHERAULT RC</span>
+<div class="h-4 w-[1px] bg-slate-800/20 mx-2"></div>
+<span class="text-[10px] font-['Inter'] uppercase tracking-widest text-orange-500 font-bold">KERNEL V2.0.4</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-400 hover:bg-slate-800/50 transition-colors p-2 cursor-pointer active:scale-95 duration-75">security</span>
+<span class="material-symbols-outlined text-slate-400 hover:bg-slate-800/50 transition-colors p-2 cursor-pointer active:scale-95 duration-75">terminal</span>
+</div>
+<button class="bg-tertiary text-on-tertiary px-4 py-1.5 text-[11px] font-bold tracking-widest rounded-sm hover:bg-surface-bright transition-colors uppercase active:scale-95 duration-75">
+                ADMIN MODE
+            </button>
+<div class="w-8 h-8 rounded-sm bg-surface-container-high overflow-hidden border border-outline-variant/20">
+<img alt="Admin Avatar" class="w-full h-full object-cover" data-alt="Close up portrait of a professional system administrator in a dark tech environment with blue ambient light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgVk4qKVvSDIOmIh-f_zu4Hj2Jkh9nwH3AuWldm5oWWKoPAAwSHknbOAOgKybHDFZ-AfGjNe6uYwIdUl33ZlmjoYIO0AjiSNDtsfLEC-P3jhHW13zxcG7GLC9yOQ0mi9bpzOjrK5yQzKYVwnR3g9Ps7MQV2CPVr4tnWMAFooGxlNS96hSfjaC9FBJgZE5pcEvHcurl4SVVW6MCLaacDFmKsus81EV7cc5wpeuLDnPMWEVks2PY7kSRDoSutRhCI64XJoCx3_L8JdU"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full flex flex-col bg-[#1a1c1e] h-screen w-64 border-r-0 z-40 pt-20">
+<div class="px-6 py-4 border-b border-[#282a2c]">
+<h2 class="text-slate-200 font-black font-['Inter'] uppercase tracking-[0.05em] text-[10px]">SYSTEM ROOT</h2>
+<p class="text-orange-500 font-['Inter'] uppercase tracking-[0.05em] text-[10px] opacity-70">V2.0.4-STABLE</p>
+</div>
+<nav class="flex-1 mt-4">
+<a class="flex items-center gap-3 bg-[#282a2c] text-orange-500 border-l-2 border-orange-500 px-4 py-3 font-['Inter'] uppercase tracking-[0.05em] text-[10px] transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 px-4 py-3 font-['Inter'] uppercase tracking-[0.05em] text-[10px] hover:text-slate-200 hover:bg-[#37393b]/30 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">memory</span>
+<span>Node Control</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 px-4 py-3 font-['Inter'] uppercase tracking-[0.05em] text-[10px] hover:text-slate-200 hover:bg-[#37393b]/30 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Telemetry</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 px-4 py-3 font-['Inter'] uppercase tracking-[0.05em] text-[10px] hover:text-slate-200 hover:bg-[#37393b]/30 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Log Files</span>
+</a>
+<a class="flex items-center gap-3 text-slate-500 px-4 py-3 font-['Inter'] uppercase tracking-[0.05em] text-[10px] hover:text-slate-200 hover:bg-[#37393b]/30 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">lock</span>
+<span>Security</span>
+</a>
+</nav>
+<div class="p-6">
+<button class="w-full bg-error-container text-on-error-container py-3 text-[10px] font-black tracking-widest uppercase rounded-sm active:scale-95 duration-75">
+                EMERGENCY STOP
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 pb-12 px-8 min-h-screen flex flex-col">
+<!-- Header Section -->
+<section class="mb-10 grid grid-cols-12 gap-6 items-end">
+<div class="col-span-8">
+<h1 class="text-5xl font-['Space_Grotesk'] font-bold tracking-tighter text-on-surface mb-2 uppercase">Root Management</h1>
+<p class="text-on-surface-variant font-body max-w-xl">Centralized kernel orchestration for the Chatelherault RC platform. All modifications are logged and mirrored to the secondary security node.</p>
+</div>
+<div class="col-span-4 flex justify-end">
+<div class="bg-surface-container-low p-4 rounded-sm border-l-2 border-primary">
+<div class="text-[10px] font-label uppercase tracking-widest text-primary mb-1">System Uptime</div>
+<div class="text-2xl font-headline font-bold text-on-surface">142:12:04:44</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Dashboard -->
+<div class="grid grid-cols-12 gap-6 flex-1">
+<!-- Section: Hard-coded Credentials -->
+<section class="col-span-12 lg:col-span-7 bg-surface-container-low rounded-lg overflow-hidden flex flex-col">
+<div class="p-6 border-b border-surface-container-highest flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">key</span>
+<h3 class="font-headline text-lg font-bold uppercase tracking-tight">Hard-coded Credentials</h3>
+</div>
+<button class="text-[10px] font-label font-bold text-tertiary border border-tertiary/20 px-3 py-1 rounded-sm hover:bg-tertiary/10 transition-colors uppercase">Generate New Key</button>
+</div>
+<div class="p-6 space-y-4">
+<!-- Credential Item -->
+<div class="bg-surface-container-high p-4 rounded-sm border-l-4 border-slate-700 flex items-center justify-between">
+<div>
+<div class="text-[10px] font-label text-slate-500 uppercase tracking-widest">Master Root Access</div>
+<div class="text-sm font-['Inter'] text-on-surface mt-1 terminal-text">CR-XXXX-ROOT-001</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-label text-primary bg-primary-container px-2 py-0.5 rounded-full">ACTIVE</span>
+<button class="material-symbols-outlined text-slate-500 hover:text-white transition-colors">visibility</button>
+<button class="material-symbols-outlined text-slate-500 hover:text-white transition-colors">settings</button>
+</div>
+</div>
+<!-- Credential Item -->
+<div class="bg-surface-container-high p-4 rounded-sm border-l-4 border-slate-700 flex items-center justify-between">
+<div>
+<div class="text-[10px] font-label text-slate-500 uppercase tracking-widest">Service Worker Alpha</div>
+<div class="text-sm font-['Inter'] text-on-surface mt-1 terminal-text">SRV-ALPHA-AUTH-KEY-8821</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-label text-primary bg-primary-container px-2 py-0.5 rounded-full">ACTIVE</span>
+<button class="material-symbols-outlined text-slate-500 hover:text-white transition-colors">visibility</button>
+<button class="material-symbols-outlined text-slate-500 hover:text-white transition-colors">settings</button>
+</div>
+</div>
+<!-- Credential Item -->
+<div class="bg-surface-container-high p-4 rounded-sm border-l-4 border-slate-700 flex items-center justify-between">
+<div>
+<div class="text-[10px] font-label text-slate-500 uppercase tracking-widest">Legacy API Endpoint</div>
+<div class="text-sm font-['Inter'] text-slate-400 mt-1 terminal-text">API-LEGACY-SEC-BYPASS</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-label text-tertiary bg-tertiary-container px-2 py-0.5 rounded-full">DEPRECATED</span>
+<button class="material-symbols-outlined text-slate-500 hover:text-white transition-colors">visibility</button>
+<button class="material-symbols-outlined text-slate-500 hover:text-white transition-colors">delete</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Core Site Permissions -->
+<section class="col-span-12 lg:col-span-5 bg-surface-container-low rounded-lg p-6">
+<div class="flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary">rule</span>
+<h3 class="font-headline text-lg font-bold uppercase tracking-tight">Core Site Permissions</h3>
+</div>
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold text-on-surface uppercase tracking-tight">Public Node Discovery</p>
+<p class="text-[11px] text-on-surface-variant max-w-[240px]">Allow external entities to find this unit on the local mesh.</p>
+</div>
+<div class="w-12 h-6 bg-primary-container rounded-full relative p-1 cursor-pointer">
+<div class="w-4 h-4 bg-primary rounded-full ml-auto"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold text-on-surface uppercase tracking-tight">Telemetry Mirroring</p>
+<p class="text-[11px] text-on-surface-variant max-w-[240px]">Stream all sensor data to the cloud dashboard.</p>
+</div>
+<div class="w-12 h-6 bg-primary-container rounded-full relative p-1 cursor-pointer">
+<div class="w-4 h-4 bg-primary rounded-full ml-auto"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold text-on-surface uppercase tracking-tight">Auto-Recovery KERNEL</p>
+<p class="text-[11px] text-on-surface-variant max-w-[240px]">Force system reboot on process failure.</p>
+</div>
+<div class="w-12 h-6 bg-surface-container-highest rounded-full relative p-1 cursor-pointer">
+<div class="w-4 h-4 bg-on-surface-variant rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold text-tertiary uppercase tracking-tight">Override Safe Limits</p>
+<p class="text-[11px] text-on-surface-variant max-w-[240px]">Bypass torque and thermal safety dampeners.</p>
+</div>
+<div class="w-12 h-6 bg-surface-container-highest rounded-full relative p-1 cursor-pointer">
+<div class="w-4 h-4 bg-on-surface-variant rounded-full"></div>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-8 border-t border-surface-container-highest">
+<div class="bg-primary/5 p-4 rounded-sm flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-sm">info</span>
+<p class="text-[10px] text-primary font-label uppercase leading-relaxed">Changes to core permissions require a secondary handshake from the telemetry node before taking effect.</p>
+</div>
+</div>
+</section>
+<!-- Section: System Audit Log -->
+<section class="col-span-12 bg-surface-container-low rounded-lg overflow-hidden">
+<div class="p-6 border-b border-surface-container-highest flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400">history_edu</span>
+<h3 class="font-headline text-lg font-bold uppercase tracking-tight">System Audit Log</h3>
+</div>
+<div class="flex gap-4">
+<input class="bg-surface-container-high border-none text-[10px] font-label p-2 w-48 focus:ring-1 focus:ring-primary rounded-sm uppercase" placeholder="FILTER LOGS..." type="text"/>
+<button class="bg-surface-container-high p-2 rounded-sm hover:bg-surface-bright"><span class="material-symbols-outlined text-sm">download</span></button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-highest">
+<th class="px-6 py-3 text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Timestamp</th>
+<th class="px-6 py-3 text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Actor</th>
+<th class="px-6 py-3 text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Action</th>
+<th class="px-6 py-3 text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Status</th>
+<th class="px-6 py-3 text-[10px] font-label text-on-surface-variant uppercase tracking-widest text-right">Node</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-highest">
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4 text-[11px] terminal-text text-slate-400">2024-05-24 14:02:11</td>
+<td class="px-6 py-4 text-xs font-bold text-on-surface">SYS_ROOT</td>
+<td class="px-6 py-4 text-xs text-on-surface-variant">Update Credentials: CR-XXXX-ROOT-001</td>
+<td class="px-6 py-4"><span class="text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded-sm">SUCCESS</span></td>
+<td class="px-6 py-4 text-[11px] terminal-text text-right text-slate-400">CH-01</td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4 text-[11px] terminal-text text-slate-400">2024-05-24 13:58:45</td>
+<td class="px-6 py-4 text-xs font-bold text-on-surface">ADMIN_J_CHALMERS</td>
+<td class="px-6 py-4 text-xs text-on-surface-variant">Enable: Telemetry Mirroring</td>
+<td class="px-6 py-4"><span class="text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded-sm">SUCCESS</span></td>
+<td class="px-6 py-4 text-[11px] terminal-text text-right text-slate-400">WEB_IF</td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4 text-[11px] terminal-text text-slate-400">2024-05-24 13:45:02</td>
+<td class="px-6 py-4 text-xs font-bold text-on-surface">NODE_LOCAL</td>
+<td class="px-6 py-4 text-xs text-on-surface-variant">Auth Attempt: Deprecated Key SRV-004</td>
+<td class="px-6 py-4"><span class="text-[9px] font-bold text-error border border-error/20 px-2 py-0.5 rounded-sm">BLOCKED</span></td>
+<td class="px-6 py-4 text-[11px] terminal-text text-right text-slate-400">ETH_PORT_A</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<footer class="flex justify-between items-center px-8 w-full mt-auto pt-12 pb-4">
+<div class="text-slate-600 font-['Inter'] text-[10px] tracking-widest uppercase">
+                © 2024 CHATELHERAULT RC - KERNEL V2.0.4
+            </div>
+<div class="flex gap-8">
+<a class="text-slate-600 font-['Inter'] text-[10px] tracking-widest uppercase hover:text-slate-300 transition-opacity" href="#">System Status</a>
+<a class="text-slate-600 font-['Inter'] text-[10px] tracking-widest uppercase hover:text-slate-300 transition-opacity" href="#">Documentation</a>
+<a class="text-orange-500 font-['Inter'] text-[10px] tracking-widest uppercase hover:text-slate-300 transition-opacity" href="#">Auth Logs</a>
+</div>
+</footer>
+</main>
+<!-- Visual Polish: Accent Gradients & HUD elements -->
+<div class="fixed top-0 right-0 w-1/2 h-screen pointer-events-none z-[-1] opacity-20">
+<div class="w-full h-full bg-gradient-to-bl from-tertiary/20 via-transparent to-transparent"></div>
+</div>
+<div class="fixed bottom-0 left-64 right-0 h-[1px] bg-gradient-to-r from-slate-800/50 via-slate-700/50 to-slate-800/50"></div>
+</body></html>

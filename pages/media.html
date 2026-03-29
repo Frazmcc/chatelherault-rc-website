@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Media Gallery | Chatelherault RC</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-surface": "#e2e2e5",
+            "tertiary-container": "#7c1e00",
+            "on-tertiary-container": "#ff8d6d",
+            "on-primary": "#1d3626",
+            "on-primary-container": "#97b39e",
+            "secondary-fixed": "#d5e5ee",
+            "surface-container-high": "#282a2c",
+            "outline-variant": "#424843",
+            "inverse-on-surface": "#2f3133",
+            "surface-container-highest": "#333537",
+            "surface-container-low": "#1a1c1e",
+            "on-secondary-fixed": "#0f1d24",
+            "primary-fixed": "#ccead2",
+            "primary-fixed-dim": "#b1ceb7",
+            "on-background": "#e2e2e5",
+            "secondary-container": "#3c4b53",
+            "on-error": "#690005",
+            "primary-container": "#2d4635",
+            "on-tertiary-fixed-variant": "#862201",
+            "on-surface-variant": "#c2c8c1",
+            "secondary": "#b9c9d2",
+            "on-tertiary": "#601500",
+            "on-secondary": "#243239",
+            "surface-container-lowest": "#0c0e10",
+            "surface-container": "#1e2022",
+            "on-secondary-fixed-variant": "#3a4950",
+            "on-primary-fixed-variant": "#334c3b",
+            "tertiary-fixed": "#ffdbd1",
+            "surface-bright": "#37393b",
+            "tertiary": "#ffb5a0",
+            "on-primary-fixed": "#072012",
+            "error-container": "#93000a",
+            "tertiary-fixed-dim": "#ffb5a0",
+            "on-tertiary-fixed": "#3b0900",
+            "on-error-container": "#ffdad6",
+            "surface-dim": "#121416",
+            "surface": "#121416",
+            "surface-variant": "#333537",
+            "outline": "#8c928c",
+            "surface-tint": "#b1ceb7",
+            "on-secondary-container": "#abbbc4",
+            "secondary-fixed-dim": "#b9c9d2",
+            "inverse-primary": "#4a6452",
+            "inverse-surface": "#e2e2e5",
+            "background": "#121416",
+            "error": "#ffb4ab",
+            "primary": "#b1ceb7"
+          },
+          fontFamily: {
+            "headline": ["Space Grotesk"],
+            "body": ["Manrope"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .masonry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-auto-rows: 200px;
+      gap: 1.5rem;
+    }
+    .masonry-item-tall { grid-row: span 2; }
+    .masonry-item-wide { grid-column: span 2; }
+    .reel-scroll::-webkit-scrollbar {
+      height: 4px;
+    }
+    .reel-scroll::-webkit-scrollbar-track {
+      background: #1e2022;
+    }
+    .reel-scroll::-webkit-scrollbar-thumb {
+      background: #ffb5a0;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-tertiary selection:text-on-tertiary">
+<!-- TopNavBar (Shared Component) -->
+<nav class="fixed top-0 w-full z-50 bg-[#121416]/70 backdrop-blur-xl bg-gradient-to-b from-[#1a1c1e] to-transparent shadow-none h-20">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-6 h-full">
+<div class="text-2xl font-bold tracking-tighter text-slate-100 font-headline uppercase">
+        Chatelherault RC
+      </div>
+<!-- Desktop Navigation -->
+<div class="hidden md:flex items-center space-x-8 font-headline tracking-tight uppercase text-sm">
+<a class="text-slate-400 hover:text-slate-100 transition-colors active:scale-95 duration-200" href="../index.html">Home</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors active:scale-95 duration-200" href="meetups.html">Meetups</a>
+<!-- Active State: Media page -->
+<a class="text-[#d97706] border-b-2 border-[#d97706] pb-1 active:scale-95 duration-200" href="media.html">Media</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors active:scale-95 duration-200" href="spotlight.html">Spotlight</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors active:scale-95 duration-200" href="contact.html">Contact</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-slate-400 hover:text-slate-100 p-2 rounded-full hover:bg-white/5 transition-colors">account_circle</button>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="pt-32 pb-16 px-6 max-w-7xl mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end">
+<div class="md:col-span-8">
+<span class="font-label text-tertiary text-xs tracking-[0.2em] uppercase mb-4 block">Visual Archives</span>
+<h1 class="font-headline text-5xl md:text-7xl font-bold tracking-tighter uppercase leading-none">
+          Terrain <br/><span class="text-outline">Captured</span>
+</h1>
+</div>
+<div class="md:col-span-4 pb-2">
+<p class="text-on-surface-variant font-body text-lg border-l-2 border-primary-container pl-6 leading-relaxed">
+          From the deep mud of the lowlands to the jagged peaks of the ridges. Explore our digital collection of engineered dominance.
+        </p>
+</div>
+</div>
+</header>
+<!-- Sunday Reel Section (New) -->
+<section class="mb-24 px-6 overflow-hidden">
+<div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
+<div>
+<span class="font-label text-tertiary text-[10px] tracking-widest uppercase mb-2 block">Latest Expedition</span>
+<h2 class="font-headline text-4xl font-bold uppercase tracking-tight">Sunday Reel</h2>
+<p class="text-on-surface-variant font-body text-sm mt-1">October 27 Meetup • High Glen Trail • 24 Captures</p>
+</div>
+<div class="flex gap-2">
+<button class="material-symbols-outlined text-slate-400 hover:text-white p-2 border border-outline-variant rounded-full">chevron_left</button>
+<button class="material-symbols-outlined text-slate-400 hover:text-white p-2 border border-outline-variant rounded-full">chevron_right</button>
+</div>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-8 reel-scroll snap-x scroll-px-6 md:scroll-px-[calc((100vw-80rem)/2)]">
+<!-- Spacing element for center alignment -->
+<div class="min-w-[calc((100vw-80rem)/2)] md:block hidden"></div>
+<!-- Reel Items (20+ simulated with dynamic widths) -->
+<div class="min-w-[280px] h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_tN07iJqVeGqW-4Vy5sfEoBIwaQc65yI94kWq7Jx3h28SIi8-D2MfT1aYeOtReS8TfWzpKQI5V8shvNQKoZ2-rggHRSBoXISal1ZeUXNtEuY9U6cxdJT4-vGeWoI4fdHavk4LR-p1t1VB-iZWbZWAP0igUC7jnj3euslNcsaMBTTckkNrUsJNQJN0t6c30RyAuVnjsw8Fbn3jJtKooanGEzE2ZFCGzna5CVD3YIXp4-Jnz7l5yLTsCWLmg4PdSyXzzVb0fNgbPS4"/>
+<div class="absolute bottom-4 left-4 font-label text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded">09:12 AM</div>
+</div>
+<div class="min-w-[420px] h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkdt6YlGp9idC6wWsJI_olA4PiqBRoha2Kem42X9CgptD7DQlhlA9FNc6hnwOwMWdOZOjpJ8X0mcOHj3gf1hkHwr0hf9oA7J6KCfYCmEJqhuldb5whF7tdJsVnXfeU8vc4LNHpCwhtGJP6aXU2VMQ-9v4zUGl5Lh5AG7vIkcl_Z7IjVSNkR2_fY_7nuokAsf_hmWjy9uNoevSpW0DxvaHcBx7j52sAw46NUKglr_eRXs7DTzQYJgnm3CtHmFNRiONUthjoHM_vNj4"/>
+<div class="absolute bottom-4 left-4 font-label text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded">09:45 AM</div>
+</div>
+<div class="min-w-[300px] h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0XfqHkauWat66lPFtDouPF24he4w4o6z-FrY7YUKFCht9nPBJ3fKxErB243FLFwYLn_Drb79DXLSFOcnAONHdrBvyugCKKMOXfmJf7cUHVqNWc3DdcfG-UZ11FSRs1dajOXHyKpamn7ayq54GEUHWySBobuE7NLEVhaB7YTM3dJ2HsYKUG_Lf7rIYurB09oE4a5vlszanWPHWvZLSfjhmCG-T_5T7cEqJHKBiBJ6J4B8yQ1aS3qeNj93QChhu1L_BHtYSGdY-T8s"/>
+<div class="absolute bottom-4 left-4 font-label text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded">10:02 AM</div>
+</div>
+<div class="min-w-[500px] h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRgPFy6CMjR0a--7tHVn0O9bgY4ZlsYS2Dme_fZ54fZJqzcSp9uptNiZYadOKCFtbdgEe-wjaeP2kTTdRGpMqru1MOla2__NxY-ZkabTWMDwyPEnAWC8f0N-x9zpTxOR37FNgdFKH6PqnCnuinjoadluiLUbfObXRSzn4DghUQRNQXiLM-QFxCtGK2gGGSXuTrnHQ5R_lZvcPJKq6zZWBQPjMgt_9ywQ9nPoqe5xfibjLKFa35hMQFdCFI1E132STOmyJZmQk6938"/>
+<div class="absolute bottom-4 left-4 font-label text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded">10:30 AM</div>
+</div>
+<div class="min-w-[280px] h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQlN6NoLS_RvsQNVJr_ZS8Hfcuubj4XZT_WlWEiGv1Yz8px6R9-3vztF4y14HszW88nDy-TmDo7GwqcK8y9ICiQZTC89QvGbMsk1bgnHygYH-E73AJYULXwd6hF1oQdCqwOSgssllh_ghZoMocztNymWnfK7FfmL2K0xoPd3mYTiBNoYiwuHC8ZYXFUDTun3DMycZrwFvhYmtwbnY-SVJroY2jOo2xpOlchmgaAXp7cnq6WoO6cScbX5a7DEloIlEgJfhJVrQrJbc"/>
+<div class="absolute bottom-4 left-4 font-label text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded">11:15 AM</div>
+</div>
+<!-- Repeated items to simulate "20+" images flow -->
+<div class="min-w-[350px] h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWsOePt_LrWal81EEaYGLmbQcV_72qREJ9o0AdKbfrEVXcjldFd28KJRQi0KsPaPypSNSikMqDo8lpWCwaoz8oM3HkYnfOeA1YjBOYAhb6uzTmkTgJUmsAdN87soO_2b1FoEfRwkpyM1Kmudnd9CBZOSRw2z9FC9KeGEoif0eWIsCfM5FpgJJCsC2uw-utbla0Z_OwwG0s-O7Kg2iJGJz-ZH6aFS9XOIT5s8l7YUuVyCnfsgxvMuqZhEVRQljv7EJX3aRNGmSKylw"/>
+<div class="absolute bottom-4 left-4 font-label text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded">11:40 AM</div>
+</div>
+<!-- More items would follow in a real implementation -->
+<div class="min-w-[400px] h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0">
+<div class="w-full h-full flex items-center justify-center bg-surface-container border-2 border-dashed border-outline-variant">
+<span class="font-headline font-bold text-outline-variant uppercase text-2xl">+18 More</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Filter HUD -->
+<section class="max-w-7xl mx-auto px-6 mb-12">
+<div class="bg-surface-container-low p-2 rounded-lg inline-flex items-center gap-1">
+<button class="px-6 py-2 rounded-md bg-surface-bright text-tertiary font-label text-xs uppercase font-bold tracking-widest">All Assets</button>
+<button class="px-6 py-2 rounded-md hover:bg-white/5 text-on-surface-variant font-label text-xs uppercase tracking-widest transition-all">Trail Highlights</button>
+<button class="px-6 py-2 rounded-md hover:bg-white/5 text-on-surface-variant font-label text-xs uppercase tracking-widest transition-all">Action Shots</button>
+<button class="px-6 py-2 rounded-md hover:bg-white/5 text-on-surface-variant font-label text-xs uppercase tracking-widest transition-all">Event Photos</button>
+</div>
+</section>
+<!-- Gallery Canvas -->
+<main class="max-w-7xl mx-auto px-6 mb-32">
+<div class="masonry-grid">
+<!-- Item 1: Wide Action Shot -->
+<div class="masonry-item-wide relative group overflow-hidden bg-surface-container-high rounded-lg cursor-pointer">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" data-alt="Close-up of a high-performance RC crawler conquering a wet mossy rock face in a dense forest at dusk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_tN07iJqVeGqW-4Vy5sfEoBIwaQc65yI94kWq7Jx3h28SIi8-D2MfT1aYeOtReS8TfWzpKQI5V8shvNQKoZ2-rggHRSBoXISal1ZeUXNtEuY9U6cxdJT4-vGeWoI4fdHavk4LR-p1t1VB-iZWbZWAP0igUC7jnj3euslNcsaMBTTckkNrUsJNQJN0t6c30RyAuVnjsw8Fbn3jJtKooanGEzE2ZFCGzna5CVD3YIXp4-Jnz7l5yLTsCWLmg4PdSyXzzVb0fNgbPS4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent opacity-0 group-hover:opacity-100 transition-opacity p-6 flex flex-col justify-end">
+<span class="font-label text-tertiary text-[10px] tracking-widest uppercase mb-1">Action Shots</span>
+<h3 class="font-headline font-bold text-xl uppercase tracking-tight">The North Ascent</h3>
+</div>
+<div class="absolute top-4 right-4 bg-surface-container-lowest/70 backdrop-blur-md p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface text-sm">visibility</span>
+</div>
+</div>
+<!-- Item 2: Tall Portrait -->
+<div class="masonry-item-tall relative group overflow-hidden bg-surface-container-high rounded-lg cursor-pointer">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" data-alt="Rugged RC 4x4 vehicle profile shot standing on a rocky outcrop with vast mountain scenery in soft bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkdt6YlGp9idC6wWsJI_olA4PiqBRoha2Kem42X9CgptD7DQlhlA9FNc6hnwOwMWdOZOjpJ8X0mcOHj3gf1hkHwr0hf9oA7J6KCfYCmEJqhuldb5whF7tdJsVnXfeU8vc4LNHpCwhtGJP6aXU2VMQ-9v4zUGl5Lh5AG7vIkcl_Z7IjVSNkR2_fY_7nuokAsf_hmWjy9uNoevSpW0DxvaHcBx7j52sAw46NUKglr_eRXs7DTzQYJgnm3CtHmFNRiONUthjoHM_vNj4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent opacity-0 group-hover:opacity-100 transition-opacity p-6 flex flex-col justify-end">
+<span class="font-label text-tertiary text-[10px] tracking-widest uppercase mb-1">Trail Highlights</span>
+<h3 class="font-headline font-bold text-xl uppercase tracking-tight">Ridge Runner</h3>
+</div>
+</div>
+<!-- Item 3: Standard Square -->
+<div class="relative group overflow-hidden bg-surface-container-high rounded-lg cursor-pointer">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" data-alt="Overhead shot of a gathering of custom RC trucks parked in a circle on a gravel path during an event" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQlN6NoLS_RvsQNVJr_ZS8Hfcuubj4XZT_WlWEiGv1Yz8px6R9-3vztF4y14HszW88nDy-TmDo7GwqcK8y9ICiQZTC89QvGbMsk1bgnHygYH-E73AJYULXwd6hF1oQdCqwOSgssllh_ghZoMocztNymWnfK7FfmL2K0xoPd3mYTiBNoYiwuHC8ZYXFUDTun3DMycZrwFvhYmtwbnY-SVJroY2jOo2xpOlchmgaAXp7cnq6WoO6cScbX5a7DEloIlEgJfhJVrQrJbc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
+<span class="font-label text-tertiary text-[10px] tracking-widest uppercase mb-1">Event Photos</span>
+<h3 class="font-headline font-bold text-lg uppercase tracking-tight">Summer Brawl '23</h3>
+</div>
+</div>
+<!-- Item 4: Video Entry -->
+<div class="relative group overflow-hidden bg-surface-container-high rounded-lg cursor-pointer">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" data-alt="Action capture of an RC car spraying mud in a slow-motion turn during a rainy trail run" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWsOePt_LrWal81EEaYGLmbQcV_72qREJ9o0AdKbfrEVXcjldFd28KJRQi0KsPaPypSNSikMqDo8lpWCwaoz8oM3HkYnfOeA1YjBOYAhb6uzTmkTgJUmsAdN87soO_2b1FoEfRwkpyM1Kmudnd9CBZOSRw2z9FC9KeGEoif0eWIsCfM5FpgJJCsC2uw-utbla0Z_OwwG0s-O7Kg2iJGJz-ZH6aFS9XOIT5s8l7YUuVyCnfsgxvMuqZhEVRQljv7EJX3aRNGmSKylw"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-12 h-12 rounded-full bg-tertiary/20 backdrop-blur-md flex items-center justify-center border border-tertiary/40 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-tertiary" data-weight="fill">play_arrow</span>
+</div>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
+<span class="font-label text-tertiary text-[10px] tracking-widest uppercase mb-1">0:45 • HD Video</span>
+<h3 class="font-headline font-bold text-lg uppercase tracking-tight">The Swamp Crawl</h3>
+</div>
+</div>
+<!-- Item 5: Large Focus -->
+<div class="masonry-item-tall masonry-item-wide relative group overflow-hidden bg-surface-container-high rounded-lg cursor-pointer">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" data-alt="Wide angle dramatic shot of three RC crawlers on a steep rocky incline at sunset with golden light reflections" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRgPFy6CMjR0a--7tHVn0O9bgY4ZlsYS2Dme_fZ54fZJqzcSp9uptNiZYadOKCFtbdgEe-wjaeP2kTTdRGpMqru1MOla2__NxY-ZkabTWMDwyPEnAWC8f0N-x9zpTxOR37FNgdFKH6PqnCnuinjoadluiLUbfObXRSzn4DghUQRNQXiLM-QFxCtGK2gGGSXuTrnHQ5R_lZvcPJKq6zZWBQPjMgt_9ywQ9nPoqe5xfibjLKFa35hMQFdCFI1E132STOmyJZmQk6938"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/95 via-transparent opacity-0 group-hover:opacity-100 transition-opacity p-8 flex flex-col justify-end">
+<span class="font-label text-tertiary text-[10px] tracking-widest uppercase mb-1">Trail Highlights</span>
+<h3 class="font-headline font-bold text-3xl uppercase tracking-tight mb-2">Golden Hour Traverse</h3>
+<p class="text-on-surface-variant font-body max-w-lg">Capturing the ultimate synchronization of suspension and sunlight on the western ridge during the annual solstice run.</p>
+</div>
+</div>
+<!-- Item 6: Detail Shot -->
+<div class="relative group overflow-hidden bg-surface-container-high rounded-lg cursor-pointer">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" data-alt="Macro photo of an RC vehicle's intricate suspension system coated in dried red mud and grit" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0XfqHkauWat66lPFtDouPF24he4w4o6z-FrY7YUKFCht9nPBJ3fKxErB243FLFwYLn_Drb79DXLSFOcnAONHdrBvyugCKKMOXfmJf7cUHVqNWc3DdcfG-UZ11FSRs1dajOXHyKpamn7ayq54GEUHWySBobuE7NLEVhaB7YTM3dJ2HsYKUG_Lf7rIYurB09oE4a5vlszanWPHWvZLSfjhmCG-T_5T7cEqJHKBiBJ6J4B8yQ1aS3qeNj93QChhu1L_BHtYSGdY-T8s"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
+<span class="font-label text-tertiary text-[10px] tracking-widest uppercase mb-1">Mechanicals</span>
+<h3 class="font-headline font-bold text-lg uppercase tracking-tight">Post-Run Grit</h3>
+</div>
+</div>
+</div>
+<!-- Pagination/Load More -->
+<div class="mt-20 flex flex-col items-center">
+<div class="h-[1px] w-24 bg-surface-container-highest mb-8"></div>
+<button class="group flex items-center gap-4 text-on-surface hover:text-tertiary transition-colors">
+<span class="font-headline font-bold uppercase tracking-widest text-sm">Synchronize More Data</span>
+<span class="material-symbols-outlined group-hover:translate-y-1 transition-transform">south</span>
+</button>
+</div>
+</main>
+<!-- CTA Section -->
+<section class="bg-surface-container-low py-24 px-6 border-y-0 relative overflow-hidden">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between relative z-10">
+<div class="max-w-xl mb-12 md:mb-0">
+<h2 class="font-headline text-4xl font-bold uppercase tracking-tight mb-4 text-on-surface">Captured something epic?</h2>
+<p class="text-on-surface-variant font-body leading-relaxed">Submit your high-resolution footage from the last club run to be featured in the Spotlight archives.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container hover:bg-surface-bright transition-all px-10 py-4 font-headline uppercase font-bold tracking-widest rounded-sm border border-outline-variant/20">
+        Upload Assets
+      </button>
+</div>
+<div class="absolute -right-20 -bottom-20 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[300px]" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+</div>
+</section>
+<!-- Footer (Shared Component) -->
+<footer class="bg-[#1a1c1e] w-full py-12 px-6 border-t-0 font-['Manrope'] text-sm text-slate-400">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+<div class="space-y-4">
+<div class="font-['Space_Grotesk'] font-bold text-slate-200 text-xl uppercase tracking-tight">Chatelherault RC</div>
+<p class="max-w-xs leading-relaxed">Defined by terrain, engineered for performance. The premier Scottish RC crawler collective.</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col space-y-2">
+<a class="text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+</div>
+<div class="flex flex-col space-y-2">
+<a class="text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="#">Safety Guidelines</a>
+<a class="text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="#">Sponsors</a>
+</div>
+</div>
+<div class="flex flex-col md:items-end justify-between">
+<div class="flex gap-4 mb-8 md:mb-0">
+<span class="material-symbols-outlined cursor-pointer hover:text-[#d97706]">share</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-[#d97706]">podcasts</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-[#d97706]">forum</span>
+</div>
+<div class="text-[10px] tracking-widest uppercase font-label">
+          © 2024 Chatelherault RC. Engineered for the Terrain.
+        </div>
+</div>
+</div>
+</footer>
+</body></html>

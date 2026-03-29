@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Spotlight | Chatelherault RC</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-surface": "#e2e2e5",
+              "tertiary-container": "#7c1e00",
+              "on-tertiary-container": "#ff8d6d",
+              "on-primary": "#1d3626",
+              "on-primary-container": "#97b39e",
+              "secondary-fixed": "#d5e5ee",
+              "surface-container-high": "#282a2c",
+              "outline-variant": "#424843",
+              "inverse-on-surface": "#2f3133",
+              "surface-container-highest": "#333537",
+              "surface-container-low": "#1a1c1e",
+              "on-secondary-fixed": "#0f1d24",
+              "primary-fixed": "#ccead2",
+              "primary-fixed-dim": "#b1ceb7",
+              "on-background": "#e2e2e5",
+              "secondary-container": "#3c4b53",
+              "on-error": "#690005",
+              "primary-container": "#2d4635",
+              "on-tertiary-fixed-variant": "#862201",
+              "on-surface-variant": "#c2c8c1",
+              "secondary": "#b9c9d2",
+              "on-tertiary": "#601500",
+              "on-secondary": "#243239",
+              "surface-container-lowest": "#0c0e10",
+              "surface-container": "#1e2022",
+              "on-secondary-fixed-variant": "#3a4950",
+              "on-primary-fixed-variant": "#334c3b",
+              "tertiary-fixed": "#ffdbd1",
+              "surface-bright": "#37393b",
+              "tertiary": "#ffb5a0",
+              "on-primary-fixed": "#072012",
+              "error-container": "#93000a",
+              "tertiary-fixed-dim": "#ffb5a0",
+              "on-tertiary-fixed": "#3b0900",
+              "on-error-container": "#ffdad6",
+              "surface-dim": "#121416",
+              "surface": "#121416",
+              "surface-variant": "#333537",
+              "outline": "#8c928c",
+              "surface-tint": "#b1ceb7",
+              "on-secondary-container": "#abbbc4",
+              "secondary-fixed-dim": "#b9c9d2",
+              "inverse-primary": "#4a6452",
+              "inverse-surface": "#e2e2e5",
+              "background": "#121416",
+              "error": "#ffb4ab",
+              "primary": "#b1ceb7"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .technical-gradient {
+            background: linear-gradient(15deg, #2d4635 0%, #333537 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-tertiary/30">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#121416]/70 backdrop-blur-xl bg-gradient-to-b from-[#1a1c1e] to-transparent">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-6 h-20">
+<div class="text-2xl font-bold tracking-tighter text-slate-100 font-headline uppercase">Chatelherault RC</div>
+<div class="hidden md:flex items-center space-x-8">
+<a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100 transition-colors" href="../index.html">Home</a>
+<a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100 transition-colors" href="meetups.html">Meetups</a>
+<a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100 transition-colors" href="media.html">Media</a>
+<a class="font-headline tracking-tight uppercase text-[#d97706] border-b-2 border-[#d97706] pb-1" href="spotlight.html">Spotlight</a>
+<a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100 transition-colors" href="contact.html">Contact</a>
+</div>
+<div class="flex items-center space-x-4">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-on-surface transition-all active:scale-95 duration-200">account_circle</span>
+</div>
+</div>
+</nav>
+<main class="pt-32 pb-24 px-6 max-w-7xl mx-auto">
+<!-- Hero Header -->
+<header class="mb-16 md:mb-24 flex flex-col md:flex-row md:items-end gap-8">
+<div class="flex-1">
+<span class="font-label text-tertiary uppercase tracking-[0.2em] text-xs font-bold mb-4 block">Archive 2024</span>
+<h1 class="font-headline text-6xl md:text-8xl font-extrabold tracking-tighter uppercase leading-none">
+                    Build <br/> <span class="text-primary">Spotlight</span>
+</h1>
+</div>
+<div class="md:w-1/3">
+<p class="text-on-surface-variant font-body leading-relaxed text-lg border-l-2 border-primary-container pl-6">
+                    A curated technical showcase of high-performance scale crawling. We break down the engineering and craftsmanship behind our members' most capable trail machines.
+                </p>
+</div>
+</header>
+<!-- Spotlight Grid: Asymmetric Layout -->
+<div class="space-y-32">
+<!-- Entry 1: Featured (Left Heavy) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<div class="lg:col-span-8 group relative overflow-hidden rounded-lg">
+<img class="w-full aspect-[16/10] object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Close-up high angle shot of a custom RC crawler with weathered grey body panels navigating jagged dark rocks in a forest environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcvv1oByjsCLjQGKiTGaWJvq0YEA7ekniGLRpRkGiZoAXlrRzY7tEQXzED5xCse4CbTkEDpong3lgNZyPqa4RaL3XFQYGz51Yl9nQfHdkN3-i3UPHJZo8GNC7nDChbBzropdvtaxEOVxFfo4aMMsyyEjFPyMNaFr6BbggUTr7x4w4hnCMrZafkZB2Dfv3gshlkUKPFPtBEfq-GOFmpxlcJYTCSeb-XpJZD7D39204bL_yar_BXE1mVV9k_Rx7l2pTgGja5mlIqbxM"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-60"></div>
+</div>
+<div class="lg:col-span-4 lg:pt-12">
+<div class="space-y-6">
+<div>
+<span class="font-label text-tertiary text-xs uppercase tracking-widest block mb-2">Featured Rig #01</span>
+<h2 class="font-headline text-4xl font-bold tracking-tight uppercase mb-1">Highland Stalker</h2>
+<p class="font-body text-primary-fixed-dim text-lg">Axial SCX10 III Base</p>
+</div>
+<div class="bg-surface-container-low p-8 rounded-sm">
+<h3 class="font-label text-[10px] uppercase tracking-[0.3em] text-outline mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">settings_suggest</span> Technical Specifications
+                            </h3>
+<ul class="space-y-4 font-body text-sm">
+<li class="flex justify-between border-b border-outline-variant/20 pb-2">
+<span class="text-on-surface-variant">Owner</span>
+<span class="text-on-surface font-bold">Marcus Thorne</span>
+</li>
+<li class="flex justify-between border-b border-outline-variant/20 pb-2">
+<span class="text-on-surface-variant">Axles</span>
+<span class="text-on-surface font-bold">Portal Axles w/ Brass Weights</span>
+</li>
+<li class="flex justify-between border-b border-outline-variant/20 pb-2">
+<span class="text-on-surface-variant">ESC</span>
+<span class="text-on-surface font-bold">Hobbywing Fusion Pro</span>
+</li>
+<li class="flex justify-between border-b border-outline-variant/20 pb-2">
+<span class="text-on-surface-variant">Servo</span>
+<span class="text-on-surface font-bold">NSDRC RS800 V2</span>
+</li>
+<li class="flex justify-between">
+<span class="text-on-surface-variant">Tires</span>
+<span class="text-on-surface font-bold">Pro-Line Hyrax 1.9" Predator</span>
+</li>
+</ul>
+</div>
+<div class="flex gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 text-[10px] font-bold uppercase tracking-tighter">Class 2</span>
+<span class="bg-primary-container text-on-primary-container px-3 py-1 text-[10px] font-bold uppercase tracking-tighter">Trail Ready</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Entry 2: Secondary (Right Heavy) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<div class="lg:col-span-4 lg:order-1 lg:pt-12">
+<div class="space-y-6 lg:text-right">
+<div>
+<span class="font-label text-tertiary text-xs uppercase tracking-widest block mb-2">Featured Rig #02</span>
+<h2 class="font-headline text-4xl font-bold tracking-tight uppercase mb-1">Sandstorm Defender</h2>
+<p class="font-body text-primary-fixed-dim text-lg">Traxxas TRX-4 D110</p>
+</div>
+<div class="bg-surface-container-high p-8 rounded-sm lg:text-left">
+<h3 class="font-label text-[10px] uppercase tracking-[0.3em] text-outline mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">construction</span> Custom Modifications
+                            </h3>
+<div class="grid grid-cols-1 gap-4 font-body text-sm">
+<div class="bg-surface-container-lowest p-4 border-l-2 border-tertiary">
+<p class="text-on-surface-variant italic mb-1">"Custom 3D-printed interior with working LED dashboard and scale adventure gear."</p>
+<span class="text-[10px] font-bold text-on-surface uppercase tracking-wider">— Alistair Graham</span>
+</div>
+<ul class="space-y-2 mt-4">
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="w-1.5 h-1.5 bg-tertiary rounded-full"></span> SSD Brass Portal Covers
+                                    </li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="w-1.5 h-1.5 bg-tertiary rounded-full"></span> Holmes Hobbies CrawlMaster
+                                    </li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="w-1.5 h-1.5 bg-tertiary rounded-full"></span> Vanquish Method Wheels
+                                    </li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-8 lg:order-2 group relative overflow-hidden rounded-lg">
+<img class="w-full aspect-[16/10] object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Side profile of a tan Land Rover Defender RC crawler on a dusty trail with warm sunset light highlighting the scale details and mud splatter" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRepb6BgjNdGQsriZaMGNVxksNXlZOJUuH1tpQGDvLH2dHUzUL5WWyvCeH2kgG9dgIhuHxykxU0_zkzdwH-Tby7Nnlxb-ZpGTqCelytp5sEhxuyLOeAEkR5IC3aabFo91UOVOUHxGhH4DuzwwrUgSxR4GwjEcZwuqBArBQyJKrFPsGB7m6oBwVSQ84FnDAKsiab2iZ3P96JGxl6LHYX6F4yzswS5PEqhrQH085lrDegPf4Vno8mbh138rB7i_O0U58Zy1UDo2YVTc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-60"></div>
+</div>
+</section>
+<!-- Grid Highlight: Technical Specs Layout -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="md:col-span-2 relative h-[500px] rounded-lg overflow-hidden group">
+<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000" data-alt="Detailed close-up of RC vehicle suspension and chassis with metal components and shocks in focus against a blurry dirt background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkHLN8Gut8jI7bghsqbnSQ9PAiE_3utrtcSuPLTIVFCEdpgvyI-WXkiFsqw0NLvouybQ5PkMhdfHVslW_zVcaWP1ReDQCY0xUqJxPvusPZklV38bvou71FbxQ9IdR961t2lmhgvHRgEFhSEhvVP48TgTe6HOhRO4v-IRkLApzATOIoatEUqD_wmPCSqHopD0ZzzVCN9tNQezWoLRGdsRf1qJG8cuGalP5rE4Jjip7q_-wjkHQuJKgsjmS-lpkFFfcnaEkGk-XVXBA"/>
+<div class="absolute inset-0 bg-primary-container/20 mix-blend-multiply"></div>
+<div class="absolute bottom-10 left-10">
+<h2 class="font-headline text-5xl font-black text-white uppercase tracking-tighter leading-none">Engineering<br/>Precision</h2>
+</div>
+</div>
+<div class="bg-surface-container-high p-10 flex flex-col justify-between border-t-4 border-tertiary">
+<div class="space-y-4">
+<span class="material-symbols-outlined text-4xl text-tertiary" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+<h3 class="font-headline text-2xl font-bold uppercase">The Bench Report</h3>
+<p class="text-on-surface-variant font-body">Our technical review team breaks down the most innovative home-brewed modifications in the community each month.</p>
+</div>
+<button class="bg-surface-bright text-on-surface font-label uppercase text-[10px] font-bold tracking-[0.2em] py-4 w-full border border-outline-variant/30 hover:bg-tertiary hover:text-on-tertiary transition-all">Submit Your Build</button>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer Component -->
+<footer class="bg-[#1a1c1e] w-full py-12 px-6 border-t-0">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+<div class="flex flex-col gap-4">
+<div class="font-['Space_Grotesk'] font-bold text-slate-200 text-xl tracking-tighter uppercase">Chatelherault RC</div>
+<p class="font-['Manrope'] text-sm text-slate-400">© 2024 Chatelherault RC. Engineered for the Terrain.</p>
+</div>
+<div class="flex flex-col gap-4">
+<h4 class="font-['Space_Grotesk'] text-slate-100 text-xs font-bold uppercase tracking-widest">Navigation</h4>
+<div class="grid grid-cols-2 gap-2">
+<a class="font-['Manrope'] text-sm text-slate-500 hover:text-[#d97706] transition-colors" href="#">Privacy Policy</a>
+<a class="font-['Manrope'] text-sm text-slate-500 hover:text-[#d97706] transition-colors" href="#">Terms of Service</a>
+<a class="font-['Manrope'] text-sm text-slate-500 hover:text-[#d97706] transition-colors" href="#">Safety Guidelines</a>
+<a class="font-['Manrope'] text-sm text-slate-500 hover:text-[#d97706] transition-colors" href="#">Sponsors</a>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<h4 class="font-['Space_Grotesk'] text-slate-100 text-xs font-bold uppercase tracking-widest">Connect</h4>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-slate-500 hover:text-[#d97706] cursor-pointer transition-colors">share</span>
+<span class="material-symbols-outlined text-slate-500 hover:text-[#d97706] cursor-pointer transition-colors">rss_feed</span>
+<span class="material-symbols-outlined text-slate-500 hover:text-[#d97706] cursor-pointer transition-colors">group</span>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

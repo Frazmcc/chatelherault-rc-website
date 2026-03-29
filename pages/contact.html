@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-surface": "#e2e2e5",
+              "tertiary-container": "#7c1e00",
+              "on-tertiary-container": "#ff8d6d",
+              "on-primary": "#1d3626",
+              "on-primary-container": "#97b39e",
+              "secondary-fixed": "#d5e5ee",
+              "surface-container-high": "#282a2c",
+              "outline-variant": "#424843",
+              "inverse-on-surface": "#2f3133",
+              "surface-container-highest": "#333537",
+              "surface-container-low": "#1a1c1e",
+              "on-secondary-fixed": "#0f1d24",
+              "primary-fixed": "#ccead2",
+              "primary-fixed-dim": "#b1ceb7",
+              "on-background": "#e2e2e5",
+              "secondary-container": "#3c4b53",
+              "on-error": "#690005",
+              "primary-container": "#2d4635",
+              "on-tertiary-fixed-variant": "#862201",
+              "on-surface-variant": "#c2c8c1",
+              "secondary": "#b9c9d2",
+              "on-tertiary": "#601500",
+              "on-secondary": "#243239",
+              "surface-container-lowest": "#0c0e10",
+              "surface-container": "#1e2022",
+              "on-secondary-fixed-variant": "#3a4950",
+              "on-primary-fixed-variant": "#334c3b",
+              "tertiary-fixed": "#ffdbd1",
+              "surface-bright": "#37393b",
+              "tertiary": "#ffb5a0",
+              "on-primary-fixed": "#072012",
+              "error-container": "#93000a",
+              "tertiary-fixed-dim": "#ffb5a0",
+              "on-tertiary-fixed": "#3b0900",
+              "on-error-container": "#ffdad6",
+              "surface-dim": "#121416",
+              "surface": "#121416",
+              "surface-variant": "#333537",
+              "outline": "#8c928c",
+              "surface-tint": "#b1ceb7",
+              "on-secondary-container": "#abbbc4",
+              "secondary-fixed-dim": "#b9c9d2",
+              "inverse-primary": "#4a6452",
+              "inverse-surface": "#e2e2e5",
+              "background": "#121416",
+              "error": "#ffb4ab",
+              "primary": "#b1ceb7"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(18, 20, 22, 0.7);
+            backdrop-filter: blur(12px);
+        }
+        input:focus ~ label, input:not(:placeholder-shown) ~ label {
+            transform: translateY(-1.5rem) scale(0.85);
+            color: #b1ceb7;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-tertiary/30">
+<!-- Top Navigation -->
+<nav class="fixed top-0 w-full z-50 bg-[#121416]/70 backdrop-blur-xl bg-gradient-to-b from-[#1a1c1e] to-transparent shadow-none h-20">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-6 h-full">
+<div class="text-2xl font-headline font-bold tracking-tighter text-slate-100">Chatelherault RC</div>
+<!-- Desktop Links -->
+<div class="hidden md:flex items-center space-x-8 font-headline tracking-tight uppercase text-sm">
+<a class="text-slate-400 hover:text-slate-100 transition-colors" href="../index.html">Home</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors" href="meetups.html">Meetups</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors" href="media.html">Media</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors" href="spotlight.html">Spotlight</a>
+<a class="text-[#d97706] border-b-2 border-[#d97706] pb-1" href="contact.html">Contact</a>
+</div>
+<div class="flex items-center space-x-6">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-slate-100" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</nav>
+<main class="pt-32 pb-20 px-6 max-w-7xl mx-auto">
+<!-- Hero Header -->
+<header class="mb-20">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end">
+<div class="md:col-span-8">
+<span class="font-label text-tertiary tracking-[0.2em] uppercase text-xs mb-4 block">Engineered for Connection</span>
+<h1 class="font-headline text-5xl md:text-7xl font-bold tracking-tighter text-on-background leading-none mb-6">
+                        Get in <span class="text-tertiary">Touch</span>
+</h1>
+<p class="text-on-surface-variant max-w-xl text-lg leading-relaxed font-light">
+                        Whether you're looking to join our next technical climb or have specific questions about chassis setup, the Chatelherault crew is here to help.
+                    </p>
+</div>
+<div class="md:col-span-4 flex md:justify-end pb-2">
+<div class="flex flex-col gap-2">
+<span class="font-label text-[10px] uppercase tracking-widest text-outline">Social Frequency</span>
+<div class="flex gap-4">
+<a class="w-12 h-12 rounded-sm bg-surface-container-high flex items-center justify-center text-on-surface hover:bg-tertiary hover:text-on-tertiary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</a>
+<a class="w-12 h-12 rounded-sm bg-surface-container-high flex items-center justify-center text-on-surface hover:bg-tertiary hover:text-on-tertiary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+</a>
+<a class="w-12 h-12 rounded-sm bg-surface-container-high flex items-center justify-center text-on-surface hover:bg-tertiary hover:text-on-tertiary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="camera">camera</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Bento Contact Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-32">
+<!-- Contact Form Card -->
+<div class="lg:col-span-2 bg-surface-container-low p-8 md:p-12 rounded-lg relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-8 opacity-5 font-headline text-8xl font-black select-none group-hover:opacity-10 transition-opacity">RC</div>
+<h2 class="font-headline text-3xl font-bold mb-10 tracking-tight">Transmission Box</h2>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+<div class="relative">
+<input class="peer w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all py-2 px-0 text-on-surface font-body" id="name" placeholder=" " type="text"/>
+<label class="absolute left-0 top-2 text-outline pointer-events-none transition-all font-label text-sm uppercase tracking-wider" for="name">Your Name</label>
+</div>
+<div class="relative">
+<input class="peer w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all py-2 px-0 text-on-surface font-body" id="email" placeholder=" " type="email"/>
+<label class="absolute left-0 top-2 text-outline pointer-events-none transition-all font-label text-sm uppercase tracking-wider" for="email">Email Frequency</label>
+</div>
+<div class="md:col-span-2 relative">
+<input class="peer w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all py-2 px-0 text-on-surface font-body" id="subject" placeholder=" " type="text"/>
+<label class="absolute left-0 top-2 text-outline pointer-events-none transition-all font-label text-sm uppercase tracking-wider" for="subject">Subject Inquiry</label>
+</div>
+<div class="md:col-span-2 relative">
+<textarea class="peer w-full bg-transparent border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all py-2 px-0 text-on-surface font-body resize-none" id="message" placeholder=" " rows="4"></textarea>
+<label class="absolute left-0 top-2 text-outline pointer-events-none transition-all font-label text-sm uppercase tracking-wider" for="message">Operational Intel</label>
+</div>
+<div class="md:col-span-2">
+<button class="w-full md:w-auto px-10 py-4 bg-tertiary text-on-tertiary font-headline font-bold uppercase tracking-[0.15em] rounded-sm hover:bg-surface-bright transition-colors active:scale-95" type="submit">
+                            Launch Transmission
+                        </button>
+</div>
+</form>
+</div>
+<!-- Side Cards -->
+<div class="space-y-6">
+<!-- Location Info -->
+<div class="bg-surface-container-high p-8 rounded-lg">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 bg-primary-container text-on-primary-container flex items-center justify-center rounded-sm">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+</div>
+<h3 class="font-headline font-bold text-lg">Base Camp</h3>
+</div>
+<p class="text-on-surface-variant font-body leading-relaxed">
+                        Chatelherault Country Park<br/>
+                        Ferniegair, Hamilton<br/>
+                        ML3 7UE, Scotland
+                    </p>
+<div class="mt-8 rounded-lg overflow-hidden grayscale contrast-125 opacity-70 hover:opacity-100 transition-opacity h-32 w-full bg-surface-container-lowest relative">
+<img alt="Map view" class="w-full h-full object-cover" data-alt="minimalist dark satellite view map of a rural park region with subtle grid lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa0hzH6_4hpXeVBtJ0WCb202eByqaYTsXaA4J6Gn1Zn_q5N1BHSzmKjOPSp7OKZDDqCMssfZNSHRVcRsYn6YllqAg6CsX12hktg3z8IO94E8YGL6BHSpIJ1z7_4moViWgMEUcoWbGQwbyBLcSiJA7KFMJoB-bogYXjn0kINkjxsTxwS67nx7YcF7kncm9sTAqpsOHD3QU_LAn9rGZeTI4CAg07gMmuXhviHskvZ2WPRLO33LjZyLEIUJpkLyoxRWYq2x2IUwVCUpM"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high to-transparent"></div>
+</div>
+</div>
+<!-- Club Status Card -->
+<div class="bg-surface-container-low p-8 rounded-lg flex flex-col justify-between border-l-4 border-tertiary">
+<div>
+<span class="font-label text-[10px] text-tertiary uppercase tracking-widest mb-2 block">System Status</span>
+<h3 class="font-headline font-bold text-xl mb-4">Operations Active</h3>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-sm font-label text-on-surface-variant uppercase tracking-tighter">Responding in &lt; 24 hrs</span>
+</div>
+</div>
+</div>
+</div>
+<!-- FAQ Section -->
+<section class="mt-32">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
+<div class="max-w-xl">
+<span class="font-label text-primary tracking-[0.2em] uppercase text-xs mb-4 block">Intelligence Reports</span>
+<h2 class="font-headline text-4xl font-bold tracking-tight">Common Technicalities</h2>
+</div>
+<div class="h-px flex-grow bg-outline-variant/30 hidden md:block mx-12"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- FAQ Item 1 -->
+<div class="group cursor-pointer">
+<div class="bg-surface-container-low p-6 rounded-lg group-hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start gap-4 mb-4">
+<h4 class="font-headline font-semibold text-lg">How do I join a run?</h4>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="add">add</span>
+</div>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                            Check our 'Meetups' page for scheduled weekend events. New members are encouraged to attend a "Class 1" session first to get familiar with the group and terrain.
+                        </p>
+</div>
+</div>
+<!-- FAQ Item 2 -->
+<div class="group cursor-pointer">
+<div class="bg-surface-container-low p-6 rounded-lg group-hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start gap-4 mb-4">
+<h4 class="font-headline font-semibold text-lg">What equipment is mandatory?</h4>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="add">add</span>
+</div>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                            At minimum, a 1/10 scale crawler, fully charged LiPo/NiMH battery, and a compatible transmitter. Waterproofing is highly recommended given the Scottish climate.
+                        </p>
+</div>
+</div>
+<!-- FAQ Item 3 -->
+<div class="group cursor-pointer">
+<div class="bg-surface-container-low p-6 rounded-lg group-hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start gap-4 mb-4">
+<h4 class="font-headline font-semibold text-lg">Are there membership fees?</h4>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="add">add</span>
+</div>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                            Currently, we operate as a community collective. There are no mandatory fees, though we occasionally pool resources for trail maintenance or trophies.
+                        </p>
+</div>
+</div>
+<!-- FAQ Item 4 -->
+<div class="group cursor-pointer">
+<div class="bg-surface-container-low p-6 rounded-lg group-hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start gap-4 mb-4">
+<h4 class="font-headline font-semibold text-lg">Can I bring a basher?</h4>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="add">add</span>
+</div>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                            Our primary focus is technical crawling and trailing. High-speed bashers are generally not suitable for our organized trail runs for safety and pace reasons.
+                        </p>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="mt-32 relative h-96 rounded-lg overflow-hidden">
+<div class="absolute inset-0 bg-surface-container-lowest">
+<img class="w-full h-full object-cover opacity-40 mix-blend-luminosity" data-alt="close up of a detailed RC crawler tire climbing over wet mossy rocks in a forest setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ecHpj_vyoin9qPOgDp5p4ch7FJQt4pJj99f47_6XUGjM2OyeZuYaSovHEldd3QeiaynpT0METGFqX_e7_AOpcaWukcMAr33-3vBuS9oug_YQMPrf4OXx_-FV83fI1YevsPzi9i1X8WveanSHFssfXBHM4k6Ls0DJ0d5UFQmNxkbb6IF00JS5uZ1UD81Srv6iP3Xh3ny4Rqt-ZAUSU_VjJ93KLkM7U2avdSCix0hMVuqxZ7FHXxQX9BLKMVny7k8487Q63eC5-5I"/>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent"></div>
+</div>
+<div class="relative h-full flex flex-col justify-center px-12 md:px-20 max-w-2xl">
+<h2 class="font-headline text-4xl font-bold mb-6 tracking-tight leading-tight">Ready to tackle the terrain with the crew?</h2>
+<div>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-sm font-headline font-bold uppercase tracking-widest text-sm hover:bg-surface-bright hover:text-on-surface transition-all">
+                        Register Your Rig
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#1a1c1e] w-full py-12 px-6 border-t-0 mt-20">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+<div class="space-y-4">
+<div class="font-headline font-bold text-slate-200 text-xl tracking-tighter">Chatelherault RC</div>
+<p class="font-body text-sm text-slate-400 max-w-xs leading-relaxed">
+                    A technical RC crawling collective based in the heart of Scotland. Precision driving, rugged terrain, and engineering excellence.
+                </p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-3">
+<span class="font-label text-[10px] uppercase tracking-widest text-slate-500">Navigation</span>
+<ul class="space-y-2 font-body text-sm">
+<li><a class="text-slate-500 hover:text-[#d97706] transition-colors" href="../index.html">Home</a></li>
+<li><a class="text-slate-500 hover:text-[#d97706] transition-colors" href="meetups.html">Meetups</a></li>
+<li><a class="text-slate-500 hover:text-[#d97706] transition-colors" href="spotlight.html">Spotlight</a></li>
+</ul>
+</div>
+<div class="space-y-3">
+<span class="font-label text-[10px] uppercase tracking-widest text-slate-500">Legal</span>
+<ul class="space-y-2 font-body text-sm">
+<li><a class="text-slate-500 hover:text-[#d97706] transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="text-slate-500 hover:text-[#d97706] transition-colors" href="#">Terms of Service</a></li>
+<li><a class="text-slate-500 hover:text-[#d97706] transition-colors" href="#">Safety Guidelines</a></li>
+</ul>
+</div>
+</div>
+<div class="flex flex-col justify-between items-end md:items-end">
+<div class="text-right">
+<span class="font-label text-[10px] uppercase tracking-widest text-slate-500">Engineered for the Terrain</span>
+<div class="flex gap-4 mt-4 justify-end">
+<span class="material-symbols-outlined text-slate-500 hover:text-[#d97706] transition-colors cursor-pointer" data-icon="terminal">terminal</span>
+<span class="material-symbols-outlined text-slate-500 hover:text-[#d97706] transition-colors cursor-pointer" data-icon="precision_manufacturing">precision_manufacturing</span>
+<span class="material-symbols-outlined text-slate-500 hover:text-[#d97706] transition-colors cursor-pointer" data-icon="landscape">landscape</span>
+</div>
+</div>
+<p class="font-body text-sm text-slate-500 mt-8 text-right">
+                    © 2024 Chatelherault RC. All Systems Nominal.
+                </p>
+</div>
+</div>
+</footer>
+</body></html>

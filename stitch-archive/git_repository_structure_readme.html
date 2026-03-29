@@ -1,0 +1,48 @@
+# Chatelherault RC - Website v1.0
+
+This repository contains the source code for the Chatelherault RC community platform.
+
+## 📂 Repository Structure
+
+```text
+chatelherault-rc/
+├── public/                 # Static assets (logos, base images)
+├── src/
+│   ├── components/         # Shared UI components (Nav, Footer, Cards)
+│   ├── styles/             # Tailwind CSS & Design System tokens
+│   └── pages/
+│       ├── index.html      # Home (Updated)
+│       ├── meetups.html    # Meetups (Schedule Updated)
+│       ├── gallery.html    # Media Gallery
+│       ├── spotlight.html  # Spotlight (Member Builds)
+│       └── contact.html    # Contact Us
+├── admin/                  # Restricted Admin/Godmode Suite
+│   ├── login.html          # Tiered Login System
+│   ├── dashboard.html      # Standard Admin Dashboard
+│   └── godmode.html        # Godmode Admin Dashboard (Elevated)
+├── README.md               # Documentation & Setup Guide
+└── tailwind.config.js      # Design System: Overland Pulse
+```
+
+## 🚀 Getting Started
+
+1. **Clone the Repo:**
+   `git clone https://github.com/your-username/chatelherault-rc.git`
+
+2. **Install Dependencies:**
+   `npm install` (Includes Tailwind CSS and Met Office API helpers)
+
+3. **Run Local Dev:**
+   `npm run dev`
+
+## 🛠 Features
+
+- **Overland Pulse Design System:** Custom-built rugged aesthetic.
+- **Dynamic Weather Integration:** Real-time Sunday forecasts from Met Office.
+- **Godmode Console:** Tiered administrative access with kernel-level overrides.
+- **Direct Edit Mode:** On-page editing tools for authenticated admins.
+
+## 🔐 Deployment Notes
+
+- Ensure environment variables are set for the Met Office API keys.
+- Admin routes (`/admin`) should be protected by a server-side authentication layer (Firebase, Supabase, or custom Node.js).

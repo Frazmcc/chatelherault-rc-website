@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-surface": "#e2e2e5",
+              "tertiary-container": "#7c1e00",
+              "on-tertiary-container": "#ff8d6d",
+              "on-primary": "#1d3626",
+              "on-primary-container": "#97b39e",
+              "secondary-fixed": "#d5e5ee",
+              "surface-container-high": "#282a2c",
+              "outline-variant": "#424843",
+              "inverse-on-surface": "#2f3133",
+              "surface-container-highest": "#333537",
+              "surface-container-low": "#1a1c1e",
+              "on-secondary-fixed": "#0f1d24",
+              "primary-fixed": "#ccead2",
+              "primary-fixed-dim": "#b1ceb7",
+              "on-background": "#e2e2e5",
+              "secondary-container": "#3c4b53",
+              "on-error": "#690005",
+              "primary-container": "#2d4635",
+              "on-tertiary-fixed-variant": "#862201",
+              "on-surface-variant": "#c2c8c1",
+              "secondary": "#b9c9d2",
+              "on-tertiary": "#601500",
+              "on-secondary": "#243239",
+              "surface-container-lowest": "#0c0e10",
+              "surface-container": "#1e2022",
+              "on-secondary-fixed-variant": "#3a4950",
+              "on-primary-fixed-variant": "#334c3b",
+              "tertiary-fixed": "#ffdbd1",
+              "surface-bright": "#37393b",
+              "tertiary": "#ffb5a0",
+              "on-primary-fixed": "#072012",
+              "error-container": "#93000a",
+              "tertiary-fixed-dim": "#ffb5a0",
+              "on-tertiary-fixed": "#3b0900",
+              "on-error-container": "#ffdad6",
+              "surface-dim": "#121416",
+              "surface": "#121416",
+              "surface-variant": "#333537",
+              "outline": "#8c928c",
+              "surface-tint": "#b1ceb7",
+              "on-secondary-container": "#abbbc4",
+              "secondary-fixed-dim": "#b9c9d2",
+              "inverse-primary": "#4a6452",
+              "inverse-surface": "#e2e2e5",
+              "background": "#121416",
+              "error": "#ffb4ab",
+              "primary": "#b1ceb7"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+        .glass-panel {
+            background: rgba(12, 14, 16, 0.7);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-tertiary-container selection:text-on-tertiary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#121416]/70 backdrop-blur-xl bg-gradient-to-b from-[#1a1c1e] to-transparent">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-6 h-20">
+<div class="text-2xl font-bold tracking-tighter text-slate-100 font-headline uppercase">Chatelherault RC</div>
+<div class="hidden md:flex items-center space-x-8">
+<a class="font-headline tracking-tight uppercase transition-colors text-[#d97706] border-b-2 border-[#d97706] pb-1" href="index.html">Home</a>
+<a class="font-headline tracking-tight uppercase transition-colors text-slate-400 hover:text-slate-100" href="pages/meetups.html">Meetups</a>
+<a class="font-headline tracking-tight uppercase transition-colors text-slate-400 hover:text-slate-100" href="pages/media.html">Media</a>
+<a class="font-headline tracking-tight uppercase transition-colors text-slate-400 hover:text-slate-100" href="pages/spotlight.html">Spotlight</a>
+<a class="font-headline tracking-tight uppercase transition-colors text-slate-400 hover:text-slate-100" href="pages/contact.html">Contact</a>
+</div>
+<div class="flex items-center space-x-6">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-slate-100 transition-colors" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="relative h-screen w-full flex items-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img alt="Conquer the Terrain" class="w-full h-full object-cover grayscale-[0.2] contrast-[1.1]" data-alt="Close-up of a rugged RC trail truck climbing over jagged grey rocks with forest background in moody cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZBrqQvz3wqsiP68KKnHOXCgK43ZvA8tOdzFI0yV4YRLWeYeZvUUV2bnkTdl0RMwWPSnYyerj3M-aVv5I9EUvoJ0LM01RKFDem9ByWmMXzrtE6lomOxRA0Kll59eEiem2t9XyBoziW7I3zrQe6uiL94VxTPFt72BuHEfSyJWAAMbnQZv3knG5xfh1Ow0GkgPZc5ZQxdF6h8ZoZ-AXdcuBnuoul67W4UgtkIWgRV7PZB4a-yPtBNixFArjsMUuCXPiTWoFIXM-kRxM"/>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent"></div>
+</div>
+<div class="relative z-10 max-w-7xl mx-auto px-6 w-full editorial-grid">
+<div class="col-span-12 md:col-span-8 lg:col-span-7">
+<span class="font-label text-xs uppercase tracking-[0.3em] text-tertiary mb-6 block">Est. Hamilton, Scotland</span>
+<h1 class="font-headline text-6xl md:text-8xl font-bold tracking-tighter uppercase leading-[0.9] mb-8">
+                    Conquer the <br/> <span class="text-tertiary">Terrain</span> at Chatelherault
+                </h1>
+<p class="font-body text-lg text-on-surface-variant max-w-xl mb-10 leading-relaxed">
+                    The premier destination for scale trail driving and rock crawling enthusiasts. Join our community for technical precision, engineering, and shared outdoor adventures.
+                </p>
+<div class="flex flex-col sm:flex-row gap-4">
+<button class="bg-tertiary text-on-tertiary px-8 py-4 rounded-sm font-headline font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-all hover:bg-surface-bright active:scale-95">
+                        Join the Next Meetup
+                        <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Technical HUD Overlay (Asymmetric) -->
+<div class="absolute bottom-12 right-6 hidden lg:block glass-panel p-6 rounded-lg border-l-4 border-tertiary">
+<div class="flex flex-col gap-4">
+<div class="flex justify-between items-center gap-12">
+<span class="font-label text-[10px] uppercase text-slate-500 tracking-tighter">Current Location</span>
+<span class="font-label text-xs font-bold text-on-surface">Hamilton / ML3</span>
+</div>
+<div class="flex justify-between items-center gap-12">
+<span class="font-label text-[10px] uppercase text-slate-500 tracking-tighter">Surface Type</span>
+<span class="font-label text-xs font-bold text-tertiary">Gravel / Sandstone</span>
+</div>
+<div class="flex justify-between items-center gap-12">
+<span class="font-label text-[10px] uppercase text-slate-500 tracking-tighter">Next Event</span>
+<span class="font-label text-xs font-bold text-on-surface">Sunday 10:00 AM</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Welcome Section (Asymmetric Editorial) -->
+<section class="py-32 bg-surface-container-low overflow-hidden">
+<div class="max-w-7xl mx-auto px-6 editorial-grid items-center">
+<div class="col-span-12 md:col-span-5 order-2 md:order-1">
+<div class="relative group">
+<img alt="Chatelherault Woods" class="rounded-lg shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-700" data-alt="Misty pine forest trail in Chatelherault Country Park with soft morning light filtering through the canopy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJYyAYRnivVm-OczAiHOuTedK8HvRU4FFMkQm-cfXc0WWG8keCIR48MJ7WtRz7lhKKobG0jEJQyaHHkx06W6xZAp3R5Z5NyYi2qcte9nclzm9wM6tL9PE9Iy1wWW8yG-WtLpFGvNXcALdjVSaqaPJn3sY7UmUk0Ok9qvCu022nbUSutHVt6GnVmH9jMFW2u0jNwh5VhJAFckS4F8dUHn7_MHyCwv3jr38oWJvy_OWxG9w3YOcKEIhHnQKfXJ4QowQApSSTx0XlMW4"/>
+<div class="absolute -bottom-6 -right-6 w-48 h-48 bg-tertiary-container/30 -z-10 rounded-lg"></div>
+</div>
+</div>
+<div class="col-span-12 md:col-span-6 md:col-start-7 order-1 md:order-2">
+<h2 class="font-headline text-4xl font-bold uppercase tracking-tight mb-8">Weekly Gatherings <br/> at the Park</h2>
+<div class="space-y-6 font-body text-on-surface-variant leading-relaxed">
+<p>
+                        Every weekend, Chatelherault Country Park transforms into a technical playground. Our community meets at the historic hunting lodge before descending into the river valley trails together.
+                    </p>
+<p>
+                        Whether you pilot a 1/10 scale crawler or a custom-built technical rig, we welcome all enthusiasts to join our weekly trail runs. We focus on technical precision over speed, tackling the natural sandstone formations and challenging woodland climbs that define the Scottish landscape.
+                    </p>
+</div>
+<div class="mt-12 flex items-center gap-4">
+<div class="h-px flex-1 bg-outline-variant/30"></div>
+<span class="font-label text-xs uppercase tracking-widest text-slate-500">The Grounds</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Latest Member Builds (Bento Grid) -->
+<section class="py-32 bg-surface">
+<div class="max-w-7xl mx-auto px-6">
+<div class="flex justify-between items-end mb-16">
+<div>
+<span class="font-label text-tertiary text-xs uppercase tracking-[0.2em] mb-4 block">The Garage</span>
+<h2 class="font-headline text-5xl font-bold uppercase tracking-tighter">Community Builds</h2>
+</div>
+<button class="hidden md:block font-headline uppercase text-sm font-bold tracking-widest border-b border-tertiary pb-1 hover:text-tertiary transition-colors">View All Gallery</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[600px]">
+<!-- Large Highlight Card -->
+<div class="md:col-span-8 group relative overflow-hidden rounded-lg bg-surface-container-high">
+<img alt="Community Build 1" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="High-detail custom RC crawler with weathered paint job parked on a flat granite rock in dramatic overcast lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1kcO5KG7iNYKqs_pOWqRCnYf8Wf20AflliB1NOfZfNUBMrZ446ttqfa-tbpXjffPJDNb68oSP3kki9nHo4IG-Qj2oH6yyrmQAdUqbvGa65ptf0_sgcWWcI4gb83xMLBwwOLVfAs-qDRkv39cD-X7I7yxtW-rWtY9WiBdsiBiyOhJtCYSzZtNY5cxTr0AYY80RwzPs4a_P7DgeB-UYN05Ud78pJzlWCA7p5DKJb8bK2PSnL27zHH198k4DxCH8A_8SsXu5IdPQpb4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="absolute bottom-6 left-6 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+<span class="bg-tertiary text-on-tertiary px-3 py-1 text-[10px] font-bold uppercase font-label rounded-sm mb-2 inline-block">Featured Trail Rig</span>
+<h3 class="font-headline text-2xl font-bold text-white uppercase tracking-tight">Vanquish VRD Technical</h3>
+</div>
+</div>
+<!-- Secondary Cards -->
+<div class="md:col-span-4 grid grid-rows-2 gap-6">
+<div class="bg-surface-container-high rounded-lg overflow-hidden group relative">
+<img alt="Community Build 2" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="Technical RC car chassis showing intricate suspension and metal parts on a clean workbench" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-yjkLk0wBjvkDCqJ6Ijkeeu2Ejn2t6bXJH2HJuiC5UKAahXpAr126Mk3ttQimwp2vKGn_SboS_7WnEItM2MTHTQ9gk0rQ-2MLMPaNWEwOyP7V4Creti1lCCOhJv2jeK68WLW_YRJQJefgwhawfb-1HL5XviabjzjbsKLsQRlyUTfEOyH3QbaxTpe3mKVq3Jrj8Zx_aDhD9jQZ9e4pufo_JqjTedkAdKL7UDIfDVNz3XMWrpeGYfRsUkwtpr0uyCYEOR4vGfk3eY4"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="absolute bottom-4 left-4">
+<h4 class="font-headline text-lg font-bold text-white uppercase">TRX4 Sport Custom</h4>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-lg p-8 flex flex-col justify-between border-l-2 border-tertiary">
+<span class="font-label text-[10px] uppercase text-slate-500 tracking-[0.2em]">Weekly Highlight</span>
+<p class="font-body text-on-surface-variant italic">"The sheer torque on the riverbed trails today was incredible. This new gear set is a game changer for our weekend runs."</p>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container"></div>
+<span class="font-label text-xs font-bold">@Trailmaster_Jim</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Terrain Stats (Technical Grid) -->
+<section class="py-24 bg-surface-container-low border-y border-outline-variant/5">
+<div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12">
+<div class="flex flex-col gap-2">
+<span class="font-label text-[10px] uppercase tracking-widest text-tertiary">Total Trails</span>
+<span class="font-headline text-4xl font-bold tracking-tighter">14+</span>
+<div class="h-1 w-8 bg-surface-container-highest"></div>
+</div>
+<div class="flex flex-col gap-2">
+<span class="font-label text-[10px] uppercase tracking-widest text-tertiary">Community Members</span>
+<span class="font-headline text-4xl font-bold tracking-tighter">150</span>
+<div class="h-1 w-8 bg-surface-container-highest"></div>
+</div>
+<div class="flex flex-col gap-2">
+<span class="font-label text-[10px] uppercase tracking-widest text-tertiary">Max Incline</span>
+<span class="font-headline text-4xl font-bold tracking-tighter">52°</span>
+<div class="h-1 w-8 bg-surface-container-highest"></div>
+</div>
+<div class="flex flex-col gap-2">
+<span class="font-label text-[10px] uppercase tracking-widest text-tertiary">Next Meetup</span>
+<span class="font-headline text-4xl font-bold tracking-tighter">04D</span>
+<div class="h-1 w-8 bg-surface-container-highest"></div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-[#1a1c1e] w-full py-12 px-6 border-t-0">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+<!-- Brand Column -->
+<div class="space-y-4">
+<div class="font-['Space_Grotesk'] font-bold text-slate-200 text-xl uppercase tracking-tighter">Chatelherault RC</div>
+<p class="font-['Manrope'] text-sm text-slate-400 max-w-xs leading-relaxed">
+                    Engineering precision meets natural terrain. Join Scotland's premier RC scale and crawler collective for weekly adventures.
+                </p>
+</div>
+<!-- Links Column -->
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col space-y-2">
+<a class="font-['Manrope'] text-sm text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="font-['Manrope'] text-sm text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+</div>
+<div class="flex flex-col space-y-2">
+<a class="font-['Manrope'] text-sm text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="#">Safety Guidelines</a>
+<a class="font-['Manrope'] text-sm text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="#">Sponsors</a>
+</div>
+</div>
+<!-- Newsletter/Location -->
+<div class="flex flex-col justify-between items-end md:items-end">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-slate-500 hover:text-[#d97706] cursor-pointer transition-colors" data-icon="share">share</span>
+<span class="material-symbols-outlined text-slate-500 hover:text-[#d97706] cursor-pointer transition-colors" data-icon="location_on">location_on</span>
+</div>
+<p class="font-['Manrope'] text-xs text-slate-500 text-right mt-8">
+                    © 2024 Chatelherault RC. Engineered for the Terrain.
+                </p>
+</div>
+</div>
+</footer>
+</body></html>

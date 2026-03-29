@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #121416;
+            background-image: 
+                radial-gradient(circle at 2px 2px, rgba(140, 146, 140, 0.05) 1px, transparent 0);
+            background-size: 32px 32px;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed-dim": "#ffb5a0",
+              "on-secondary": "#243239",
+              "on-secondary-container": "#abbbc4",
+              "surface-dim": "#121416",
+              "on-tertiary": "#601500",
+              "inverse-surface": "#e2e2e5",
+              "secondary-fixed": "#d5e5ee",
+              "outline": "#8c928c",
+              "on-primary-fixed": "#072012",
+              "surface": "#121416",
+              "surface-container-low": "#1a1c1e",
+              "on-secondary-fixed-variant": "#3a4950",
+              "secondary": "#b9c9d2",
+              "on-primary-container": "#97b39e",
+              "surface-container": "#1e2022",
+              "inverse-on-surface": "#2f3133",
+              "surface-variant": "#333537",
+              "surface-container-highest": "#333537",
+              "secondary-container": "#3c4b53",
+              "surface-tint": "#b1ceb7",
+              "on-error": "#690005",
+              "tertiary-container": "#7c1e00",
+              "outline-variant": "#424843",
+              "secondary-fixed-dim": "#b9c9d2",
+              "primary-fixed-dim": "#b1ceb7",
+              "on-surface-variant": "#c2c8c1",
+              "on-surface": "#e2e2e5",
+              "on-primary-fixed-variant": "#334c3b",
+              "on-tertiary-fixed-variant": "#862201",
+              "primary": "#b1ceb7",
+              "primary-fixed": "#ccead2",
+              "surface-bright": "#37393b",
+              "surface-container-lowest": "#0c0e10",
+              "surface-container-high": "#282a2c",
+              "error": "#ffb4ab",
+              "tertiary-fixed": "#ffdbd1",
+              "background": "#121416",
+              "primary-container": "#2d4635",
+              "error-container": "#93000a",
+              "on-tertiary-fixed": "#3b0900",
+              "on-tertiary-container": "#ff8d6d",
+              "tertiary": "#ffb5a0",
+              "on-primary": "#1d3626",
+              "inverse-primary": "#4a6452",
+              "on-background": "#e2e2e5",
+              "on-secondary-fixed": "#0f1d24",
+              "on-error-container": "#ffdad6"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col selection:bg-tertiary selection:text-on-tertiary">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full border-b-0 bg-[#121416]/70 backdrop-blur-xl z-50">
+<div class="flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold tracking-widest text-slate-100 font-headline uppercase">CHATELHERAULT RC</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-4 text-slate-400 font-medium font-headline tracking-tighter uppercase text-sm">
+<span class="material-symbols-outlined text-orange-600" data-icon="security">security</span>
+<span class="material-symbols-outlined hover:text-orange-500 transition-colors cursor-pointer" data-icon="terminal">terminal</span>
+</div>
+<button class="bg-tertiary text-on-tertiary px-4 py-1.5 rounded-sm font-label text-[10px] font-bold tracking-widest hover:bg-surface-bright transition-colors duration-75 active:scale-95">
+                    ADMIN MODE
+                </button>
+</div>
+</div>
+<div class="bg-gradient-to-r from-slate-800/50 via-slate-700/50 to-slate-800/50 h-[1px]"></div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center px-4 pt-16">
+<div class="w-full max-w-lg relative">
+<!-- Decorative Terminal Elements -->
+<div class="absolute -top-12 left-0 font-label text-[10px] text-slate-500 tracking-[0.2em] flex flex-col gap-1">
+<span>TERMINAL_ID: CRK-092-ALPHA</span>
+<span>UPLINK_STATUS: SECURE_CHANNEL_STABLE</span>
+</div>
+<!-- Login Container (Machined Edge Aesthetic) -->
+<div class="bg-surface-container-low p-1 rounded-sm overflow-hidden relative group">
+<!-- Background visual noise/texture -->
+<div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: linear-gradient(45deg, #282a2c 25%, transparent 25%, transparent 50%, #282a2c 50%, #282a2c 75%, transparent 75%, transparent); background-size: 4px 4px;"></div>
+<div class="bg-surface-container-high p-8 md:p-12 relative z-10">
+<!-- Header Section -->
+<div class="mb-10 text-center md:text-left">
+<div class="inline-flex items-center gap-2 mb-2">
+<span class="w-2 h-2 rounded-full bg-orange-600 animate-pulse"></span>
+<span class="font-label text-[10px] text-orange-500 tracking-[0.3em] font-bold">AUTHENTICATION REQUIRED</span>
+</div>
+<h1 class="font-headline text-3xl md:text-4xl font-bold tracking-tighter uppercase text-on-surface">SYSTEM LEVEL 0</h1>
+<p class="font-label text-[10px] text-slate-500 mt-2 tracking-widest leading-relaxed">AUTHORIZED PERSONNEL ONLY. ALL ACTIONS ARE LOGGED BY KERNEL V2.0.4 SECURITY DAEMON.</p>
+</div>
+<!-- Technical Inputs -->
+<form class="space-y-8" onsubmit="return false;">
+<div class="relative group/input">
+<label class="block font-label text-[10px] text-slate-500 tracking-widest uppercase mb-2 ml-1" for="root-id">Root ID</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-600 group-focus-within/input:text-orange-500 transition-colors" data-icon="account_circle">account_circle</span>
+<input class="w-full bg-surface-container-highest border-0 border-b-2 border-slate-700 focus:border-orange-500 focus:ring-0 text-on-surface font-headline tracking-widest py-4 pl-12 pr-4 transition-all duration-300 placeholder:text-slate-700 placeholder:text-xs" id="root-id" placeholder="UID-000-ADMIN" type="text"/>
+</div>
+</div>
+<div class="relative group/input">
+<label class="block font-label text-[10px] text-slate-500 tracking-widest uppercase mb-2 ml-1" for="secret-key">Secret Key</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-600 group-focus-within/input:text-orange-500 transition-colors" data-icon="key">key</span>
+<input class="w-full bg-surface-container-highest border-0 border-b-2 border-slate-700 focus:border-orange-500 focus:ring-0 text-on-surface font-headline tracking-widest py-4 pl-12 pr-4 transition-all duration-300 placeholder:text-slate-700 placeholder:text-xs" id="secret-key" placeholder="••••••••••••" type="password"/>
+</div>
+</div>
+<div class="pt-4">
+<button class="w-full group relative overflow-hidden bg-tertiary-container py-4 flex items-center justify-center gap-3 active:scale-[0.98] transition-all" type="submit">
+<span class="relative z-10 font-headline font-bold tracking-widest text-on-tertiary-container group-hover:text-tertiary transition-colors">INITIALIZE ROOT ACCESS</span>
+<span class="material-symbols-outlined relative z-10 text-on-tertiary-container group-hover:text-tertiary transition-colors" data-icon="login">login</span>
+<div class="absolute inset-0 bg-tertiary translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out opacity-10"></div>
+</button>
+</div>
+</form>
+<!-- Bottom Metadata -->
+<div class="mt-12 pt-8 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-4">
+<div class="flex flex-col">
+<span class="font-label text-[8px] text-slate-600 uppercase tracking-tighter">Encryption</span>
+<span class="font-label text-[10px] text-slate-400 font-bold">AES-256-GCM</span>
+</div>
+<div class="w-[1px] h-6 bg-slate-800"></div>
+<div class="flex flex-col">
+<span class="font-label text-[8px] text-slate-600 uppercase tracking-tighter">Node</span>
+<span class="font-label text-[10px] text-slate-400 font-bold">CH-PRIMARY-01</span>
+</div>
+</div>
+<a class="font-label text-[10px] text-orange-500/60 hover:text-orange-500 transition-colors tracking-widest uppercase flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[14px]" data-icon="help_center">help_center</span>
+                            Forgot Credentials?
+                        </a>
+</div>
+</div>
+<!-- Asymmetric HUD Detail -->
+<div class="absolute top-0 right-0 w-24 h-24 pointer-events-none opacity-20">
+<svg class="w-full h-full text-orange-500" viewbox="0 0 100 100">
+<path d="M0 0 L100 0 L100 100 Z" fill="currentColor"></path>
+</svg>
+</div>
+</div>
+<div class="mt-8 flex justify-center gap-8 font-label text-[9px] text-slate-600 tracking-[0.4em] uppercase">
+<span class="flex items-center gap-2"><span class="w-1 h-1 bg-slate-700"></span> PROTOCOL: SSH-V3</span>
+<span class="flex items-center gap-2"><span class="w-1 h-1 bg-slate-700"></span> HANDSHAKE: VERIFIED</span>
+</div>
+</div>
+</main>
+<!-- Side Navigation (Supressed for Transactional screen per Shell Visibility Rule) -->
+<!-- Footer -->
+<footer class="w-full py-4 border-t-0 bg-[#121416] mt-auto">
+<div class="flex justify-between items-center px-8 w-full">
+<span class="font-label text-[10px] tracking-widest uppercase text-slate-600">© 2024 CHATELHERAULT RC - KERNEL V2.0.4</span>
+<div class="flex gap-6">
+<a class="font-label text-[10px] tracking-widest uppercase text-slate-600 hover:text-slate-300 transition-opacity" href="#">System Status</a>
+<a class="font-label text-[10px] tracking-widest uppercase text-slate-600 hover:text-slate-300 transition-opacity" href="#">Documentation</a>
+<a class="font-label text-[10px] tracking-widest uppercase text-slate-600 hover:text-slate-300 transition-opacity" href="#">Auth Logs</a>
+</div>
+</div>
+<div class="bg-slate-800/20 h-[1px] mt-4"></div>
+</footer>
+<!-- Background Imagery Elements (Tactical feeling) -->
+<div class="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+<div class="absolute top-1/4 -right-24 w-96 h-96 bg-orange-900/10 blur-[120px] rounded-full"></div>
+<div class="absolute bottom-1/4 -left-24 w-96 h-96 bg-primary-container/10 blur-[120px] rounded-full"></div>
+<!-- Technical overlay pattern -->
+<div class="absolute inset-0 opacity-[0.03]" data-alt="microscopic detail of high-grade carbon fiber weave texture with subtle light reflections" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBRhqhgH1g1JXGPt9tbKN0KEEW8keCt_-qTJmJg47OoQm5NWOJtSFTMhQFatSiB2SUd7dpISxvkvNhKw-aBjU7Gdo2SRSg3d7q-BfHYHYmn0bH_5O3CJBa0VOGl-Dz9BKm02JvMUioAV4FpigQcsg8DxRNGI-VG7mch4-5_Qp5FKQ3lD414k7cXigK1dx6BviGhAGSrl_FW8Mm4UMvd2F-Zka3u6IeyH4DSWiy3ErEd18Q6m2gbGMAZ2A2yCDMUz-7V9GRA6Z06GBk');"></div>
+</div>
+</body></html>
