@@ -22,11 +22,8 @@
     <a data-account-login href="/admin/login.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors border-b border-white/5">
       Login
     </a>
-    <a data-account-profile href="/admin/index.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors hidden">
-      Profile
-    </a>
-    <a data-account-details href="/admin/index.html#account" role="menuitem" class="block px-4 py-3 text-sm text-slate-300 hover:bg-white/5 transition-colors border-t border-white/5 hidden">
-      Account Details
+    <a data-account-superuser href="/pages/super-user.html" role="menuitem" class="block px-4 py-3 text-sm text-slate-100 hover:bg-white/5 transition-colors hidden">
+      Super User
     </a>
     <button type="button" data-account-logout class="w-full text-left px-4 py-3 text-sm text-[#ffb5a0] hover:bg-white/5 transition-colors border-t border-white/5 hidden">
       Logout
@@ -36,8 +33,7 @@
   document.body.appendChild(menu)
 
   const loginItem = menu.querySelector('[data-account-login]')
-  const profileItem = menu.querySelector('[data-account-profile]')
-  const detailsItem = menu.querySelector('[data-account-details]')
+  const superUserItem = menu.querySelector('[data-account-superuser]')
   const logoutItem = menu.querySelector('[data-account-logout]')
 
   if (!trigger.hasAttribute('tabindex')) {
@@ -48,10 +44,9 @@
   trigger.setAttribute('aria-haspopup', 'menu')
   trigger.setAttribute('aria-expanded', 'false')
 
-  function setMenuState(isLoggedIn) {
+  function setMenuState(isLoggedIn, role) {
     loginItem?.classList.toggle('hidden', isLoggedIn)
-    profileItem?.classList.toggle('hidden', !isLoggedIn)
-    detailsItem?.classList.toggle('hidden', !isLoggedIn)
+    superUserItem?.classList.toggle('hidden', !(isLoggedIn && role === 'owner'))
     logoutItem?.classList.toggle('hidden', !isLoggedIn)
   }
 
@@ -63,13 +58,26 @@
       })
 
       if (!response.ok) {
+        const session = { ok: false }
+        window.__CHRC_SESSION = session
+        window.dispatchEvent(new CustomEvent('chrc:session', { detail: session }))
         setMenuState(false)
         return
       }
 
       const payload = await response.json()
-      setMenuState(Boolean(payload?.ok))
+      const session = {
+        ok: Boolean(payload?.ok),
+        username: payload?.username || '',
+        role: payload?.role || '',
+      }
+      window.__CHRC_SESSION = session
+      window.dispatchEvent(new CustomEvent('chrc:session', { detail: session }))
+      setMenuState(session.ok, session.role)
     } catch {
+      const session = { ok: false }
+      window.__CHRC_SESSION = session
+      window.dispatchEvent(new CustomEvent('chrc:session', { detail: session }))
       setMenuState(false)
     }
   }
@@ -158,6 +166,6 @@
     }
   })
 
-  setMenuState(false)
+  setMenuState(false, '')
   loadSessionState()
 })()

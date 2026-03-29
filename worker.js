@@ -10,7 +10,7 @@ import {
 } from './functions/_lib/auth.js'
 
 const PUBLIC_ADMIN_PATHS = new Set(['/admin/login.html', '/admin/root-login.html'])
-const OWNER_ONLY_PATHS = new Set(['/admin/root-owner.html', '/admin/godmode.html', '/admin/root-management.html'])
+const OWNER_ONLY_SITE_PATHS = new Set(['/pages/super-user.html'])
 
 function json(data, init = {}) {
   const headers = new Headers(init.headers || {})
@@ -82,7 +82,7 @@ async function handleLogin(request, env) {
       ok: true,
       username: user.username,
       role: user.role,
-      redirectTo: user.role === 'owner' ? '/admin/root-owner.html' : '/admin/dashboard.html',
+      redirectTo: '/index.html',
     },
     { headers }
   )
@@ -329,8 +329,31 @@ async function guardAdminRoute(request, env) {
     return redirect('/admin/login.html', true)
   }
 
-  if (OWNER_ONLY_PATHS.has(path) && session.role !== 'owner') {
-    return redirect('/admin/dashboard.html')
+  return redirect('/index.html')
+}
+
+async function guardOwnerOnlySiteRoute(request, env) {
+  const path = new URL(request.url).pathname.toLowerCase()
+
+  if (!OWNER_ONLY_SITE_PATHS.has(path)) {
+    return null
+  }
+
+  const cookies = parseCookies(request.headers.get('cookie') || '')
+  const token = cookies[getSessionCookieName()]
+
+  if (!token) {
+    return redirect('/admin/login.html')
+  }
+
+  const session = await verifySessionToken(token, env)
+
+  if (!session) {
+    return redirect('/admin/login.html', true)
+  }
+
+  if (session.role !== 'owner') {
+    return redirect('/index.html')
   }
 
   return null
@@ -339,6 +362,10 @@ async function guardAdminRoute(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
+
+    if (url.pathname === '/admin/root-login.html') {
+      return redirect('/admin/login.html')
+    }
 
     if (url.pathname === '/api/login' && request.method === 'POST') {
       return handleLogin(request, env)
@@ -370,6 +397,12 @@ export default {
 
     if (adminBlockResponse) {
       return adminBlockResponse
+    }
+
+    const ownerOnlyBlockResponse = await guardOwnerOnlySiteRoute(request, env)
+
+    if (ownerOnlyBlockResponse) {
+      return ownerOnlyBlockResponse
     }
 
     return env.ASSETS.fetch(request)

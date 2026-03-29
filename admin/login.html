@@ -239,7 +239,7 @@
               throw new Error(payload.message || 'Login failed')
             }
 
-            window.location.href = payload.redirectTo || '/admin/dashboard.html'
+            window.location.href = payload.redirectTo || '/index.html'
           } catch {
             errorMessage.textContent = 'Login failed. Check credentials and ensure the auth server is running.'
             errorMessage.classList.remove('hidden')

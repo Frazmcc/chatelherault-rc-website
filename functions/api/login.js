@@ -66,7 +66,7 @@ export async function onRequestPost(context) {
       ok: true,
       username: user.username,
       role: user.role,
-      redirectTo: user.role === 'owner' ? '/admin/root-owner.html' : '/admin/dashboard.html',
+      redirectTo: '/index.html',
     },
     { headers }
   )

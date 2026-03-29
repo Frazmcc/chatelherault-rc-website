@@ -70,7 +70,7 @@ app.post('/api/login', async (req, res) => {
       ok: true,
       username: user.username,
       role: user.role,
-      redirectTo: user.role === 'owner' ? '/admin/root-owner.html' : '/admin/dashboard.html',
+      redirectTo: '/index.html',
     })
   } catch (error) {
     return res.status(500).json({ ok: false, message: 'Authentication service error.' })

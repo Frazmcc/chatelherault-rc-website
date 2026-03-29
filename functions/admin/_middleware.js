@@ -6,7 +6,6 @@ import {
 } from '../_lib/auth.js'
 
 const PUBLIC_ADMIN_PATHS = new Set(['/admin/login.html', '/admin/root-login.html'])
-const OWNER_ONLY_PATHS = new Set(['/admin/root-owner.html', '/admin/godmode.html', '/admin/root-management.html'])
 
 function redirect(url, location, clearSession = false) {
   const headers = new Headers({ location })
@@ -40,9 +39,5 @@ export async function onRequest(context) {
     return redirect(url, '/admin/login.html', true)
   }
 
-  if (OWNER_ONLY_PATHS.has(path) && session.role !== 'owner') {
-    return redirect(url, '/admin/dashboard.html')
-  }
-
-  return next()
+  return redirect(url, '/index.html')
 }

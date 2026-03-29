@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatelherault RC - Super User</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: '#121416',
+            surface: '#1a1c1e',
+            panel: '#1e2022',
+            accent: '#d97706',
+          },
+          fontFamily: {
+            headline: ['Space Grotesk'],
+            body: ['Manrope'],
+            label: ['Inter'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background text-slate-100 font-body min-h-screen">
+  <nav class="fixed top-0 w-full z-50 bg-[#121416]/80 backdrop-blur-xl border-b border-white/5">
+    <div class="flex flex-wrap md:flex-nowrap justify-between items-center max-w-7xl mx-auto px-4 md:px-6 h-auto md:h-20 py-3 md:py-0 gap-y-2">
+      <div class="text-2xl font-bold tracking-tighter text-slate-100 font-headline uppercase">Chatelherault RC</div>
+      <div class="order-3 md:order-none flex w-full md:w-auto justify-center items-center gap-5 md:gap-8 text-[11px] md:text-sm overflow-x-auto whitespace-nowrap pb-1 md:pb-0">
+        <a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100" href="../index.html">Home</a>
+        <a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100" href="meetups.html">Meetups</a>
+        <a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100" href="media.html">Media</a>
+        <a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100" href="spotlight.html">Spotlight</a>
+        <a class="font-headline tracking-tight uppercase text-slate-400 hover:text-slate-100" href="contact.html">Contact</a>
+        <a class="font-headline tracking-tight uppercase text-accent border-b-2 border-accent pb-1" href="super-user.html">Super User</a>
+      </div>
+      <div class="flex items-center space-x-6">
+        <span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-slate-100 transition-colors" data-account-menu-trigger="true">account_circle</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-6 pt-32 pb-16">
+    <header class="mb-10">
+      <p class="text-[10px] uppercase tracking-[0.2em] text-accent font-label font-bold">Owner Only</p>
+      <h1 class="text-4xl md:text-5xl font-headline font-bold tracking-tight mt-2">Super User: Account Management</h1>
+      <p class="text-slate-400 mt-3 max-w-2xl">Only owner accounts can add or remove admin and mod users. Admin and mod accounts can edit public site panels, text, spotlight content, and media.</p>
+    </header>
+
+    <section class="bg-surface rounded-lg border border-white/5 p-6">
+      <div class="flex justify-between items-start mb-6 gap-4 flex-wrap">
+        <h2 class="font-headline font-bold text-xl tracking-tight">Users</h2>
+        <button id="show-add-user-btn" class="text-accent border border-accent/30 px-3 py-1 rounded-sm text-[11px] uppercase tracking-widest font-bold hover:bg-accent/10">Add Account</button>
+      </div>
+
+      <div id="add-user-form" class="hidden mb-6 p-4 bg-panel rounded-md border border-accent/20">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+          <input id="new-username" type="text" autocomplete="off" placeholder="Username" class="bg-[#0f1114] border border-white/10 rounded px-3 py-2" />
+          <input id="new-password" type="password" autocomplete="new-password" placeholder="Password (min 8)" class="bg-[#0f1114] border border-white/10 rounded px-3 py-2" />
+          <select id="new-role" class="bg-[#0f1114] border border-white/10 rounded px-3 py-2">
+            <option value="admin">Admin</option>
+            <option value="mod">Mod</option>
+          </select>
+        </div>
+        <div id="add-user-error" class="hidden text-sm text-[#ffb4ab] mb-3"></div>
+        <div class="flex gap-2">
+          <button id="submit-add-user" class="bg-accent text-white px-3 py-2 rounded text-[11px] uppercase tracking-widest font-bold">Create</button>
+          <button id="cancel-add-user" class="bg-[#25282d] text-slate-300 px-3 py-2 rounded text-[11px] uppercase tracking-widest font-bold">Cancel</button>
+        </div>
+      </div>
+
+      <div id="user-list" class="space-y-2">
+        <p class="text-slate-500 text-sm">Loading accounts...</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="../scripts/account-menu.js"></script>
+  <script>
+    const userList = document.getElementById('user-list')
+    const addUserForm = document.getElementById('add-user-form')
+    const addUserError = document.getElementById('add-user-error')
+
+    function escHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    }
+
+    function renderUsers(users) {
+      if (!users.length) {
+        userList.innerHTML = '<p class="text-slate-500 text-sm">No admin/mod accounts created yet.</p>'
+        return
+      }
+
+      userList.innerHTML = users.map((u) => `
+        <div class="flex items-center justify-between bg-panel border border-white/5 rounded-md px-4 py-3">
+          <div>
+            <p class="font-bold">${escHtml(u.username)}</p>
+            <p class="text-[11px] text-slate-500 uppercase tracking-wider">${escHtml(u.role)} · ${new Date(u.created_at).toLocaleString()}</p>
+          </div>
+          <button data-delete-user="${u.id}" class="text-[11px] uppercase tracking-widest font-bold text-[#ffb4ab] border border-[#ffb4ab]/20 px-3 py-1 rounded hover:bg-[#ffb4ab]/10">Delete</button>
+        </div>
+      `).join('')
+
+      userList.querySelectorAll('[data-delete-user]').forEach((btn) => {
+        btn.addEventListener('click', () => deleteUser(Number(btn.dataset.deleteUser)))
+      })
+    }
+
+    async function loadUsers() {
+      userList.innerHTML = '<p class="text-slate-500 text-sm">Loading accounts...</p>'
+      try {
+        const response = await fetch('/api/users', { credentials: 'include' })
+        if (!response.ok) {
+          userList.innerHTML = '<p class="text-[#ffb4ab] text-sm">Unable to load users.</p>'
+          return
+        }
+        const payload = await response.json()
+        renderUsers(payload.users || [])
+      } catch {
+        userList.innerHTML = '<p class="text-[#ffb4ab] text-sm">Network error while loading users.</p>'
+      }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('Delete this account?')) return
+
+      const response = await fetch(`/api/users/${id}`, { method: 'DELETE', credentials: 'include' })
+      if (!response.ok) {
+        alert('Unable to delete account.')
+        return
+      }
+
+      loadUsers()
+    }
+
+    document.getElementById('show-add-user-btn').addEventListener('click', () => {
+      addUserForm.classList.toggle('hidden')
+      addUserError.classList.add('hidden')
+    })
+
+    document.getElementById('cancel-add-user').addEventListener('click', () => {
+      addUserForm.classList.add('hidden')
+      addUserError.classList.add('hidden')
+      document.getElementById('new-username').value = ''
+      document.getElementById('new-password').value = ''
+      document.getElementById('new-role').value = 'admin'
+    })
+
+    document.getElementById('submit-add-user').addEventListener('click', async () => {
+      addUserError.classList.add('hidden')
+
+      const username = document.getElementById('new-username').value.trim()
+      const password = document.getElementById('new-password').value
+      const role = document.getElementById('new-role').value
+
+      if (!username || !password) {
+        addUserError.textContent = 'Username and password are required.'
+        addUserError.classList.remove('hidden')
+        return
+      }
+
+      const button = document.getElementById('submit-add-user')
+      button.disabled = true
+      button.textContent = 'Creating...'
+
+      try {
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ username, password, role }),
+        })
+
+        const payload = await response.json()
+        if (!response.ok) {
+          addUserError.textContent = payload.message || 'Unable to create account.'
+          addUserError.classList.remove('hidden')
+          return
+        }
+
+        addUserForm.classList.add('hidden')
+        document.getElementById('new-username').value = ''
+        document.getElementById('new-password').value = ''
+        document.getElementById('new-role').value = 'admin'
+        loadUsers()
+      } finally {
+        button.disabled = false
+        button.textContent = 'Create'
+      }
+    })
+
+    loadUsers()
+  </script>
+</body>
+</html>
