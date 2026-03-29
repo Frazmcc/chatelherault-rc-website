@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: '#121416',
+            surface: '#1e2022',
+            panel: '#282a2c',
+            primary: '#b1ceb7',
+            tertiary: '#d97706',
+            text: '#e2e2e5',
+            muted: '#9fa4ab'
+          },
+          fontFamily: {
+            headline: ['Space Grotesk'],
+            body: ['Manrope'],
+            label: ['Inter']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-text font-body">
+  <nav class="fixed top-0 w-full z-50 bg-[#121416]/80 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
+      <div class="text-2xl font-bold tracking-tighter font-headline">Chatelherault RC</div>
+      <div class="flex items-center gap-6 text-sm uppercase tracking-wide">
+        <a class="text-muted hover:text-text" href="../index.html">Home</a>
+        <a class="text-muted hover:text-text" href="meetups.html">Meetups</a>
+        <a class="text-muted hover:text-text" href="register-rig.html">Register Rig</a>
+        <a class="text-tertiary border-b-2 border-tertiary pb-1" href="members-rigs.html">Members Rigs</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-28 pb-20 px-6 max-w-7xl mx-auto">
+    <header class="mb-10">
+      <h1 class="font-headline text-5xl font-bold tracking-tight">Members Rigs</h1>
+      <p class="text-muted mt-3 max-w-3xl">Approved member builds from the Chatelherault RC community.</p>
+    </header>
+
+    <div id="members-rigs-status" class="hidden text-sm rounded border px-3 py-2 mb-6"></div>
+    <section id="members-rigs-list" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></section>
+  </main>
+
+  <script src="../scripts/account-menu.js"></script>
+  <script src="../scripts/panel-editor.js"></script>
+  <script src="../scripts/url-title-lock.js"></script>
+  <script src="../scripts/members-rigs.js"></script>
+</body>
+</html>

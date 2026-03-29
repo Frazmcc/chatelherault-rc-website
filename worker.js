@@ -330,6 +330,19 @@ async function handleListRigSubmissions(request, env) {
   return json({ ok: true, submissions: results || [] })
 }
 
+async function handleListPublicApprovedRigs(env) {
+  await ensureRigSubmissionTable(env)
+
+  const { results } = await env.DB.prepare(
+    `SELECT id, owner_name, chassis_model, battery, upgrades, blog_text, media_items, submitted_at
+     FROM rig_submissions
+     WHERE status = 'approved'
+     ORDER BY datetime(submitted_at) DESC`
+  ).all()
+
+  return json({ ok: true, rigs: results || [] })
+}
+
 async function handleRigSubmissionDecision(request, env, executionCtx) {
   await ensureRigSubmissionTable(env)
 
@@ -1053,6 +1066,10 @@ export default {
 
     if (url.pathname === '/api/rig-submissions' && request.method === 'GET') {
       return handleListRigSubmissions(request, env)
+    }
+
+    if (url.pathname === '/api/rig-submissions-public' && request.method === 'GET') {
+      return handleListPublicApprovedRigs(env)
     }
 
     if (/^\/api\/rig-submissions\/\d+\/decision$/.test(url.pathname) && request.method === 'POST') {
