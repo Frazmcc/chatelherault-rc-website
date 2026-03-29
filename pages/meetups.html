@@ -193,8 +193,8 @@
 <p class="text-on-surface-variant text-xs font-label mt-1" id="weather-target-time">Forecast date: Upcoming Sunday</p>
 </div>
 <div class="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-sm border border-primary/20">
-<span class="material-symbols-outlined text-primary text-sm">info</span>
-<span class="text-[10px] font-bold font-label text-primary uppercase tracking-widest">Met Office Verified</span>
+<span class="material-symbols-outlined text-primary text-sm">calendar_month</span>
+<span class="text-[10px] font-bold font-label text-primary uppercase tracking-widest" id="weather-target-badge-date">Upcoming Sunday</span>
 </div>
 </div>
 <div class="overflow-x-auto">
@@ -249,9 +249,10 @@
 <script>
   (() => {
     const targetEl = document.getElementById('weather-target-time')
+    const badgeDateEl = document.getElementById('weather-target-badge-date')
     const tableBody = document.getElementById('weather-forecast-body')
 
-    if (!targetEl || !tableBody) {
+    if (!targetEl || !badgeDateEl || !tableBody) {
       return
     }
 
@@ -330,7 +331,9 @@
     // If it is already past Sunday 13:00 UK time, roll to next Sunday.
     const target = getNextSundayTarget()
 
-    targetEl.textContent = `Forecast date: ${formatSundayDate(target)}`
+    const sundayDateText = formatSundayDate(target)
+    targetEl.textContent = `Forecast date: ${sundayDateText}`
+    badgeDateEl.textContent = sundayDateText
 
     const targetKey = target.toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
 
@@ -361,7 +364,8 @@
         }
 
         const resolutionLabel = formatResolutionLabel(payload.resolution)
-        targetEl.textContent = `Forecast date: ${formatSundayDate(target)} (${resolutionLabel})`
+        targetEl.textContent = `Forecast date: ${sundayDateText} (${resolutionLabel})`
+        badgeDateEl.textContent = sundayDateText
 
         renderRows(rowsToRender)
       })
