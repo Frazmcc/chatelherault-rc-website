@@ -1,23 +1,7 @@
 [
   {
     "results": [],
-    "success": true,
-    "meta": {
-      "served_by": "v3-prod",
-      "served_by_region": "WEUR",
-      "served_by_colo": "LHR",
-      "served_by_primary": true,
-      "timings": {
-        "sql_duration_ms": 0.2468
-      },
-      "duration": 0.2468,
-      "changes": 0,
-      "last_row_id": 0,
-      "changed_db": false,
-      "size_after": 40960,
-      "rows_read": 2,
-      "rows_written": 0,
-      "total_attempts": 1
-    }
+    "generated_at": "2026-03-29T21:52:28.318Z",
+    "source": "cloudflare-d1-live"
   }
 ]
