@@ -28,27 +28,6 @@
         "value": "https://maps.google.com/maps?q=55.76278,-4.010164&t=k&z=18&ie=UTF8&iwloc=&output=embed",
         "updated_by": "Frazer",
         "updated_at": "2026-03-29 21:44:32"
-      },
-      {
-        "page": "_pages_meetups",
-        "key": "panel-1-fields",
-        "value": "[\"Location\",\"Trail Walk\",\"Join the collective at Chatelherault Country Park. Our weekly meetups cover technical rock crawling, high-speed trail runs, and relaxed trails. All ages and skill levels welcome.\"]",
-        "updated_by": "Frazer",
-        "updated_at": "2026-03-29 19:27:18"
-      },
-      {
-        "page": "_pages_meetups",
-        "key": "panel-2-fields",
-        "value": "[\"Next Run\",\"Sunday Field Ops\",\"schedule\",\"Arrival Window: 09:00am\",\"rocket_launch\",\"Rollout Target: 09:30am\",\"location_on\",\"Meet Point: Chatelherault Allotments Car Park\",\"grid_3x3\",\"///lively.woes.tinsel\",\"What to Bring\",\"Operator Checklist\",\"check_circle\",\"(Waterproof trail shoes are popular)\",\"check_circle\",\"check_circle\",\"(not required)\",\"check_circle\",\"check_circle\",\"(not required but recommended)\",\"satellite_alt\",\"Tactical view of the rendezvous point. Look for the technical staging area adjacent to the North Entrance loop.\",\"Coordinates: 55.76278, -4.010164\",\"Open in Google Maps\",\"wb_sunny\",\"Met Office Forecast: Chatelherault Country Park (09:00 - 13:00 Window)\",\"info\",\"Met Office Verified\",\"Sunny\",\"Partly Cloudy\",\"Cloudy\",\"Light Rain\",\"Light Rain\",\"\\\"If weather conditions exceed Safety Protocol 4 (Heavy Rain/Gale), check the Status board or Deployment Alerts for cancellation intel.\\\"\"]",
-        "updated_by": "Frazer",
-        "updated_at": "2026-03-29 19:23:27"
-      },
-      {
-        "page": "_pages_meetups",
-        "key": "panel-2-media",
-        "value": "https://maps.google.com/maps?q=55.76278,-4.010164&t=k&z=18&ie=UTF8&iwloc=&output=embed",
-        "updated_by": "Frazer",
-        "updated_at": "2026-03-29 19:23:27"
       }
     ],
     "success": true,
@@ -58,14 +37,14 @@
       "served_by_colo": "LHR",
       "served_by_primary": true,
       "timings": {
-        "sql_duration_ms": 0.3555
+        "sql_duration_ms": 0.223
       },
-      "duration": 0.3555,
+      "duration": 0.223,
       "changes": 0,
       "last_row_id": 0,
       "changed_db": false,
       "size_after": 40960,
-      "rows_read": 14,
+      "rows_read": 8,
       "rows_written": 0,
       "total_attempts": 1
     }
