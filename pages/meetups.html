@@ -187,13 +187,14 @@
 <div>
 <h2 class="font-headline text-2xl font-bold text-white uppercase tracking-tight flex items-center gap-3">
 <span class="material-symbols-outlined text-tertiary">wb_sunny</span>
-                        Deployment Weather
+            Sunday Trail Weather Forecast
                     </h2>
-<p class="text-on-surface-variant text-sm font-body mt-1">Met Office Forecast: Chatelherault Country Park (09:00 - 13:00 Window)</p>
+<p class="text-on-surface-variant text-sm font-body mt-1">Met Office Forecast: Chatelherault Country Park</p>
+<p class="text-on-surface-variant text-xs font-label mt-1" id="weather-target-time">Forecast date: Upcoming Sunday</p>
 </div>
 <div class="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-sm border border-primary/20">
-<span class="material-symbols-outlined text-primary text-sm">info</span>
-<span class="text-[10px] font-bold font-label text-primary uppercase tracking-widest">Met Office Verified</span>
+<span class="material-symbols-outlined text-primary text-sm">calendar_month</span>
+<span class="text-[10px] font-bold font-label text-primary uppercase tracking-widest" id="weather-target-badge-date">Upcoming Sunday</span>
 </div>
 </div>
 <div class="overflow-x-auto">
@@ -207,79 +208,12 @@
 <th class="pb-4 font-bold">Wind</th>
 </tr>
 </thead>
-<tbody class="font-body text-sm divide-y divide-white/5">
-<!-- Forecast Row 1 (Simulated Data based on format) -->
+<tbody class="font-body text-sm divide-y divide-white/5" id="weather-forecast-body">
 <tr class="group hover:bg-white/5 transition-colors">
-<td class="py-4 font-headline font-bold text-white">09:00</td>
-<td class="py-4">
-<div class="flex items-center gap-2 text-on-surface-variant">
-<svg aria-hidden="true" class="weather-icon text-tertiary" viewbox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.2 2.2M16.9 16.9l2.2 2.2M19.1 4.9l-2.2 2.2M7.1 16.9l-2.2 2.2"></path></svg>
-<span>Sunny</span>
-</div>
-</td>
-<td class="py-4 text-white">9°C</td>
-<td class="py-4 text-on-surface-variant">5%</td>
-<td class="py-4 text-on-surface-variant">8 mph</td>
-</tr>
-<!-- Forecast Row 2 -->
-<tr class="group hover:bg-white/5 transition-colors">
-<td class="py-4 font-headline font-bold text-white">10:00</td>
-<td class="py-4">
-<div class="flex items-center gap-2 text-on-surface-variant">
-<svg aria-hidden="true" class="weather-icon text-tertiary" viewbox="0 0 24 24"><circle cx="8" cy="8" r="3"></circle><path d="M7 16h10a3 3 0 0 0 0-6 4.5 4.5 0 0 0-8.3-1.7A3.5 3.5 0 0 0 7 16z"></path></svg>
-<span>Partly Cloudy</span>
-</div>
-</td>
-<td class="py-4 text-white">11°C</td>
-<td class="py-4 text-on-surface-variant">10%</td>
-<td class="py-4 text-on-surface-variant">9 mph</td>
-</tr>
-<!-- Forecast Row 3 -->
-<tr class="group hover:bg-white/5 transition-colors">
-<td class="py-4 font-headline font-bold text-white">11:00</td>
-<td class="py-4">
-<div class="flex items-center gap-2 text-on-surface-variant">
-<svg aria-hidden="true" class="weather-icon" viewbox="0 0 24 24"><path d="M7 16h10a3 3 0 0 0 0-6 4.5 4.5 0 0 0-8.3-1.7A3.5 3.5 0 0 0 7 16z"></path></svg>
-<span>Cloudy</span>
-</div>
-</td>
-<td class="py-4 text-white">12°C</td>
-<td class="py-4 text-on-surface-variant">15%</td>
-<td class="py-4 text-on-surface-variant">11 mph</td>
-</tr>
-<!-- Forecast Row 4 -->
-<tr class="group hover:bg-white/5 transition-colors">
-<td class="py-4 font-headline font-bold text-white">12:00</td>
-<td class="py-4">
-<div class="flex items-center gap-2 text-on-surface-variant">
-<svg aria-hidden="true" class="weather-icon text-primary" viewbox="0 0 24 24"><path d="M7 14h10a3 3 0 0 0 0-6 4.5 4.5 0 0 0-8.3-1.7A3.5 3.5 0 0 0 7 14z"></path><path d="M9 16l-1 3M13 16l-1 3M17 16l-1 3"></path></svg>
-<span>Light Rain</span>
-</div>
-</td>
-<td class="py-4 text-white">12°C</td>
-<td class="py-4 text-on-surface-variant">40%</td>
-<td class="py-4 text-on-surface-variant">14 mph</td>
-</tr>
-<!-- Forecast Row 5 -->
-<tr class="group hover:bg-white/5 transition-colors">
-<td class="py-4 font-headline font-bold text-white">13:00</td>
-<td class="py-4">
-<div class="flex items-center gap-2 text-on-surface-variant">
-<svg aria-hidden="true" class="weather-icon text-primary" viewbox="0 0 24 24"><path d="M7 14h10a3 3 0 0 0 0-6 4.5 4.5 0 0 0-8.3-1.7A3.5 3.5 0 0 0 7 14z"></path><path d="M9 16l-1 3M13 16l-1 3M17 16l-1 3"></path></svg>
-<span>Light Rain</span>
-</div>
-</td>
-<td class="py-4 text-white">13°C</td>
-<td class="py-4 text-on-surface-variant">45%</td>
-<td class="py-4 text-on-surface-variant">15 mph</td>
+<td class="py-4 text-on-surface-variant" colspan="5">Loading live Met Office forecast...</td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="mt-8 p-4 bg-tertiary-container/20 border-l-2 border-tertiary-container">
-<p class="text-xs font-body text-on-tertiary-container leading-relaxed italic">
-                        "If weather conditions exceed Safety Protocol 4 (Heavy Rain/Gale), check the Status board or Deployment Alerts for cancellation intel."
-                    </p>
 </div>
 </div>
 </section>
@@ -311,4 +245,133 @@
 </div>
 </footer>
 <script src="../scripts/account-menu.js"></script>
+<script src="../scripts/panel-editor.js"></script>
+<script>
+  (() => {
+    const targetEl = document.getElementById('weather-target-time')
+    const badgeDateEl = document.getElementById('weather-target-badge-date')
+    const tableBody = document.getElementById('weather-forecast-body')
+
+    if (!targetEl || !badgeDateEl || !tableBody) {
+      return
+    }
+
+    function ordinal(day) {
+      if (day >= 11 && day <= 13) return `${day}th`
+      const last = day % 10
+      if (last === 1) return `${day}st`
+      if (last === 2) return `${day}nd`
+      if (last === 3) return `${day}rd`
+      return `${day}th`
+    }
+
+    function formatSundayDate(date) {
+      const day = Number(date.toLocaleDateString('en-GB', { timeZone: 'Europe/London', day: '2-digit' }))
+      const month = date.toLocaleDateString('en-GB', { timeZone: 'Europe/London', month: 'long' })
+      const year = date.toLocaleDateString('en-GB', { timeZone: 'Europe/London', year: 'numeric' })
+      return `${ordinal(day)} ${month} ${year}`
+    }
+
+    function getNextSundayTarget() {
+      const nowLondon = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/London' }))
+      const day = nowLondon.getDay() // Sunday = 0
+      const hour = nowLondon.getHours()
+      const minute = nowLondon.getMinutes()
+
+      let daysUntilSunday = (7 - day) % 7
+      if (day === 0 && (hour > 13 || (hour === 13 && minute > 0))) {
+        daysUntilSunday = 7
+      }
+
+      const target = new Date(nowLondon)
+      target.setDate(nowLondon.getDate() + daysUntilSunday)
+      target.setHours(13, 0, 0, 0)
+      return target
+    }
+
+    function toLondonParts(dateLike) {
+      const date = new Date(dateLike)
+      return {
+        dateKey: date.toLocaleDateString('en-CA', { timeZone: 'Europe/London' }),
+        hour: Number(date.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hour12: false })),
+        timeLabel: date.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false }),
+      }
+    }
+
+    function renderRows(rows) {
+      tableBody.innerHTML = rows
+        .map((row) => `
+          <tr class="group hover:bg-white/5 transition-colors">
+            <td class="py-4 font-headline font-bold text-white">${row.timeLabel}</td>
+            <td class="py-4 text-on-surface-variant">${row.condition}</td>
+            <td class="py-4 text-white">${row.tempC != null ? `${Math.round(row.tempC)}°C` : '—'}</td>
+            <td class="py-4 text-on-surface-variant">${row.precipPct != null ? `${Math.round(row.precipPct)}%` : '—'}</td>
+            <td class="py-4 text-on-surface-variant">${row.windMph != null ? `${Math.round(row.windMph)} mph` : '—'}</td>
+          </tr>
+        `)
+        .join('')
+    }
+
+    function formatResolutionLabel(resolution) {
+      if (resolution === 'hourly') return 'Hourly forecast'
+      if (resolution === 'three-hourly') return '3-hourly forecast'
+      if (resolution === 'daily') return 'Daily forecast'
+      return 'Forecast'
+    }
+
+    function renderError(message) {
+      tableBody.innerHTML = `
+        <tr class="group hover:bg-white/5 transition-colors">
+          <td class="py-4 text-on-surface-variant" colspan="5">${message}</td>
+        </tr>
+      `
+    }
+
+    // Always target the upcoming Sunday.
+    // If it is already past Sunday 13:00 UK time, roll to next Sunday.
+    const target = getNextSundayTarget()
+
+    const sundayDateText = formatSundayDate(target)
+    targetEl.textContent = `Forecast date: ${sundayDateText}`
+    badgeDateEl.textContent = sundayDateText
+
+    const targetKey = target.toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
+
+    fetch(`/api/metoffice-forecast?targetDate=${encodeURIComponent(targetKey)}`, { method: 'GET' })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok || !payload?.ok || !Array.isArray(payload.rows)) {
+          throw new Error(payload?.message || 'Unable to load weather data right now.')
+        }
+
+        const entries = payload.rows
+          .map((entry) => {
+            const parts = toLondonParts(entry.time)
+            return { ...entry, ...parts }
+          })
+          .filter((entry) => entry.dateKey === targetKey)
+          .sort((a, b) => a.hour - b.hour)
+
+        if (!entries.length) {
+          throw new Error('No Met Office forecast entries available yet for that Sunday window.')
+        }
+
+        // Always show the trail window only: Sunday 09:00 to 13:00.
+        const rowsToRender = entries.filter((entry) => entry.hour >= 9 && entry.hour <= 13)
+
+        if (!rowsToRender.length) {
+          throw new Error('No forecast entries are available for Sunday 09:00 to 13:00 yet.')
+        }
+
+        const resolutionLabel = formatResolutionLabel(payload.resolution)
+        targetEl.textContent = `Forecast date: ${sundayDateText} (${resolutionLabel})`
+        badgeDateEl.textContent = sundayDateText
+
+        renderRows(rowsToRender)
+      })
+      .catch((error) => {
+        renderError(error.message || 'Unable to load weather data right now.')
+      })
+  })()
+</script>
 </body></html>
