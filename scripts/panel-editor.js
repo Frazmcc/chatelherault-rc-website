@@ -141,11 +141,11 @@
   }
 
   async function init(session) {
-    if (!session?.ok || !ALLOWED_ROLES.has(session.role)) {
-      return
-    }
+    const canEdit = Boolean(session?.ok && ALLOWED_ROLES.has(session.role))
 
-    ensureSuperUserTab(session)
+    if (canEdit) {
+      ensureSuperUserTab(session)
+    }
 
     const pageId = getPageId()
     const panels = findPanels()
@@ -153,28 +153,10 @@
       return
     }
 
-    const modal = createEditorModal()
-    const fieldsContainer = modal.querySelector('[data-panel-fields]')
-    const mediaField = modal.querySelector('[data-panel-media]')
-    const status = modal.querySelector('[data-panel-status]')
-
-    const closeModal = () => {
-      modal.classList.add('hidden')
-      status.classList.add('hidden')
-      status.textContent = ''
-    }
-
-    modal.querySelector('[data-panel-close]').addEventListener('click', closeModal)
-    modal.addEventListener('click', (event) => {
-      if (event.target === modal) {
-        closeModal()
-      }
-    })
-
     const storedByKey = {}
 
     try {
-      const response = await fetch('/api/content', { credentials: 'include' })
+      const response = await fetch('/api/content-public')
       if (response.ok) {
         const payload = await response.json()
         for (const entry of payload.content || []) {
@@ -182,7 +164,21 @@
         }
       }
     } catch {
-      // Ignore read errors here; save still works when online.
+      // Ignore read errors here.
+    }
+
+    if (!Object.keys(storedByKey).length && canEdit) {
+      try {
+        const response = await fetch('/api/content', { credentials: 'include' })
+        if (response.ok) {
+          const payload = await response.json()
+          for (const entry of payload.content || []) {
+            storedByKey[`${entry.page}::${entry.key}`] = entry.value
+          }
+        }
+      } catch {
+        // Ignore read errors here; save still works when online.
+      }
     }
 
     function applyPanelOverrides(panel, panelId) {
@@ -216,6 +212,34 @@
         }
       }
     }
+
+    panels.forEach((panel, index) => {
+      const panelId = index + 1
+      panel.dataset.editPanelId = String(panelId)
+      applyPanelOverrides(panel, panelId)
+    })
+
+    if (!canEdit) {
+      return
+    }
+
+    const modal = createEditorModal()
+    const fieldsContainer = modal.querySelector('[data-panel-fields]')
+    const mediaField = modal.querySelector('[data-panel-media]')
+    const status = modal.querySelector('[data-panel-status]')
+
+    const closeModal = () => {
+      modal.classList.add('hidden')
+      status.classList.add('hidden')
+      status.textContent = ''
+    }
+
+    modal.querySelector('[data-panel-close]').addEventListener('click', closeModal)
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        closeModal()
+      }
+    })
 
     let activePanel = null
     let activePanelId = null
@@ -385,9 +409,6 @@
 
     panels.forEach((panel, index) => {
       const panelId = index + 1
-      panel.dataset.editPanelId = String(panelId)
-
-      applyPanelOverrides(panel, panelId)
 
       if (panel.querySelector('[data-panel-editor-control="true"]')) {
         return

@@ -678,6 +678,14 @@ async function handleListContent(request, env) {
   return json({ ok: true, content: results })
 }
 
+async function handleListPublicContent(env) {
+  const { results } = await env.DB.prepare(
+    `SELECT page, key, value FROM content ORDER BY page, key`
+  ).all()
+
+  return json({ ok: true, content: results })
+}
+
 async function handlePutContent(request, env, executionCtx) {
   const session = await getSession(request, env)
   if (!hasRole(session, 'owner', 'admin', 'mod')) return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
@@ -812,6 +820,9 @@ export default {
     if (url.pathname === '/api/media' && request.method === 'GET') return handleListMedia(request, env)
     if (url.pathname === '/api/media' && request.method === 'POST') return handleAddMedia(request, env, executionCtx)
     if (/^\/api\/media\/\d+$/.test(url.pathname) && request.method === 'DELETE') return handleDeleteMedia(request, env, executionCtx)
+
+    // Public content read for page rendering overrides
+    if (url.pathname === '/api/content-public' && request.method === 'GET') return handleListPublicContent(env)
 
     // Content management (admin / mod / owner)
     if (url.pathname === '/api/content' && request.method === 'GET') return handleListContent(request, env)
