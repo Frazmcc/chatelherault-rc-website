@@ -233,15 +233,21 @@
               }),
             })
 
-            const payload = await response.json()
+            const payload = await response.json().catch(() => ({}))
 
             if (!response.ok || !payload.ok) {
+              const retryAfter = Number(response.headers.get('retry-after') || '0')
+              if (response.status === 429 && Number.isFinite(retryAfter) && retryAfter > 0) {
+                const waitMinutes = Math.ceil(retryAfter / 60)
+                throw new Error(`Too many login attempts. Try again in about ${waitMinutes} minute(s).`)
+              }
+
               throw new Error(payload.message || 'Login failed')
             }
 
             window.location.href = payload.redirectTo || '/index.html'
-          } catch {
-            errorMessage.textContent = 'Login failed. Check credentials and ensure the auth server is running.'
+          } catch (error) {
+            errorMessage.textContent = error?.message || 'Login failed. Please try again.'
             errorMessage.classList.remove('hidden')
             passwordInput.value = ''
             passwordInput.focus()
