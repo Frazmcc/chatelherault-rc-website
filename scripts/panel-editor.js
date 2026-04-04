@@ -60,7 +60,7 @@
     link.href = base
     link.className = 'font-headline tracking-tight uppercase transition-colors text-slate-400 hover:text-slate-100'
     link.dataset.superUserLink = 'true'
-    link.textContent = 'Super User'
+    link.textContent = 'Super User Dashboard'
     navRow.appendChild(link)
   }
 
