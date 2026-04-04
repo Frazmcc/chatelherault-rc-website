@@ -294,10 +294,23 @@ async function sendContactEmailViaResend({ env, recipientEmail, fromEmail, email
   return { attempted: true, ok: true, provider: 'resend', details: null }
 }
 
-async function sendContactEmailViaMailChannels({ recipientEmail, fromEmail, email, name, subject, plainText, htmlBody }) {
+async function sendContactEmailViaMailChannels({ env, recipientEmail, fromEmail, email, name, subject, plainText, htmlBody }) {
+  if (!env.MAILCHANNELS_API_KEY) {
+    return {
+      attempted: false,
+      ok: false,
+      provider: 'mailchannels',
+      details: 'MAILCHANNELS_API_KEY is not configured.',
+    }
+  }
+
   const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
     method: 'POST',
-    headers: { 'content-type': 'application/json; charset=utf-8' },
+    headers: {
+      authorization: `Bearer ${env.MAILCHANNELS_API_KEY}`,
+      'x-api-key': env.MAILCHANNELS_API_KEY,
+      'content-type': 'application/json; charset=utf-8',
+    },
     body: JSON.stringify({
       personalizations: [{ to: [{ email: recipientEmail }] }],
       from: {
@@ -428,9 +441,11 @@ async function handleContactSubmission(request, env) {
     htmlBody,
   })
 
-  const deliveryResult = resendResult.ok
-    ? resendResult
-    : await sendContactEmailViaMailChannels({
+  const shouldTryMailChannelsFallback = !resendResult.ok && Boolean(env.MAILCHANNELS_API_KEY)
+
+  const deliveryResult = shouldTryMailChannelsFallback
+    ? await sendContactEmailViaMailChannels({
+        env,
         recipientEmail,
         fromEmail,
         email,
@@ -439,6 +454,7 @@ async function handleContactSubmission(request, env) {
         plainText,
         htmlBody,
       })
+    : resendResult
 
   if (!deliveryResult.ok) {
     console.error('Mail delivery failed:', deliveryResult.provider, deliveryResult.details)
