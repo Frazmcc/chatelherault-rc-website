@@ -351,6 +351,21 @@
       return list
     }
 
+    function chooseStartSequence() {
+      const previousStart = Number(window.localStorage?.getItem(startImageStorageKey) || '0')
+
+      let sequence = randomInt(minSequence, maxSequence)
+      if (Number.isInteger(previousStart) && previousStart >= minSequence && previousStart <= maxSequence) {
+        let guard = 0
+        while (sequence === previousStart && guard < 20) {
+          sequence = randomInt(minSequence, maxSequence)
+          guard += 1
+        }
+      }
+
+      return sequence
+    }
+
     function pushRecent(sequence) {
       recent.push(sequence)
       if (recent.length > noRepeatWindow) {
@@ -429,16 +444,32 @@
     }
 
     async function playNext() {
-      const firstCycleBlocked = new Set()
-
       if (isFirstCycle) {
-        const previousStart = Number(window.localStorage?.getItem(startImageStorageKey) || '0')
-        if (Number.isInteger(previousStart) && previousStart > 0) {
-          firstCycleBlocked.add(previousStart)
+        const startSequence = chooseStartSequence()
+        const startSource = candidateSrc(startSequence, preferredExtension(startSequence))
+
+        imageEl.src = startSource
+        imageEl.classList.remove('opacity-0')
+        pushRecent(startSequence)
+
+        try {
+          window.localStorage?.setItem(startImageStorageKey, String(startSequence))
+        } catch {
+          // Ignore storage failures and continue playback.
         }
+
+        statusEl.textContent = `Now playing capture #${toSequence(startSequence)} • No repeat within next ${noRepeatWindow}`
+
+        const firstDurationMs = randomInt(minDurationMs, maxDurationMs)
+        startProgress(firstDurationMs)
+        startCountdown(firstDurationMs)
+
+        isFirstCycle = false
+        nextTimeout = setTimeout(playNext, firstDurationMs)
+        return
       }
 
-      const selected = chooseNextImage(firstCycleBlocked)
+      const selected = chooseNextImage(new Set())
 
       if (!selected) {
         statusEl.textContent = 'Unable to find reel images. Retrying...'
@@ -456,15 +487,6 @@
 
       imageEl.classList.remove('opacity-0')
       pushRecent(selected.sequence)
-
-      if (isFirstCycle) {
-        try {
-          window.localStorage?.setItem(startImageStorageKey, String(selected.sequence))
-        } catch {
-          // Ignore storage failures and continue playback.
-        }
-        isFirstCycle = false
-      }
 
       statusEl.textContent = `Now playing capture #${toSequence(selected.sequence)} • No repeat within next ${noRepeatWindow}`
 
