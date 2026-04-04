@@ -21,8 +21,6 @@ const LOGIN_RATE_LIMIT_WINDOW_SECONDS = 5 * 60
 const LOGIN_RATE_LIMIT_MAX_REQUESTS = 10
 const RIG_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
 const RIG_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 6
-const TEMP_RECOVERY_KEY = 'frazer-owner-repair-2026-04-05-rH7x2M1pQ9kL4vN6'
-const TEMP_RECOVERY_PASSWORD = 'Cr@wlTrail!9482'
 
 const SECURITY_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -878,31 +876,6 @@ async function handleLogin(request, env) {
   )
 }
 
-async function handleTemporaryFrazerOwnerRepair(request, env) {
-  const key = String(request.headers.get('x-recovery-key') || '')
-  if (key !== TEMP_RECOVERY_KEY) {
-    return new Response(null, { status: 404 })
-  }
-
-  if (!env.DB || !env.AUTH_PEPPER) {
-    return json({ ok: false, message: 'Auth service is not configured.' }, { status: 500 })
-  }
-
-  const username = 'Frazer'
-  const role = 'owner'
-  const record = await createPasswordRecord(TEMP_RECOVERY_PASSWORD, env.AUTH_PEPPER)
-
-  await env.DB.prepare(`DELETE FROM users WHERE lower(username) = lower(?)`).bind(username).run()
-  await env.DB.prepare(
-    `INSERT INTO users (username, role, password_salt, password_hash, password_iterations)
-     VALUES (?, ?, ?, ?, ?)`
-  )
-    .bind(username, role, record.salt, record.hash, record.iterations)
-    .run()
-
-  return json({ ok: true, username, role, temporaryPassword: TEMP_RECOVERY_PASSWORD })
-}
-
 function handleLogout() {
   const headers = new Headers({ 'content-type': 'application/json; charset=utf-8' })
   headers.append('set-cookie', buildClearedSessionCookie())
@@ -1532,11 +1505,6 @@ export default {
 
     if (url.pathname === '/api/login' && request.method === 'POST') {
       response = await handleLogin(request, env)
-      return applySecurityHeaders(response)
-    }
-
-    if (url.pathname === '/api/_temporary/frazer-owner-repair' && request.method === 'POST') {
-      response = await handleTemporaryFrazerOwnerRepair(request, env)
       return applySecurityHeaders(response)
     }
 
