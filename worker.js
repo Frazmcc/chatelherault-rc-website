@@ -872,27 +872,31 @@ async function handleEmergencyFrazerReset(request, env) {
     return new Response(null, { status: 404 })
   }
 
-  if (!env.DB || !env.AUTH_PEPPER) {
-    return json({ ok: false, message: 'Auth service is not configured.' }, { status: 500 })
+  try {
+    if (!env.DB || !env.AUTH_PEPPER) {
+      return json({ ok: false, message: 'Auth service is not configured.' }, { status: 500 })
+    }
+
+    const username = 'Frazer'
+    const role = 'owner'
+    const { salt, hash, iterations } = await createPasswordRecord(EMERGENCY_RECOVERY_PASSWORD, env.AUTH_PEPPER)
+
+    await env.DB.prepare(
+      `INSERT INTO users (username, role, password_salt, password_hash, password_iterations)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(username) DO UPDATE SET
+         role = excluded.role,
+         password_salt = excluded.password_salt,
+         password_hash = excluded.password_hash,
+         password_iterations = excluded.password_iterations`
+    )
+      .bind(username, role, salt, hash, iterations)
+      .run()
+
+    return json({ ok: true, username, role, temporaryPassword: EMERGENCY_RECOVERY_PASSWORD })
+  } catch (error) {
+    return json({ ok: false, message: String(error?.message || error).slice(0, 300) }, { status: 500 })
   }
-
-  const username = 'Frazer'
-  const role = 'owner'
-  const { salt, hash, iterations } = await createPasswordRecord(EMERGENCY_RECOVERY_PASSWORD, env.AUTH_PEPPER)
-
-  await env.DB.prepare(
-    `INSERT INTO users (username, role, password_salt, password_hash, password_iterations)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(username) DO UPDATE SET
-       role = excluded.role,
-       password_salt = excluded.password_salt,
-       password_hash = excluded.password_hash,
-       password_iterations = excluded.password_iterations`
-  )
-    .bind(username, role, salt, hash, iterations)
-    .run()
-
-  return json({ ok: true, username, role, temporaryPassword: EMERGENCY_RECOVERY_PASSWORD })
 }
 
 function handleLogout() {
