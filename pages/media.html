@@ -377,9 +377,11 @@
     const knownGood = new Map()
     const knownBad = new Set()
     const recent = []
+    const startImageStorageKey = 'chrc-reel-last-start-image'
 
     let nextTimeout = null
     let countdownInterval = null
+    let isFirstCycle = true
 
     function toSequence(number) {
       return String(number).padStart(4, '0')
@@ -454,8 +456,11 @@
       })
     }
 
-    async function chooseNextImage() {
+    async function chooseNextImage(extraBlocked = new Set()) {
       const blocked = new Set(recent)
+      for (const blockedItem of extraBlocked) {
+        blocked.add(blockedItem)
+      }
       let attempts = 0
 
       while (attempts < 500) {
@@ -495,7 +500,16 @@
     }
 
     async function playNext() {
-      const selected = await chooseNextImage()
+      const firstCycleBlocked = new Set()
+
+      if (isFirstCycle) {
+        const previousStart = Number(window.localStorage?.getItem(startImageStorageKey) || '0')
+        if (Number.isInteger(previousStart) && previousStart > 0) {
+          firstCycleBlocked.add(previousStart)
+        }
+      }
+
+      const selected = await chooseNextImage(firstCycleBlocked)
 
       if (!selected) {
         statusEl.textContent = 'Unable to find reel images. Retrying...'
@@ -515,6 +529,15 @@
 
       imageEl.classList.remove('opacity-0')
       pushRecent(selected.sequence)
+
+      if (isFirstCycle) {
+        try {
+          window.localStorage?.setItem(startImageStorageKey, String(selected.sequence))
+        } catch {
+          // Ignore storage failures and continue playback.
+        }
+        isFirstCycle = false
+      }
 
       statusEl.textContent = `Now playing capture #${toSequence(selected.sequence)} • No repeat within next ${noRepeatWindow}`
 
