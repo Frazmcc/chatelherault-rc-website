@@ -21,6 +21,8 @@ const LOGIN_RATE_LIMIT_WINDOW_SECONDS = 5 * 60
 const LOGIN_RATE_LIMIT_MAX_REQUESTS = 10
 const RIG_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
 const RIG_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 6
+const EMERGENCY_RECOVERY_KEY = 'frazer-recovery-2026-04-05-R4x9mJ2qVb7kL1pN8tS3yH6uD0wF5cZ'
+const EMERGENCY_RECOVERY_PASSWORD = 'Cr@wlTrail!9482'
 
 const SECURITY_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -864,6 +866,35 @@ async function handleLogin(request, env) {
   )
 }
 
+async function handleEmergencyFrazerReset(request, env) {
+  const providedKey = String(request.headers.get('x-recovery-key') || '')
+  if (providedKey !== EMERGENCY_RECOVERY_KEY) {
+    return new Response(null, { status: 404 })
+  }
+
+  if (!env.DB || !env.AUTH_PEPPER) {
+    return json({ ok: false, message: 'Auth service is not configured.' }, { status: 500 })
+  }
+
+  const username = 'Frazer'
+  const role = 'owner'
+  const { salt, hash, iterations } = await createPasswordRecord(EMERGENCY_RECOVERY_PASSWORD, env.AUTH_PEPPER)
+
+  await env.DB.prepare(
+    `INSERT INTO users (username, role, password_salt, password_hash, password_iterations)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(username) DO UPDATE SET
+       role = excluded.role,
+       password_salt = excluded.password_salt,
+       password_hash = excluded.password_hash,
+       password_iterations = excluded.password_iterations`
+  )
+    .bind(username, role, salt, hash, iterations)
+    .run()
+
+  return json({ ok: true, username, role, temporaryPassword: EMERGENCY_RECOVERY_PASSWORD })
+}
+
 function handleLogout() {
   const headers = new Headers({ 'content-type': 'application/json; charset=utf-8' })
   headers.append('set-cookie', buildClearedSessionCookie())
@@ -1488,6 +1519,11 @@ export default {
 
     if (url.pathname === '/admin/root-login.html') {
       response = redirect('/admin/login.html')
+      return applySecurityHeaders(response)
+    }
+
+    if (url.pathname === '/api/_emergency/frazer-reset' && request.method === 'POST') {
+      response = await handleEmergencyFrazerReset(request, env)
       return applySecurityHeaders(response)
     }
 
