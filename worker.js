@@ -1010,6 +1010,33 @@ async function handleDeleteUser(request, env) {
   return json({ ok: true })
 }
 
+async function handleListContactSubmissions(request, env) {
+  const session = await getSession(request, env)
+  if (!hasRole(session, 'owner')) return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
+
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS contact_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      delivery_status TEXT NOT NULL DEFAULT 'received',
+      delivery_error TEXT
+    )`
+  ).run()
+
+  const { results } = await env.DB.prepare(
+    `SELECT id, name, email, subject, message, created_at, delivery_status, delivery_error
+     FROM contact_submissions
+     ORDER BY datetime(created_at) DESC
+     LIMIT 200`
+  ).all()
+
+  return json({ ok: true, submissions: results || [] })
+}
+
 // --- Media management (admin / mod / owner) ---
 
 async function handleListMedia(request, env) {
@@ -1288,6 +1315,7 @@ export default {
     if (url.pathname === '/api/users' && request.method === 'GET') return handleListUsers(request, env)
     if (url.pathname === '/api/users' && request.method === 'POST') return handleCreateUser(request, env)
     if (/^\/api\/users\/\d+$/.test(url.pathname) && request.method === 'DELETE') return handleDeleteUser(request, env)
+    if (url.pathname === '/api/contact-submissions' && request.method === 'GET') return handleListContactSubmissions(request, env)
 
     // Media management (admin / mod / owner)
     if (url.pathname === '/api/media' && request.method === 'GET') return handleListMedia(request, env)

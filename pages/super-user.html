@@ -108,6 +108,21 @@
       <div id="rig-approvals-status" class="hidden text-sm rounded border px-3 py-2 mb-6"></div>
       <section id="rig-approvals-list" class="space-y-6"></section>
     </section>
+
+    <section class="bg-surface rounded-lg border border-white/5 p-6 mt-8">
+      <header class="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <p class="text-[10px] uppercase tracking-[0.2em] text-accent font-label font-bold">Owner Inbox</p>
+          <h2 class="font-headline text-2xl md:text-3xl font-bold tracking-tight mt-2">Contact Submissions</h2>
+          <p class="text-slate-400 mt-2">Latest messages submitted through the public contact form.</p>
+        </div>
+        <button id="contact-submissions-refresh" class="bg-accent text-white font-headline font-bold uppercase tracking-wider px-4 py-2 rounded">Refresh</button>
+      </header>
+
+      <div id="contact-submissions-list" class="space-y-4">
+        <p class="text-slate-500 text-sm">Loading submissions...</p>
+      </div>
+    </section>
   </main>
 
   <script src="../scripts/account-menu.js"></script>
@@ -141,6 +156,66 @@
       userList.querySelectorAll('[data-delete-user]').forEach((btn) => {
         btn.addEventListener('click', () => deleteUser(Number(btn.dataset.deleteUser)))
       })
+    }
+
+    function renderContactSubmissions(submissions) {
+      const list = document.getElementById('contact-submissions-list')
+
+      if (!list) {
+        return
+      }
+
+      if (!Array.isArray(submissions) || !submissions.length) {
+        list.innerHTML = '<p class="text-slate-500 text-sm">No contact messages yet.</p>'
+        return
+      }
+
+      list.innerHTML = submissions.map((item) => {
+        const statusTone = item.delivery_status === 'emailed'
+          ? 'text-emerald-300 border-emerald-400/30 bg-emerald-900/10'
+          : item.delivery_status === 'email_failed'
+            ? 'text-amber-300 border-amber-400/30 bg-amber-900/10'
+            : 'text-slate-300 border-white/20 bg-white/5'
+
+        return `
+          <article class="bg-panel border border-white/5 rounded-md p-4 space-y-3">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="font-bold">${escHtml(item.subject || '(No subject)')}</p>
+                <p class="text-xs text-slate-400 mt-1">From ${escHtml(item.name || '')} &lt;${escHtml(item.email || '')}&gt;</p>
+                <p class="text-[11px] text-slate-500 mt-1">${new Date(item.created_at).toLocaleString()}</p>
+              </div>
+              <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded border ${statusTone}">${escHtml(item.delivery_status || 'received')}</span>
+            </div>
+            <p class="text-sm text-slate-200 whitespace-pre-wrap">${escHtml(item.message || '')}</p>
+            ${item.delivery_error ? `<p class="text-xs text-amber-300">Delivery note: ${escHtml(item.delivery_error)}</p>` : ''}
+          </article>
+        `
+      }).join('')
+    }
+
+    async function loadContactSubmissions() {
+      const list = document.getElementById('contact-submissions-list')
+
+      if (!list) {
+        return
+      }
+
+      list.innerHTML = '<p class="text-slate-500 text-sm">Loading submissions...</p>'
+
+      try {
+        const response = await fetch('/api/contact-submissions', { credentials: 'include' })
+        const payload = await response.json().catch(() => ({}))
+
+        if (!response.ok || !payload.ok) {
+          list.innerHTML = '<p class="text-[#ffb4ab] text-sm">Unable to load contact submissions.</p>'
+          return
+        }
+
+        renderContactSubmissions(payload.submissions || [])
+      } catch {
+        list.innerHTML = '<p class="text-[#ffb4ab] text-sm">Network error while loading contact submissions.</p>'
+      }
     }
 
     async function loadUsers() {
@@ -226,7 +301,12 @@
       }
     })
 
+    document.getElementById('contact-submissions-refresh').addEventListener('click', () => {
+      loadContactSubmissions()
+    })
+
     loadUsers()
+    loadContactSubmissions()
   </script>
 </body>
 </html>
