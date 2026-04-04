@@ -297,6 +297,28 @@ async function handleContactSubmission(request, env) {
   const recipientEmail = env.CONTACT_EMAIL || 'contact@chatelheraultrc.com'
   const fromEmail = env.CONTACT_FROM_EMAIL || recipientEmail
 
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS contact_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      delivery_status TEXT NOT NULL DEFAULT 'received',
+      delivery_error TEXT
+    )`
+  ).run()
+
+  const insertResult = await env.DB.prepare(
+    `INSERT INTO contact_submissions (name, email, subject, message, delivery_status)
+     VALUES (?, ?, ?, ?, 'received')`
+  )
+    .bind(name, email, subject, message)
+    .run()
+
+  const submissionId = insertResult?.meta?.last_row_id || null
+
   const plainText = [
     'New contact form submission',
     `Name: ${name}`,
@@ -336,7 +358,24 @@ async function handleContactSubmission(request, env) {
   if (!response.ok) {
     const details = await response.text().catch(() => '')
     console.error('Mail delivery failed:', response.status, details.slice(0, 300))
-    return json({ ok: false, message: 'Unable to send message right now. Please try again later.' }, { status: 502 })
+
+    if (submissionId) {
+      await env.DB.prepare(
+        `UPDATE contact_submissions SET delivery_status = 'email_failed', delivery_error = ? WHERE id = ?`
+      )
+        .bind(`status=${response.status}; details=${details.slice(0, 500)}`, submissionId)
+        .run()
+    }
+
+    return json({ ok: true, queued: true })
+  }
+
+  if (submissionId) {
+    await env.DB.prepare(
+      `UPDATE contact_submissions SET delivery_status = 'emailed', delivery_error = NULL WHERE id = ?`
+    )
+      .bind(submissionId)
+      .run()
   }
 
   return json({ ok: true })
