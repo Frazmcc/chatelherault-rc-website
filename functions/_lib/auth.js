@@ -5,7 +5,8 @@ const base64Lookup = Object.fromEntries([...base64Alphabet].map((ch, index) => [
 const SESSION_COOKIE_NAME = 'chrc_session'
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 12
 const LEGACY_MAX_ITERATIONS = 299999
-const PBKDF2_ITERATIONS = 310000
+const PBKDF2_ITERATIONS = 100000
+const MAX_SAFE_PBKDF2_ITERATIONS = 100000
 
 function encodeBase64Url(bytes) {
   let base64 = ''
@@ -99,37 +100,6 @@ async function createHmac(message, secret) {
   return encodeBase64Url(new Uint8Array(signature))
 }
 
-async function derivePbkdf2Sha256(secret, saltBytes, iterations, outputLengthBytes = 32) {
-  if (!Number.isInteger(iterations) || iterations <= 0) {
-    throw new Error('Invalid PBKDF2 iterations')
-  }
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    textEncoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-
-  const blockIndex = new Uint8Array([0, 0, 0, 1])
-  const initialInput = new Uint8Array(saltBytes.length + blockIndex.length)
-  initialInput.set(saltBytes, 0)
-  initialInput.set(blockIndex, saltBytes.length)
-
-  let u = new Uint8Array(await crypto.subtle.sign('HMAC', key, initialInput))
-  const result = new Uint8Array(u)
-
-  for (let i = 2; i <= iterations; i += 1) {
-    u = new Uint8Array(await crypto.subtle.sign('HMAC', key, u))
-    for (let j = 0; j < result.length; j += 1) {
-      result[j] ^= u[j]
-    }
-  }
-
-  return result.slice(0, outputLengthBytes)
-}
-
 function getSessionTtlSeconds(env) {
   const raw = Number(env.SESSION_TTL_SECONDS)
 
@@ -179,14 +149,30 @@ export function buildClearedSessionCookie() {
 export async function hashPassword(password, saltBase64Url, iterations, pepper) {
   const normalizedIterations = Number(iterations) || 210000
   if (normalizedIterations > LEGACY_MAX_ITERATIONS) {
-    const derived = await derivePbkdf2Sha256(
-      `${password}${pepper}`,
-      decodeBase64Url(saltBase64Url),
-      normalizedIterations,
-      32
+    if (normalizedIterations > MAX_SAFE_PBKDF2_ITERATIONS) {
+      throw new Error('PBKDF2 iterations exceed worker limit')
+    }
+
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      textEncoder.encode(`${password}${pepper}`),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits']
     )
 
-    return encodeBase64Url(derived)
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        hash: 'SHA-256',
+        salt: decodeBase64Url(saltBase64Url),
+        iterations: normalizedIterations,
+      },
+      keyMaterial,
+      256
+    )
+
+    return encodeBase64Url(new Uint8Array(bits))
   }
 
   const payload = textEncoder.encode(`${password}${pepper}${saltBase64Url}`)
