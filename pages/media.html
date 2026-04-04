@@ -156,13 +156,22 @@
 </div>
 </div>
 </section>
-<!-- Filter HUD -->
+<!-- Embedded Reel Player -->
 <section class="max-w-7xl mx-auto px-6 mb-12">
-<div class="bg-surface-container-low p-2 rounded-lg inline-flex items-center gap-1">
-<button class="px-6 py-2 rounded-md bg-surface-bright text-tertiary font-label text-xs uppercase font-bold tracking-widest">All Assets</button>
-<button class="px-6 py-2 rounded-md hover:bg-white/5 text-on-surface-variant font-label text-xs uppercase tracking-widest transition-all">Trail Highlights</button>
-<button class="px-6 py-2 rounded-md hover:bg-white/5 text-on-surface-variant font-label text-xs uppercase tracking-widest transition-all">Action Shots</button>
-<button class="px-6 py-2 rounded-md hover:bg-white/5 text-on-surface-variant font-label text-xs uppercase tracking-widest transition-all">Event Photos</button>
+<div class="rounded-xl overflow-hidden border border-outline-variant/30 bg-surface-container-low">
+<div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-surface-container" id="loop-player-stage">
+<img alt="Autoplay reel image" class="w-full h-full object-cover opacity-0 transition-opacity duration-700" id="loop-player-image"/>
+<div class="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/60 to-transparent">
+<p class="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary">Auto Reel Player</p>
+<p class="font-body text-sm text-on-surface mt-1" id="loop-player-status">Discovering reel images...</p>
+</div>
+<div class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/75 to-transparent">
+<div class="h-1 w-full bg-white/20 rounded-full overflow-hidden">
+<div class="h-full w-0 bg-tertiary" id="loop-player-progress"></div>
+</div>
+<p class="font-label text-[10px] uppercase tracking-[0.15em] text-on-surface mt-2" id="loop-player-timer">Next in --s</p>
+</div>
+</div>
 </div>
 </section>
 <!-- Gallery Canvas -->
@@ -346,6 +355,181 @@
     nextButton?.addEventListener('click', () => {
       reelTrack.scrollBy({ left: scrollAmount, behavior: 'smooth' })
     })
+  })()
+
+  (() => {
+    const imageEl = document.getElementById('loop-player-image')
+    const statusEl = document.getElementById('loop-player-status')
+    const timerEl = document.getElementById('loop-player-timer')
+    const progressEl = document.getElementById('loop-player-progress')
+
+    if (!imageEl || !statusEl || !timerEl || !progressEl) {
+      return
+    }
+
+    const minDurationMs = 5000
+    const maxDurationMs = 7000
+    const noRepeatWindow = 100
+    const minSequence = 1
+    const maxSequence = 450
+    const extFallback = ['.jpg', '.jpeg', '.png', '.webp']
+
+    const knownGood = new Map()
+    const knownBad = new Set()
+    const recent = []
+
+    let nextTimeout = null
+    let countdownInterval = null
+
+    function toSequence(number) {
+      return String(number).padStart(4, '0')
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min
+    }
+
+    function candidateSrc(sequence, extension) {
+      return `/assets/reel/optimized/chatelherault-reel-${toSequence(sequence)}${extension}`
+    }
+
+    async function resolveImage(sequence) {
+      if (knownGood.has(sequence)) {
+        return knownGood.get(sequence)
+      }
+
+      if (knownBad.has(sequence)) {
+        return null
+      }
+
+      for (const extension of extFallback) {
+        const source = candidateSrc(sequence, extension)
+
+        try {
+          const response = await fetch(source, { method: 'HEAD', cache: 'no-store' })
+          if (response.ok) {
+            knownGood.set(sequence, source)
+            return source
+          }
+        } catch {
+          // Ignore fetch errors and continue trying extensions.
+        }
+      }
+
+      knownBad.add(sequence)
+      return null
+    }
+
+    function pushRecent(sequence) {
+      recent.push(sequence)
+      if (recent.length > noRepeatWindow) {
+        recent.shift()
+      }
+    }
+
+    function startCountdown(durationMs) {
+      if (countdownInterval) {
+        clearInterval(countdownInterval)
+      }
+
+      const startedAt = Date.now()
+
+      const render = () => {
+        const elapsed = Date.now() - startedAt
+        const remaining = Math.max(0, durationMs - elapsed)
+        timerEl.textContent = `Next in ${Math.ceil(remaining / 1000)}s`
+      }
+
+      render()
+      countdownInterval = setInterval(render, 250)
+    }
+
+    function startProgress(durationMs) {
+      progressEl.style.transition = 'none'
+      progressEl.style.width = '0%'
+
+      requestAnimationFrame(() => {
+        progressEl.style.transition = `width ${durationMs}ms linear`
+        progressEl.style.width = '100%'
+      })
+    }
+
+    async function chooseNextImage() {
+      const blocked = new Set(recent)
+      let attempts = 0
+
+      while (attempts < 500) {
+        attempts += 1
+
+        let sequence = null
+
+        const availableKnown = [...knownGood.keys()].filter((item) => !blocked.has(item))
+
+        if (availableKnown.length > 0) {
+          sequence = availableKnown[randomInt(0, availableKnown.length - 1)]
+        } else {
+          const candidate = randomInt(minSequence, maxSequence)
+          if (blocked.has(candidate) || knownBad.has(candidate)) {
+            continue
+          }
+          sequence = candidate
+        }
+
+        const source = await resolveImage(sequence)
+        if (!source) {
+          continue
+        }
+
+        return { sequence, source }
+      }
+
+      return null
+    }
+
+    function waitForImageLoad(source) {
+      return new Promise((resolve) => {
+        imageEl.onload = () => resolve(true)
+        imageEl.onerror = () => resolve(false)
+        imageEl.src = source
+      })
+    }
+
+    async function playNext() {
+      const selected = await chooseNextImage()
+
+      if (!selected) {
+        statusEl.textContent = 'Unable to find reel images. Retrying...'
+        timerEl.textContent = 'Next in 3s'
+        nextTimeout = setTimeout(playNext, 3000)
+        return
+      }
+
+      const loaded = await waitForImageLoad(selected.source)
+
+      if (!loaded) {
+        knownBad.add(selected.sequence)
+        knownGood.delete(selected.sequence)
+        nextTimeout = setTimeout(playNext, 50)
+        return
+      }
+
+      imageEl.classList.remove('opacity-0')
+      pushRecent(selected.sequence)
+
+      statusEl.textContent = `Now playing capture #${toSequence(selected.sequence)} • No repeat within next ${noRepeatWindow}`
+
+      const durationMs = randomInt(minDurationMs, maxDurationMs)
+      startProgress(durationMs)
+      startCountdown(durationMs)
+
+      if (nextTimeout) {
+        clearTimeout(nextTimeout)
+      }
+
+      nextTimeout = setTimeout(playNext, durationMs)
+    }
+
+    playNext()
   })()
 </script>
 <script src="/scripts/image-grayscale-hover.js"></script>
