@@ -49,9 +49,36 @@
       approvalsItem.href = role === 'owner' ? '/pages/super-user#rig-approvals' : '/pages/rig-approvals.html'
     }
 
+    ensureOwnerNavLink(isLoggedIn, role)
+
     approvalsItem?.classList.toggle('hidden', !(isLoggedIn && ['owner', 'admin', 'mod'].includes(role)))
     superUserItem?.classList.toggle('hidden', !(isLoggedIn && role === 'owner'))
     logoutItem?.classList.toggle('hidden', !isLoggedIn)
+  }
+
+  function ensureOwnerNavLink(isLoggedIn, role) {
+    const existing = document.querySelector('[data-owner-dashboard-link="true"]')
+
+    if (!isLoggedIn || role !== 'owner') {
+      existing?.remove()
+      return
+    }
+
+    const navRows = Array.from(document.querySelectorAll('nav .order-3, nav .font-headline')).filter((node) =>
+      node.querySelector('a[href*="meetups"]')
+    )
+    const navRow = navRows[0]
+
+    if (!navRow || existing) {
+      return
+    }
+
+    const link = document.createElement('a')
+    link.href = window.location.pathname.startsWith('/pages/') ? 'super-user' : '/pages/super-user'
+    link.className = 'font-headline tracking-tight uppercase transition-colors text-slate-400 hover:text-slate-100'
+    link.dataset.ownerDashboardLink = 'true'
+    link.textContent = 'Super User Dashboard'
+    navRow.appendChild(link)
   }
 
   async function loadSessionState() {
