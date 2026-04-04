@@ -316,6 +316,7 @@
     const knownBad = new Set()
     const recent = []
     const startImageStorageKey = 'chrc-reel-last-start-image'
+    const defaultStartupSource = '/assets/reel/optimized/chatelherault-reel-0001.jpg'
 
     let nextTimeout = null
     let countdownInterval = null
@@ -331,6 +332,22 @@
 
     function candidateSrc(sequence, extension) {
       return `/assets/reel/optimized/chatelherault-reel-${toSequence(sequence)}${extension}`
+    }
+
+    function getStoredStartSequence() {
+      try {
+        return Number(window.localStorage.getItem(startImageStorageKey) || '0')
+      } catch {
+        return 0
+      }
+    }
+
+    function setStoredStartSequence(sequence) {
+      try {
+        window.localStorage.setItem(startImageStorageKey, String(sequence))
+      } catch {
+        // Ignore storage failures.
+      }
     }
 
     function preferredExtension(sequence) {
@@ -352,7 +369,7 @@
     }
 
     function chooseStartSequence() {
-      const previousStart = Number(window.localStorage?.getItem(startImageStorageKey) || '0')
+      const previousStart = getStoredStartSequence()
 
       let sequence = randomInt(minSequence, maxSequence)
       if (Number.isInteger(previousStart) && previousStart >= minSequence && previousStart <= maxSequence) {
@@ -452,11 +469,7 @@
         imageEl.classList.remove('opacity-0')
         pushRecent(startSequence)
 
-        try {
-          window.localStorage?.setItem(startImageStorageKey, String(startSequence))
-        } catch {
-          // Ignore storage failures and continue playback.
-        }
+        setStoredStartSequence(startSequence)
 
         statusEl.textContent = `Now playing capture #${toSequence(startSequence)} • No repeat within next ${noRepeatWindow}`
 
@@ -500,6 +513,11 @@
 
       nextTimeout = setTimeout(playNext, durationMs)
     }
+
+    // Paint a guaranteed frame instantly before any async selection logic.
+    imageEl.src = defaultStartupSource
+    imageEl.classList.remove('opacity-0')
+    statusEl.textContent = 'Starting reel playback...'
 
     playNext()
   })()
