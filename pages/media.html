@@ -311,9 +311,6 @@
     const noRepeatWindow = 100
     const minSequence = 1
     const maxSequence = 319
-    const extFallback = ['.jpg', '.jpeg', '.png', '.webp']
-
-    const knownBad = new Set()
     const recent = []
     const startImageStorageKey = 'chrc-reel-last-start-image'
     const defaultStartupSource = '/assets/reel/optimized/chatelherault-reel-0001.jpg'
@@ -330,7 +327,8 @@
       return Math.floor(Math.random() * (max - min + 1)) + min
     }
 
-    function candidateSrc(sequence, extension) {
+    function candidateSrc(sequence) {
+      const extension = sequence <= 254 ? '.jpg' : '.jpeg'
       return `/assets/reel/optimized/chatelherault-reel-${toSequence(sequence)}${extension}`
     }
 
@@ -348,24 +346,6 @@
       } catch {
         // Ignore storage failures.
       }
-    }
-
-    function preferredExtension(sequence) {
-      return sequence <= 254 ? '.jpg' : '.jpeg'
-    }
-
-    function buildSourcePriority(sequence) {
-      const preferred = candidateSrc(sequence, preferredExtension(sequence))
-      const list = [preferred]
-
-      for (const extension of extFallback) {
-        const source = candidateSrc(sequence, extension)
-        if (!list.includes(source)) {
-          list.push(source)
-        }
-      }
-
-      return list
     }
 
     function chooseStartSequence() {
@@ -428,7 +408,7 @@
         attempts += 1
 
         const sequence = randomInt(minSequence, maxSequence)
-        if (blocked.has(sequence) || knownBad.has(sequence)) {
+        if (blocked.has(sequence)) {
           continue
         }
 
@@ -438,32 +418,10 @@
       return null
     }
 
-    function waitForImageLoad(source) {
-      return new Promise((resolve) => {
-        imageEl.onload = () => resolve(true)
-        imageEl.onerror = () => resolve(false)
-        imageEl.src = source
-      })
-    }
-
-    async function tryLoadSequence(sequence) {
-      const candidateSources = buildSourcePriority(sequence)
-
-      for (const source of candidateSources) {
-        const loaded = await waitForImageLoad(source)
-        if (loaded) {
-          return source
-        }
-      }
-
-      knownBad.add(sequence)
-      return null
-    }
-
     async function playNext() {
       if (isFirstCycle) {
         const startSequence = chooseStartSequence()
-        const startSource = candidateSrc(startSequence, preferredExtension(startSequence))
+        const startSource = candidateSrc(startSequence)
 
         imageEl.src = startSource
         imageEl.classList.remove('opacity-0')
@@ -491,12 +449,7 @@
         return
       }
 
-      const loadedSource = await tryLoadSequence(selected.sequence)
-
-      if (!loadedSource) {
-        nextTimeout = setTimeout(playNext, 50)
-        return
-      }
+      imageEl.src = candidateSrc(selected.sequence)
 
       imageEl.classList.remove('opacity-0')
       pushRecent(selected.sequence)
