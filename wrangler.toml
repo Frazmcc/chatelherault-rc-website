@@ -20,6 +20,7 @@ GITHUB_BRANCH = "main"
 CONTACT_EMAIL = "contact@chatelheraultrc.com"
 CONTACT_FROM_EMAIL = "contact@chatelheraultrc.com"
 TURNSTILE_SITE_KEY = "0x4AAAAAAC0oUDXNzCW-4deY"
+CONTACT_DAILY_LIMIT = "50"
 
 [[d1_databases]]
 binding = "DB"

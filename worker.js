@@ -371,6 +371,25 @@ async function handleContactSubmission(request, env) {
     )`
   ).run()
 
+  const parsedDailyLimit = Number.parseInt(String(env.CONTACT_DAILY_LIMIT || '50'), 10)
+  const dailyLimit = Number.isFinite(parsedDailyLimit) && parsedDailyLimit > 0 ? parsedDailyLimit : 50
+
+  const todayCountRow = await env.DB.prepare(
+    `SELECT COUNT(*) AS count FROM contact_submissions WHERE date(created_at) = date('now')`
+  ).first()
+
+  const todayCount = Number(todayCountRow?.count || 0)
+
+  if (todayCount >= dailyLimit) {
+    return json(
+      {
+        ok: false,
+        message: 'Daily contact limit reached. Please try again tomorrow or email us directly at contact@chatelheraultrc.com.',
+      },
+      { status: 429 }
+    )
+  }
+
   const insertResult = await env.DB.prepare(
     `INSERT INTO contact_submissions (name, email, subject, message, delivery_status)
      VALUES (?, ?, ?, ?, 'received')`
