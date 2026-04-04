@@ -181,8 +181,17 @@ export async function verifyPassword(password, user, pepper) {
   }
 
   const iterations = Number(user.password_iterations) || 210000
-  const hash = await hashPassword(password, user.password_salt, iterations, pepper)
-  return timingSafeEqual(hash, user.password_hash)
+  const primaryHash = await hashPassword(password, user.password_salt, iterations, pepper)
+
+  if (timingSafeEqual(primaryHash, user.password_hash)) {
+    return true
+  }
+
+  // Compatibility fallback: try the opposite scheme to avoid locking out
+  // accounts if an older record has an unexpected iteration marker.
+  const fallbackIterations = iterations > LEGACY_MAX_ITERATIONS ? 210000 : PBKDF2_ITERATIONS
+  const fallbackHash = await hashPassword(password, user.password_salt, fallbackIterations, pepper)
+  return timingSafeEqual(fallbackHash, user.password_hash)
 }
 
 export async function createPasswordRecord(password, pepper) {
