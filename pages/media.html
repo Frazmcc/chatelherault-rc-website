@@ -310,10 +310,9 @@
     const maxDurationMs = 7000
     const noRepeatWindow = 100
     const minSequence = 1
-    const maxSequence = 450
+    const maxSequence = 319
     const extFallback = ['.jpg', '.jpeg', '.png', '.webp']
 
-    const knownGood = new Map()
     const knownBad = new Set()
     const recent = []
     const startImageStorageKey = 'chrc-reel-last-start-image'
@@ -334,31 +333,22 @@
       return `/assets/reel/optimized/chatelherault-reel-${toSequence(sequence)}${extension}`
     }
 
-    async function resolveImage(sequence) {
-      if (knownGood.has(sequence)) {
-        return knownGood.get(sequence)
-      }
+    function preferredExtension(sequence) {
+      return sequence <= 254 ? '.jpg' : '.jpeg'
+    }
 
-      if (knownBad.has(sequence)) {
-        return null
-      }
+    function buildSourcePriority(sequence) {
+      const preferred = candidateSrc(sequence, preferredExtension(sequence))
+      const list = [preferred]
 
       for (const extension of extFallback) {
         const source = candidateSrc(sequence, extension)
-
-        try {
-          const response = await fetch(source, { method: 'HEAD', cache: 'no-store' })
-          if (response.ok) {
-            knownGood.set(sequence, source)
-            return source
-          }
-        } catch {
-          // Ignore fetch errors and continue trying extensions.
+        if (!list.includes(source)) {
+          list.push(source)
         }
       }
 
-      knownBad.add(sequence)
-      return null
+      return list
     }
 
     function pushRecent(sequence) {
@@ -395,36 +385,22 @@
       })
     }
 
-    async function chooseNextImage(extraBlocked = new Set()) {
+    function chooseNextImage(extraBlocked = new Set()) {
       const blocked = new Set(recent)
       for (const blockedItem of extraBlocked) {
         blocked.add(blockedItem)
       }
       let attempts = 0
 
-      while (attempts < 500) {
+      while (attempts < 800) {
         attempts += 1
 
-        let sequence = null
-
-        const availableKnown = [...knownGood.keys()].filter((item) => !blocked.has(item))
-
-        if (availableKnown.length > 0) {
-          sequence = availableKnown[randomInt(0, availableKnown.length - 1)]
-        } else {
-          const candidate = randomInt(minSequence, maxSequence)
-          if (blocked.has(candidate) || knownBad.has(candidate)) {
-            continue
-          }
-          sequence = candidate
-        }
-
-        const source = await resolveImage(sequence)
-        if (!source) {
+        const sequence = randomInt(minSequence, maxSequence)
+        if (blocked.has(sequence) || knownBad.has(sequence)) {
           continue
         }
 
-        return { sequence, source }
+        return { sequence }
       }
 
       return null
@@ -438,6 +414,20 @@
       })
     }
 
+    async function tryLoadSequence(sequence) {
+      const candidateSources = buildSourcePriority(sequence)
+
+      for (const source of candidateSources) {
+        const loaded = await waitForImageLoad(source)
+        if (loaded) {
+          return source
+        }
+      }
+
+      knownBad.add(sequence)
+      return null
+    }
+
     async function playNext() {
       const firstCycleBlocked = new Set()
 
@@ -448,7 +438,7 @@
         }
       }
 
-      const selected = await chooseNextImage(firstCycleBlocked)
+      const selected = chooseNextImage(firstCycleBlocked)
 
       if (!selected) {
         statusEl.textContent = 'Unable to find reel images. Retrying...'
@@ -457,11 +447,9 @@
         return
       }
 
-      const loaded = await waitForImageLoad(selected.source)
+      const loadedSource = await tryLoadSequence(selected.sequence)
 
-      if (!loaded) {
-        knownBad.add(selected.sequence)
-        knownGood.delete(selected.sequence)
+      if (!loadedSource) {
         nextTimeout = setTimeout(playNext, 50)
         return
       }
