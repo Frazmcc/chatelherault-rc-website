@@ -42,7 +42,7 @@ function base64Url(buffer) {
 function createPasswordHash(password, pepper, iterations = 210000) {
   const salt = crypto.randomBytes(16)
   const saltBase64Url = base64Url(salt)
-  const hash = crypto.createHash('sha256').update(`${password}${pepper}${saltBase64Url}`).digest()
+  const hash = crypto.pbkdf2Sync(`${password}${pepper}`, salt, iterations, 32, 'sha256')
 
   return {
     salt: saltBase64Url,
@@ -73,7 +73,7 @@ function main() {
     throw new Error('AUTH_PEPPER must be set to a strong random secret (16+ chars).')
   }
 
-  const derived = createPasswordHash(password, pepper)
+  const derived = createPasswordHash(password, pepper, 310000)
 
   const sql = [
     'INSERT INTO users (username, role, password_salt, password_hash, password_iterations)',

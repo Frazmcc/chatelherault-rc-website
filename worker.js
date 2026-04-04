@@ -5,6 +5,7 @@ import {
   createSessionToken,
   getSessionCookieName,
   parseCookies,
+  shouldUpgradePasswordRecord,
   verifyPassword,
   verifySessionToken,
 } from './functions/_lib/auth.js'
@@ -853,6 +854,17 @@ async function handleLogin(request, env) {
 
   if (!valid) {
     return json({ ok: false, message: 'Invalid credentials.' }, { status: 401 })
+  }
+
+  if (shouldUpgradePasswordRecord(user)) {
+    const upgraded = await createPasswordRecord(password, env.AUTH_PEPPER)
+    await env.DB.prepare(
+      `UPDATE users
+       SET password_salt = ?, password_hash = ?, password_iterations = ?
+       WHERE lower(username) = lower(?)`
+    )
+      .bind(upgraded.salt, upgraded.hash, upgraded.iterations, user.username)
+      .run()
   }
 
   const token = await createSessionToken({ username: user.username, role: user.role }, env)

@@ -9,7 +9,7 @@ CREATE TABLE users (
   role TEXT NOT NULL CHECK (role IN ('admin', 'mod', 'owner')),
   password_salt TEXT NOT NULL,
   password_hash TEXT NOT NULL,
-  password_iterations INTEGER NOT NULL DEFAULT 210000,
+  password_iterations INTEGER NOT NULL DEFAULT 310000,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 INSERT INTO users SELECT * FROM users_backup_v1;

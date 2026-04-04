@@ -4,6 +4,8 @@ const base64Lookup = Object.fromEntries([...base64Alphabet].map((ch, index) => [
 
 const SESSION_COOKIE_NAME = 'chrc_session'
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 12
+const LEGACY_MAX_ITERATIONS = 299999
+const PBKDF2_ITERATIONS = 310000
 
 function encodeBase64Url(bytes) {
   let base64 = ''
@@ -144,6 +146,30 @@ export function buildClearedSessionCookie() {
 }
 
 export async function hashPassword(password, saltBase64Url, iterations, pepper) {
+  const normalizedIterations = Number(iterations) || 210000
+  if (normalizedIterations > LEGACY_MAX_ITERATIONS) {
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      textEncoder.encode(`${password}${pepper}`),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits']
+    )
+
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        hash: 'SHA-256',
+        salt: decodeBase64Url(saltBase64Url),
+        iterations: normalizedIterations,
+      },
+      keyMaterial,
+      256
+    )
+
+    return encodeBase64Url(new Uint8Array(bits))
+  }
+
   const payload = textEncoder.encode(`${password}${pepper}${saltBase64Url}`)
   const digest = await crypto.subtle.digest('SHA-256', payload)
   return encodeBase64Url(new Uint8Array(digest))
@@ -163,8 +189,13 @@ export async function createPasswordRecord(password, pepper) {
   const saltBytes = new Uint8Array(16)
   crypto.getRandomValues(saltBytes)
   const salt = encodeBase64Url(saltBytes)
-  const hash = await hashPassword(password, salt, 210000, pepper)
-  return { salt, hash, iterations: 210000 }
+  const hash = await hashPassword(password, salt, PBKDF2_ITERATIONS, pepper)
+  return { salt, hash, iterations: PBKDF2_ITERATIONS }
+}
+
+export function shouldUpgradePasswordRecord(user) {
+  const iterations = Number(user?.password_iterations) || 0
+  return iterations <= LEGACY_MAX_ITERATIONS
 }
 
 export async function createSessionToken(sessionData, env) {
