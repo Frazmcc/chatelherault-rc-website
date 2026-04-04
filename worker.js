@@ -270,103 +270,24 @@ async function sendContactEmailViaResend({ env, recipientEmail, fromEmail, email
     return { attempted: false, ok: false, provider: 'resend', details: 'RESEND_API_KEY is not configured.' }
   }
 
-  const buildPayload = ({ fromAddress, toAddress, textBody, htmlContent }) => ({
-    from: `Chatelherault RC Website <${fromAddress}>`,
-    to: [toAddress],
-    reply_to: email,
-    subject: `Contact Form: ${subject}`,
-    text: textBody,
-    html: htmlContent,
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'content-type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify({
+      from: `Chatelherault RC Website <${fromEmail}>`,
+      to: [recipientEmail],
+      reply_to: email,
+      subject: `Contact Form: ${subject}`,
+      text: plainText,
+      html: htmlBody,
+    }),
   })
-
-  const attemptSend = async ({ fromAddress, toAddress, textBody = plainText, htmlContent = htmlBody }) => {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${env.RESEND_API_KEY}`,
-        'content-type': 'application/json; charset=utf-8',
-      },
-      body: JSON.stringify(buildPayload({ fromAddress, toAddress, textBody, htmlContent })),
-    })
-
-    return response
-  }
-
-  const extractSandboxAllowedEmail = (details) => {
-    const match = String(details || '').match(/own email address \(([^)]+)\)/i)
-    return match ? String(match[1] || '').trim() : ''
-  }
-
-  let response = await attemptSend({ fromAddress: fromEmail, toAddress: recipientEmail })
 
   if (!response.ok) {
     const details = await response.text().catch(() => '')
-    const shouldUseOnboardingSender =
-      response.status === 403 && /domain is not verified/i.test(details)
-
-    if (shouldUseOnboardingSender) {
-      response = await attemptSend({ fromAddress: 'onboarding@resend.dev', toAddress: recipientEmail })
-
-      if (response.ok) {
-        return {
-          attempted: true,
-          ok: true,
-          provider: 'resend',
-          details: 'Used resend onboarding sender because custom domain is not verified.',
-        }
-      }
-
-      const fallbackDetails = await response.text().catch(() => '')
-
-      const sandboxOnlyMode =
-        response.status === 403 && /only send testing emails to your own email address/i.test(fallbackDetails)
-      const sandboxRecipient = extractSandboxAllowedEmail(fallbackDetails) || extractSandboxAllowedEmail(details)
-
-      if (sandboxOnlyMode && sandboxRecipient) {
-        const sandboxText = [
-          `[Resend sandbox redirect] Intended recipient: ${recipientEmail}`,
-          '',
-          plainText,
-        ].join('\n')
-
-        const sandboxHtml = `
-          <p><strong>Resend sandbox redirect</strong><br/>Intended recipient: ${escapeHtml(recipientEmail)}</p>
-          ${htmlBody}
-        `
-
-        response = await attemptSend({
-          fromAddress: 'onboarding@resend.dev',
-          toAddress: sandboxRecipient,
-          textBody: sandboxText,
-          htmlContent: sandboxHtml,
-        })
-
-        if (response.ok) {
-          return {
-            attempted: true,
-            ok: true,
-            provider: 'resend',
-            details: `Resend sandbox mode: routed to ${sandboxRecipient} because custom domain is not verified.`,
-          }
-        }
-
-        const sandboxFallbackDetails = await response.text().catch(() => '')
-        return {
-          attempted: true,
-          ok: false,
-          provider: 'resend',
-          details: `status=${response.status}; details=${sandboxFallbackDetails.slice(0, 500)}`,
-        }
-      }
-
-      return {
-        attempted: true,
-        ok: false,
-        provider: 'resend',
-        details: `status=${response.status}; details=${fallbackDetails.slice(0, 500)}`,
-      }
-    }
-
     return {
       attempted: true,
       ok: false,
