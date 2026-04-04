@@ -295,7 +295,7 @@ async function handleContactSubmission(request, env) {
   }
 
   const recipientEmail = env.CONTACT_EMAIL || 'contact@chatelheraultrc.com'
-  const fromEmail = env.CONTACT_FROM_EMAIL || 'no-reply@chatelheraultrc.com'
+  const fromEmail = env.CONTACT_FROM_EMAIL || recipientEmail
 
   const plainText = [
     'New contact form submission',
