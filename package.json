@@ -7,6 +7,8 @@
     "start": "node server/server.js",
     "create:user": "node scripts/create-user.js",
     "cf:user-sql": "node scripts/cloudflare-user-sql.js",
+    "reel:rename": "node scripts/rename-reel-images.js",
+    "reel:rename:dry": "node scripts/rename-reel-images.js --dry-run",
     "build": "echo Static site: no build step required",
     "deploy": "echo Deploy is handled by Cloudflare Pages",
     "test": "echo \"No tests configured\""
