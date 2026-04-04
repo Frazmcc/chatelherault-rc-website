@@ -4,10 +4,13 @@
   const submitButton = document.getElementById('contact-submit-button')
   const turnstileContainer = document.getElementById('turnstile-container')
   let turnstileToken = ''
+  let turnstileWidgetId = null
 
   if (!form || !statusEl || !submitButton) {
     return
   }
+
+  submitButton.disabled = true
 
   function setStatus(message, tone) {
     statusEl.textContent = message
@@ -31,26 +34,37 @@
       const response = await fetch('/api/contact-config')
       const config = await response.json().catch(() => ({}))
       const siteKey = String(config?.turnstileSiteKey || '').trim()
+      const turnstileEnabled = Boolean(config?.turnstileEnabled)
 
-      if (!siteKey || !window.turnstile) {
+      if (!turnstileEnabled || !siteKey) {
+        setStatus('Security verification is not configured yet. Please try again shortly.', 'error')
         return
       }
 
-      window.turnstile.render(turnstileContainer, {
+      if (!window.turnstile) {
+        setStatus('Unable to load security verification. Please refresh and try again.', 'error')
+        return
+      }
+
+      turnstileWidgetId = window.turnstile.render(turnstileContainer, {
         sitekey: siteKey,
         theme: 'dark',
         callback(token) {
           turnstileToken = token || ''
+          submitButton.disabled = !turnstileToken
         },
         'expired-callback'() {
           turnstileToken = ''
+          submitButton.disabled = true
         },
         'error-callback'() {
           turnstileToken = ''
+          submitButton.disabled = true
+          setStatus('Security verification failed. Please try again.', 'error')
         },
       })
     } catch {
-      // Continue without blocking form initialization.
+      setStatus('Unable to initialize security verification. Please try again later.', 'error')
     }
   }
 
@@ -64,6 +78,11 @@
       subject: String(formData.get('subject') || '').trim(),
       message: String(formData.get('message') || '').trim(),
       turnstileToken,
+    }
+
+    if (!turnstileToken) {
+      setStatus('Please complete the security verification before sending.', 'error')
+      return
     }
 
     submitButton.disabled = true
@@ -83,10 +102,15 @@
 
       form.reset()
       setStatus('Thank you. Your message has been sent.', 'ok')
+      turnstileToken = ''
+
+      if (window.turnstile && turnstileWidgetId !== null) {
+        window.turnstile.reset(turnstileWidgetId)
+      }
     } catch (error) {
       setStatus(error.message || 'Unable to send your message right now.', 'error')
     } finally {
-      submitButton.disabled = false
+      submitButton.disabled = !turnstileToken
     }
   }
 

@@ -261,6 +261,7 @@ function handleContactConfig(env) {
   return json({
     ok: true,
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || '',
+    turnstileEnabled: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET),
   })
 }
 
