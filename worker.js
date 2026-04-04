@@ -265,6 +265,67 @@ function handleContactConfig(env) {
   })
 }
 
+async function sendContactEmailViaResend({ env, recipientEmail, fromEmail, email, name, subject, plainText, htmlBody }) {
+  if (!env.RESEND_API_KEY) {
+    return { attempted: false, ok: false, provider: 'resend', details: 'RESEND_API_KEY is not configured.' }
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'content-type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify({
+      from: `Chatelherault RC Website <${fromEmail}>`,
+      to: [recipientEmail],
+      reply_to: email,
+      subject: `Contact Form: ${subject}`,
+      text: plainText,
+      html: htmlBody,
+    }),
+  })
+
+  if (!response.ok) {
+    const details = await response.text().catch(() => '')
+    return { attempted: true, ok: false, provider: 'resend', details: `status=${response.status}; details=${details.slice(0, 500)}` }
+  }
+
+  return { attempted: true, ok: true, provider: 'resend', details: null }
+}
+
+async function sendContactEmailViaMailChannels({ recipientEmail, fromEmail, email, name, subject, plainText, htmlBody }) {
+  const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json; charset=utf-8' },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: recipientEmail }] }],
+      from: {
+        email: fromEmail,
+        name: 'Chatelherault RC Website',
+      },
+      reply_to: { email, name },
+      subject: `Contact Form: ${subject}`,
+      content: [
+        { type: 'text/plain', value: plainText },
+        { type: 'text/html', value: htmlBody },
+      ],
+    }),
+  })
+
+  if (!response.ok) {
+    const details = await response.text().catch(() => '')
+    return {
+      attempted: true,
+      ok: false,
+      provider: 'mailchannels',
+      details: `status=${response.status}; details=${details.slice(0, 500)}`,
+    }
+  }
+
+  return { attempted: true, ok: true, provider: 'mailchannels', details: null }
+}
+
 async function handleContactSubmission(request, env) {
   let body
 
@@ -337,33 +398,37 @@ async function handleContactSubmission(request, env) {
     <p>${escapeHtml(message).replaceAll('\n', '<br/>')}</p>
   `
 
-  const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json; charset=utf-8' },
-    body: JSON.stringify({
-      personalizations: [{ to: [{ email: recipientEmail }] }],
-      from: {
-        email: fromEmail,
-        name: 'Chatelherault RC Website',
-      },
-      reply_to: { email, name },
-      subject: `Contact Form: ${subject}`,
-      content: [
-        { type: 'text/plain', value: plainText },
-        { type: 'text/html', value: htmlBody },
-      ],
-    }),
+  const resendResult = await sendContactEmailViaResend({
+    env,
+    recipientEmail,
+    fromEmail,
+    email,
+    name,
+    subject,
+    plainText,
+    htmlBody,
   })
 
-  if (!response.ok) {
-    const details = await response.text().catch(() => '')
-    console.error('Mail delivery failed:', response.status, details.slice(0, 300))
+  const deliveryResult = resendResult.ok
+    ? resendResult
+    : await sendContactEmailViaMailChannels({
+        recipientEmail,
+        fromEmail,
+        email,
+        name,
+        subject,
+        plainText,
+        htmlBody,
+      })
+
+  if (!deliveryResult.ok) {
+    console.error('Mail delivery failed:', deliveryResult.provider, deliveryResult.details)
 
     if (submissionId) {
       await env.DB.prepare(
         `UPDATE contact_submissions SET delivery_status = 'email_failed', delivery_error = ? WHERE id = ?`
       )
-        .bind(`status=${response.status}; details=${details.slice(0, 500)}`, submissionId)
+        .bind(`${deliveryResult.provider}: ${deliveryResult.details}`, submissionId)
         .run()
     }
 
