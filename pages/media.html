@@ -160,7 +160,7 @@
 <section class="max-w-7xl mx-auto px-6 mb-12">
 <div class="rounded-xl overflow-hidden border border-outline-variant/30 bg-surface-container-low">
 <div class="relative w-full aspect-[16/9] md:aspect-[21/9] bg-surface-container" id="loop-player-stage">
-<img alt="Autoplay reel image" class="w-full h-full object-cover opacity-0 transition-opacity duration-700" id="loop-player-image"/>
+<img alt="Autoplay reel image" class="w-full h-full object-cover opacity-0 transition-opacity duration-700" data-no-grayscale="true" id="loop-player-image"/>
 <div class="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/60 to-transparent">
 <p class="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary">Auto Reel Player</p>
 <p class="font-body text-sm text-on-surface mt-1" id="loop-player-status">Discovering reel images...</p>
@@ -246,7 +246,7 @@
       card.className = `${widths[index % widths.length]} h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0`
 
       const image = document.createElement('img')
-      image.className = 'w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500'
+      image.className = 'w-full h-full object-cover grayscale transition-all duration-500'
       image.loading = 'lazy'
       image.decoding = 'async'
       image.alt = `Sunday reel capture ${sequence}`
