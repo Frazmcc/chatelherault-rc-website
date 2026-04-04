@@ -219,6 +219,51 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;')
 }
 
+async function verifyTurnstileToken(token, request, env) {
+  if (!env.TURNSTILE_SECRET) {
+    return { ok: true }
+  }
+
+  if (!token) {
+    return { ok: false, message: 'Please complete the security check.' }
+  }
+
+  const payload = new URLSearchParams()
+  payload.set('secret', env.TURNSTILE_SECRET)
+  payload.set('response', token)
+
+  const connectingIp = request.headers.get('CF-Connecting-IP')
+
+  if (connectingIp) {
+    payload.set('remoteip', connectingIp)
+  }
+
+  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: payload.toString(),
+  })
+
+  if (!response.ok) {
+    return { ok: false, message: 'Security validation failed. Please try again.' }
+  }
+
+  const data = await response.json().catch(() => null)
+
+  if (!data?.success) {
+    return { ok: false, message: 'Security validation failed. Please try again.' }
+  }
+
+  return { ok: true }
+}
+
+function handleContactConfig(env) {
+  return json({
+    ok: true,
+    turnstileSiteKey: env.TURNSTILE_SITE_KEY || '',
+  })
+}
+
 async function handleContactSubmission(request, env) {
   let body
 
@@ -232,6 +277,7 @@ async function handleContactSubmission(request, env) {
   const email = String(body?.email || '').trim()
   const subject = String(body?.subject || '').trim()
   const message = String(body?.message || '').trim()
+  const turnstileToken = String(body?.turnstileToken || '').trim()
 
   if (!name || !email || !subject || !message) {
     return json({ ok: false, message: 'Name, email, subject, and message are required.' }, { status: 400 })
@@ -239,6 +285,12 @@ async function handleContactSubmission(request, env) {
 
   if (!/^\S+@\S+\.\S+$/.test(email)) {
     return json({ ok: false, message: 'Please enter a valid email address.' }, { status: 400 })
+  }
+
+  const turnstile = await verifyTurnstileToken(turnstileToken, request, env)
+
+  if (!turnstile.ok) {
+    return json({ ok: false, message: turnstile.message }, { status: 400 })
   }
 
   const recipientEmail = env.CONTACT_EMAIL || 'contact@chatelheraultrc.com'
@@ -1162,6 +1214,10 @@ export default {
 
     if (url.pathname === '/api/metoffice-forecast' && request.method === 'GET') {
       return handleMetOfficeForecast(request, env)
+    }
+
+    if (url.pathname === '/api/contact-config' && request.method === 'GET') {
+      return handleContactConfig(env)
     }
 
     if (url.pathname === '/api/contact' && request.method === 'POST') {

@@ -2,6 +2,8 @@
   const form = document.getElementById('contact-form')
   const statusEl = document.getElementById('contact-submit-status')
   const submitButton = document.getElementById('contact-submit-button')
+  const turnstileContainer = document.getElementById('turnstile-container')
+  let turnstileToken = ''
 
   if (!form || !statusEl || !submitButton) {
     return
@@ -20,6 +22,38 @@
     statusEl.classList.remove('hidden')
   }
 
+  async function setupTurnstile() {
+    if (!turnstileContainer) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/contact-config')
+      const config = await response.json().catch(() => ({}))
+      const siteKey = String(config?.turnstileSiteKey || '').trim()
+
+      if (!siteKey || !window.turnstile) {
+        return
+      }
+
+      window.turnstile.render(turnstileContainer, {
+        sitekey: siteKey,
+        theme: 'dark',
+        callback(token) {
+          turnstileToken = token || ''
+        },
+        'expired-callback'() {
+          turnstileToken = ''
+        },
+        'error-callback'() {
+          turnstileToken = ''
+        },
+      })
+    } catch {
+      // Continue without blocking form initialization.
+    }
+  }
+
   async function submitForm(event) {
     event.preventDefault()
 
@@ -29,6 +63,7 @@
       email: String(formData.get('email') || '').trim(),
       subject: String(formData.get('subject') || '').trim(),
       message: String(formData.get('message') || '').trim(),
+      turnstileToken,
     }
 
     submitButton.disabled = true
@@ -56,4 +91,5 @@
   }
 
   form.addEventListener('submit', submitForm)
+  setupTurnstile()
 })()
