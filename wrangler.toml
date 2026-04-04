@@ -10,6 +10,8 @@ binding = "ASSETS"
 GITHUB_REPO_OWNER = "Frazmcc"
 GITHUB_REPO_NAME = "chatelherault-rc-website"
 GITHUB_BRANCH = "main"
+CONTACT_EMAIL = "contact@chatelheraultrc.com"
+CONTACT_FROM_EMAIL = "no-reply@chatelheraultrc.com"
 
 [[d1_databases]]
 binding = "DB"

@@ -210,6 +210,85 @@ function encodeArrayBufferBase64(buffer) {
   return btoa(binary)
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+async function handleContactSubmission(request, env) {
+  let body
+
+  try {
+    body = await request.json()
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 })
+  }
+
+  const name = String(body?.name || '').trim()
+  const email = String(body?.email || '').trim()
+  const subject = String(body?.subject || '').trim()
+  const message = String(body?.message || '').trim()
+
+  if (!name || !email || !subject || !message) {
+    return json({ ok: false, message: 'Name, email, subject, and message are required.' }, { status: 400 })
+  }
+
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    return json({ ok: false, message: 'Please enter a valid email address.' }, { status: 400 })
+  }
+
+  const recipientEmail = env.CONTACT_EMAIL || 'contact@chatelheraultrc.com'
+  const fromEmail = env.CONTACT_FROM_EMAIL || 'no-reply@chatelheraultrc.com'
+
+  const plainText = [
+    'New contact form submission',
+    `Name: ${name}`,
+    `Email: ${email}`,
+    `Subject: ${subject}`,
+    '',
+    message,
+  ].join('\n')
+
+  const htmlBody = `
+    <h2>New contact form submission</h2>
+    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+    <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
+    <p><strong>Message:</strong></p>
+    <p>${escapeHtml(message).replaceAll('\n', '<br/>')}</p>
+  `
+
+  const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json; charset=utf-8' },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: recipientEmail }] }],
+      from: {
+        email: fromEmail,
+        name: 'Chatelherault RC Website',
+      },
+      reply_to: { email, name },
+      subject: `Contact Form: ${subject}`,
+      content: [
+        { type: 'text/plain', value: plainText },
+        { type: 'text/html', value: htmlBody },
+      ],
+    }),
+  })
+
+  if (!response.ok) {
+    const details = await response.text().catch(() => '')
+    console.error('Mail delivery failed:', response.status, details.slice(0, 300))
+    return json({ ok: false, message: 'Unable to send message right now. Please try again later.' }, { status: 502 })
+  }
+
+  return json({ ok: true })
+}
+
 async function ensureRigSubmissionTable(env) {
   await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS rig_submissions (
@@ -1083,6 +1162,10 @@ export default {
 
     if (url.pathname === '/api/metoffice-forecast' && request.method === 'GET') {
       return handleMetOfficeForecast(request, env)
+    }
+
+    if (url.pathname === '/api/contact' && request.method === 'POST') {
+      return handleContactSubmission(request, env)
     }
 
     if (url.pathname === '/api/facebook-group-members' && request.method === 'GET') {
