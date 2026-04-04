@@ -2,6 +2,11 @@ name = "chatelherault-rc-website"
 compatibility_date = "2026-03-29"
 main = "worker.js"
 
+routes = [
+	{ pattern = "www.chatelheraultrc.com", zone_name = "chatelheraultrc.com", custom_domain = true },
+	{ pattern = "chatelheraultrc.com", zone_name = "chatelheraultrc.com", custom_domain = true },
+]
+
 [assets]
 directory = "."
 binding = "ASSETS"
@@ -12,7 +17,7 @@ GITHUB_REPO_NAME = "chatelherault-rc-website"
 GITHUB_BRANCH = "main"
 CONTACT_EMAIL = "contact@chatelheraultrc.com"
 CONTACT_FROM_EMAIL = "contact@chatelheraultrc.com"
-TURNSTILE_SITE_KEY = ""
+TURNSTILE_SITE_KEY = "0x4AAAAAAC0oUDXNzCW-4deY"
 
 [[d1_databases]]
 binding = "DB"
