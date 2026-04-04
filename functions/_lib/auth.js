@@ -181,17 +181,26 @@ export async function verifyPassword(password, user, pepper) {
   }
 
   const iterations = Number(user.password_iterations) || 210000
-  const primaryHash = await hashPassword(password, user.password_salt, iterations, pepper)
+  try {
+    const primaryHash = await hashPassword(password, user.password_salt, iterations, pepper)
 
-  if (timingSafeEqual(primaryHash, user.password_hash)) {
-    return true
+    if (timingSafeEqual(primaryHash, user.password_hash)) {
+      return true
+    }
+  } catch {
+    // Ignore malformed metadata in legacy records and continue with fallback.
   }
 
   // Compatibility fallback: try the opposite scheme to avoid locking out
   // accounts if an older record has an unexpected iteration marker.
   const fallbackIterations = iterations > LEGACY_MAX_ITERATIONS ? 210000 : PBKDF2_ITERATIONS
-  const fallbackHash = await hashPassword(password, user.password_salt, fallbackIterations, pepper)
-  return timingSafeEqual(fallbackHash, user.password_hash)
+
+  try {
+    const fallbackHash = await hashPassword(password, user.password_salt, fallbackIterations, pepper)
+    return timingSafeEqual(fallbackHash, user.password_hash)
+  } catch {
+    return false
+  }
 }
 
 export async function createPasswordRecord(password, pepper) {
