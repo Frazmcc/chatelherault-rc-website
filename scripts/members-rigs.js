@@ -55,9 +55,9 @@
     return `
       <article class="bg-surface border border-white/10 rounded-lg p-5 space-y-4">
         <div>
-          <h2 class="font-headline text-2xl font-bold">${rig.owner_name}</h2>
-          <p class="text-sm text-slate-300">${rig.chassis_model}</p>
-          <p class="text-xs text-slate-500 mt-1">Approved Build</p>
+          <p class="font-label text-[10px] uppercase tracking-widest text-tertiary mb-2">Approved Build</p>
+          <h2 class="font-headline text-2xl font-bold uppercase tracking-tight">${rig.owner_name}</h2>
+          <p class="text-sm text-slate-300 uppercase tracking-wide">${rig.chassis_model}</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
