@@ -16,11 +16,98 @@ const OWNER_ONLY_SITE_PATHS = new Set([
   '/super-user.html',
   '/super-user',
 ])
+const LOGIN_RATE_LIMIT_WINDOW_SECONDS = 5 * 60
+const LOGIN_RATE_LIMIT_MAX_REQUESTS = 10
+const RIG_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
+const RIG_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 6
+
+const SECURITY_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'SAMEORIGIN',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+  'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+  'content-security-policy-report-only':
+    "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://challenges.cloudflare.com; connect-src 'self' https:; frame-src 'self' https:",
+}
 
 function json(data, init = {}) {
   const headers = new Headers(init.headers || {})
   headers.set('content-type', 'application/json; charset=utf-8')
   return new Response(JSON.stringify(data), { ...init, headers })
+}
+
+function applySecurityHeaders(response) {
+  const headers = new Headers(response.headers)
+
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    headers.set(key, value)
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  })
+}
+
+function getClientIp(request) {
+  const cfIp = request.headers.get('cf-connecting-ip')
+  if (cfIp) {
+    return cfIp.trim()
+  }
+
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+
+  return 'unknown'
+}
+
+async function ensureRateLimitTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS request_rate_limits (
+      key TEXT PRIMARY KEY,
+      count INTEGER NOT NULL,
+      reset_at INTEGER NOT NULL
+    )`
+  ).run()
+}
+
+async function enforceRateLimit(env, key, windowSeconds, maxRequests) {
+  await ensureRateLimitTable(env)
+
+  const now = Math.floor(Date.now() / 1000)
+  const row = await env.DB.prepare(`SELECT count, reset_at FROM request_rate_limits WHERE key = ?`).bind(key).first()
+
+  if (!row || Number(row.reset_at) <= now) {
+    await env.DB.prepare(
+      `INSERT INTO request_rate_limits (key, count, reset_at)
+       VALUES (?, 1, ?)
+       ON CONFLICT(key) DO UPDATE SET count = 1, reset_at = excluded.reset_at`
+    )
+      .bind(key, now + windowSeconds)
+      .run()
+
+    return { allowed: true, remaining: Math.max(maxRequests - 1, 0), retryAfter: windowSeconds }
+  }
+
+  const count = Number(row.count) || 0
+  const resetAt = Number(row.reset_at) || now + windowSeconds
+  const retryAfter = Math.max(resetAt - now, 1)
+
+  if (count >= maxRequests) {
+    return { allowed: false, remaining: 0, retryAfter }
+  }
+
+  const nextCount = count + 1
+
+  await env.DB.prepare(`UPDATE request_rate_limits SET count = ? WHERE key = ?`)
+    .bind(nextCount, key)
+    .run()
+
+  return { allowed: true, remaining: Math.max(maxRequests - nextCount, 0), retryAfter }
 }
 
 function toBase64Utf8(value) {
@@ -509,6 +596,24 @@ async function ensureRigSubmissionTable(env) {
 async function handleCreateRigSubmission(request, env, executionCtx) {
   await ensureRigSubmissionTable(env)
 
+  const rigSubmitLimit = await enforceRateLimit(
+    env,
+    `rig-submit:${getClientIp(request)}`,
+    RIG_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS,
+    RIG_SUBMISSION_RATE_LIMIT_MAX_REQUESTS
+  )
+
+  if (!rigSubmitLimit.allowed) {
+    const headers = new Headers({ 'retry-after': String(rigSubmitLimit.retryAfter) })
+    return json(
+      {
+        ok: false,
+        message: 'Too many submissions from this network. Please try again later.',
+      },
+      { status: 429, headers }
+    )
+  }
+
   const form = await request.formData()
   const ownerName = String(form.get('owner') || '').trim()
   const chassisModel = String(form.get('chassisModel') || '').trim()
@@ -695,6 +800,24 @@ async function fakeWork(password, pepper) {
 async function handleLogin(request, env) {
   if (!env.DB || !env.AUTH_PEPPER || !env.AUTH_SESSION_SECRET) {
     return json({ ok: false, message: 'Auth service is not configured.' }, { status: 500 })
+  }
+
+  const loginLimit = await enforceRateLimit(
+    env,
+    `login:${getClientIp(request)}`,
+    LOGIN_RATE_LIMIT_WINDOW_SECONDS,
+    LOGIN_RATE_LIMIT_MAX_REQUESTS
+  )
+
+  if (!loginLimit.allowed) {
+    const headers = new Headers({ 'retry-after': String(loginLimit.retryAfter) })
+    return json(
+      {
+        ok: false,
+        message: 'Too many login attempts. Please wait before trying again.',
+      },
+      { status: 429, headers }
+    )
   }
 
   let body
@@ -1367,83 +1490,96 @@ function mapRootPagePath(pathname) {
 export default {
   async fetch(request, env, executionCtx) {
     const url = new URL(request.url)
+    let response
 
     if (url.pathname === '/admin/root-login.html') {
-      return redirect('/admin/login.html')
+      response = redirect('/admin/login.html')
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/login' && request.method === 'POST') {
-      return handleLogin(request, env)
+      response = await handleLogin(request, env)
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/logout' && request.method === 'POST') {
-      return handleLogout()
+      response = handleLogout()
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/session' && request.method === 'GET') {
-      return handleSession(request, env)
+      response = await handleSession(request, env)
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/metoffice-forecast' && request.method === 'GET') {
-      return handleMetOfficeForecast(request, env)
+      response = await handleMetOfficeForecast(request, env)
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/contact-config' && request.method === 'GET') {
-      return handleContactConfig(env)
+      response = handleContactConfig(env)
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/contact' && request.method === 'POST') {
-      return handleContactSubmission(request, env)
+      response = await handleContactSubmission(request, env)
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/facebook-group-members' && request.method === 'GET') {
-      return handleFacebookGroupMembers(request)
+      response = await handleFacebookGroupMembers(request)
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/rig-submissions' && request.method === 'POST') {
-      return handleCreateRigSubmission(request, env, executionCtx)
+      response = await handleCreateRigSubmission(request, env, executionCtx)
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/rig-submissions' && request.method === 'GET') {
-      return handleListRigSubmissions(request, env)
+      response = await handleListRigSubmissions(request, env)
+      return applySecurityHeaders(response)
     }
 
     if (url.pathname === '/api/rig-submissions-public' && request.method === 'GET') {
-      return handleListPublicApprovedRigs(env)
+      response = await handleListPublicApprovedRigs(env)
+      return applySecurityHeaders(response)
     }
 
     if (/^\/api\/rig-submissions\/\d+\/decision$/.test(url.pathname) && request.method === 'POST') {
-      return handleRigSubmissionDecision(request, env, executionCtx)
+      response = await handleRigSubmissionDecision(request, env, executionCtx)
+      return applySecurityHeaders(response)
     }
 
     // User management (owner only)
-    if (url.pathname === '/api/users' && request.method === 'GET') return handleListUsers(request, env)
-    if (url.pathname === '/api/users' && request.method === 'POST') return handleCreateUser(request, env)
-    if (/^\/api\/users\/\d+$/.test(url.pathname) && request.method === 'DELETE') return handleDeleteUser(request, env)
-    if (url.pathname === '/api/contact-submissions' && request.method === 'GET') return handleListContactSubmissions(request, env)
+    if (url.pathname === '/api/users' && request.method === 'GET') return applySecurityHeaders(await handleListUsers(request, env))
+    if (url.pathname === '/api/users' && request.method === 'POST') return applySecurityHeaders(await handleCreateUser(request, env))
+    if (/^\/api\/users\/\d+$/.test(url.pathname) && request.method === 'DELETE') return applySecurityHeaders(await handleDeleteUser(request, env))
+    if (url.pathname === '/api/contact-submissions' && request.method === 'GET') return applySecurityHeaders(await handleListContactSubmissions(request, env))
 
     // Media management (admin / mod / owner)
-    if (url.pathname === '/api/media' && request.method === 'GET') return handleListMedia(request, env)
-    if (url.pathname === '/api/media' && request.method === 'POST') return handleAddMedia(request, env, executionCtx)
-    if (/^\/api\/media\/\d+$/.test(url.pathname) && request.method === 'DELETE') return handleDeleteMedia(request, env, executionCtx)
+    if (url.pathname === '/api/media' && request.method === 'GET') return applySecurityHeaders(await handleListMedia(request, env))
+    if (url.pathname === '/api/media' && request.method === 'POST') return applySecurityHeaders(await handleAddMedia(request, env, executionCtx))
+    if (/^\/api\/media\/\d+$/.test(url.pathname) && request.method === 'DELETE') return applySecurityHeaders(await handleDeleteMedia(request, env, executionCtx))
 
     // Public content read for page rendering overrides
-    if (url.pathname === '/api/content-public' && request.method === 'GET') return handleListPublicContent(env)
+    if (url.pathname === '/api/content-public' && request.method === 'GET') return applySecurityHeaders(await handleListPublicContent(env))
 
     // Content management (admin / mod / owner)
-    if (url.pathname === '/api/content' && request.method === 'GET') return handleListContent(request, env)
-    if (url.pathname === '/api/content' && request.method === 'PUT') return handlePutContent(request, env, executionCtx)
+    if (url.pathname === '/api/content' && request.method === 'GET') return applySecurityHeaders(await handleListContent(request, env))
+    if (url.pathname === '/api/content' && request.method === 'PUT') return applySecurityHeaders(await handlePutContent(request, env, executionCtx))
 
     const adminBlockResponse = await guardAdminRoute(request, env)
 
     if (adminBlockResponse) {
-      return adminBlockResponse
+      return applySecurityHeaders(adminBlockResponse)
     }
 
     const ownerOnlyBlockResponse = await guardOwnerOnlySiteRoute(request, env)
 
     if (ownerOnlyBlockResponse) {
-      return ownerOnlyBlockResponse
+      return applySecurityHeaders(ownerOnlyBlockResponse)
     }
 
     const mappedPath = mapRootPagePath(url.pathname)
@@ -1451,9 +1587,11 @@ export default {
     if (mappedPath) {
       const rewrittenUrl = new URL(request.url)
       rewrittenUrl.pathname = mappedPath
-      return env.ASSETS.fetch(new Request(rewrittenUrl.toString(), request))
+      response = await env.ASSETS.fetch(new Request(rewrittenUrl.toString(), request))
+      return applySecurityHeaders(response)
     }
 
-    return env.ASSETS.fetch(request)
+    response = await env.ASSETS.fetch(request)
+    return applySecurityHeaders(response)
   },
 }

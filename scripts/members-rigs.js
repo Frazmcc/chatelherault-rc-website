@@ -19,6 +19,24 @@
     statusEl.classList.remove('hidden')
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;')
+  }
+
+  function safeMediaUrl(value) {
+    const candidate = String(value || '').trim()
+    if (/^data:image\//i.test(candidate) || /^data:video\//i.test(candidate)) {
+      return candidate
+    }
+
+    return ''
+  }
+
   function renderMedia(mediaItems) {
     if (!Array.isArray(mediaItems) || !mediaItems.length) {
       return '<p class="text-xs text-slate-500">No media attached.</p>'
@@ -26,16 +44,17 @@
 
     return mediaItems
       .map((item) => {
-        if (!item || !item.dataUrl) {
+        const safeSrc = safeMediaUrl(item?.dataUrl)
+        if (!safeSrc) {
           return ''
         }
 
         if (String(item.type).startsWith('image/')) {
-          return `<img src="${item.dataUrl}" alt="Rig media" class="rounded border border-white/10 w-full max-h-64 object-cover"/>`
+          return `<img src="${escapeHtml(safeSrc)}" alt="Rig media" class="rounded border border-white/10 w-full max-h-64 object-cover"/>`
         }
 
         if (String(item.type).startsWith('video/')) {
-          return `<video controls src="${item.dataUrl}" class="rounded border border-white/10 w-full max-h-64"></video>`
+          return `<video controls src="${escapeHtml(safeSrc)}" class="rounded border border-white/10 w-full max-h-64"></video>`
         }
 
         return ''
@@ -56,18 +75,18 @@
       <article class="bg-surface border border-white/10 rounded-lg p-5 space-y-4">
         <div>
           <p class="font-label text-[10px] uppercase tracking-widest text-tertiary mb-2">Approved Build</p>
-          <h2 class="font-headline text-2xl font-bold uppercase tracking-tight">${rig.owner_name}</h2>
-          <p class="text-sm text-slate-300 uppercase tracking-wide">${rig.chassis_model}</p>
+          <h2 class="font-headline text-2xl font-bold uppercase tracking-tight">${escapeHtml(rig.owner_name)}</h2>
+          <p class="text-sm text-slate-300 uppercase tracking-wide">${escapeHtml(rig.chassis_model)}</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-          <p><span class="text-slate-500">Battery:</span> ${rig.battery || '—'}</p>
-          <p><span class="text-slate-500">Upgrades:</span> ${rig.upgrades || '—'}</p>
+          <p><span class="text-slate-500">Battery:</span> ${escapeHtml(rig.battery || '—')}</p>
+          <p><span class="text-slate-500">Upgrades:</span> ${escapeHtml(rig.upgrades || '—')}</p>
         </div>
 
         <div>
           <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">Build Blog</p>
-          <p class="text-sm leading-relaxed whitespace-pre-wrap">${rig.blog_text || ''}</p>
+          <p class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(rig.blog_text || '')}</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${renderMedia(mediaItems)}</div>

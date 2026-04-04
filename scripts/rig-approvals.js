@@ -28,6 +28,24 @@
     statusEl.classList.add('hidden')
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;')
+  }
+
+  function safeMediaUrl(value) {
+    const candidate = String(value || '').trim()
+    if (/^data:image\//i.test(candidate) || /^data:video\//i.test(candidate)) {
+      return candidate
+    }
+
+    return ''
+  }
+
   function renderMedia(mediaItems) {
     if (!Array.isArray(mediaItems) || !mediaItems.length) {
       return '<p class="text-xs text-slate-500">No media uploaded.</p>'
@@ -35,16 +53,17 @@
 
     return mediaItems
       .map((item) => {
-        if (!item || !item.dataUrl) {
+        const safeSrc = safeMediaUrl(item?.dataUrl)
+        if (!safeSrc) {
           return ''
         }
 
         if (String(item.type).startsWith('image/')) {
-          return `<img src="${item.dataUrl}" alt="Rig media" class="rounded border border-white/10 max-h-56 object-cover"/>`
+          return `<img src="${escapeHtml(safeSrc)}" alt="Rig media" class="rounded border border-white/10 max-h-56 object-cover"/>`
         }
 
         if (String(item.type).startsWith('video/')) {
-          return `<video controls class="rounded border border-white/10 max-h-56" src="${item.dataUrl}"></video>`
+          return `<video controls class="rounded border border-white/10 max-h-56" src="${escapeHtml(safeSrc)}"></video>`
         }
 
         return ''
@@ -65,21 +84,21 @@
       <article class="bg-surface border border-white/10 rounded-lg p-5 space-y-4" data-submission-id="${submission.id}">
         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
           <div>
-            <h2 class="font-headline text-2xl font-bold">${submission.owner_name}</h2>
-            <p class="text-sm text-slate-300">${submission.chassis_model}</p>
-            <p class="text-xs text-slate-500 mt-1">Submitted: ${submission.submitted_at}</p>
+            <h2 class="font-headline text-2xl font-bold">${escapeHtml(submission.owner_name)}</h2>
+            <p class="text-sm text-slate-300">${escapeHtml(submission.chassis_model)}</p>
+            <p class="text-xs text-slate-500 mt-1">Submitted: ${escapeHtml(submission.submitted_at)}</p>
           </div>
-          <div class="text-xs uppercase tracking-widest px-2 py-1 rounded border border-white/20">${submission.status}</div>
+          <div class="text-xs uppercase tracking-widest px-2 py-1 rounded border border-white/20">${escapeHtml(submission.status)}</div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <p><span class="text-slate-500">Battery:</span> ${submission.battery || '—'}</p>
-          <p><span class="text-slate-500">Upgrades:</span> ${submission.upgrades || '—'}</p>
+          <p><span class="text-slate-500">Battery:</span> ${escapeHtml(submission.battery || '—')}</p>
+          <p><span class="text-slate-500">Upgrades:</span> ${escapeHtml(submission.upgrades || '—')}</p>
         </div>
 
         <div>
           <p class="text-xs uppercase tracking-widest text-slate-500 mb-2">Blog</p>
-          <p class="text-sm leading-relaxed whitespace-pre-wrap">${submission.blog_text || ''}</p>
+          <p class="text-sm leading-relaxed whitespace-pre-wrap">${escapeHtml(submission.blog_text || '')}</p>
         </div>
 
         <div>
