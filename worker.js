@@ -803,24 +803,6 @@ async function handleLogin(request, env) {
     return json({ ok: false, message: 'Auth service is not configured.' }, { status: 500 })
   }
 
-  const loginLimit = await enforceRateLimit(
-    env,
-    `login:${getClientIp(request)}`,
-    LOGIN_RATE_LIMIT_WINDOW_SECONDS,
-    LOGIN_RATE_LIMIT_MAX_REQUESTS
-  )
-
-  if (!loginLimit.allowed) {
-    const headers = new Headers({ 'retry-after': String(loginLimit.retryAfter) })
-    return json(
-      {
-        ok: false,
-        message: 'Too many login attempts. Please wait before trying again.',
-      },
-      { status: 429, headers }
-    )
-  }
-
   let body
 
   try {
