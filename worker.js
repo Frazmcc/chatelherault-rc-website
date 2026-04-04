@@ -270,25 +270,62 @@ async function sendContactEmailViaResend({ env, recipientEmail, fromEmail, email
     return { attempted: false, ok: false, provider: 'resend', details: 'RESEND_API_KEY is not configured.' }
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${env.RESEND_API_KEY}`,
-      'content-type': 'application/json; charset=utf-8',
-    },
-    body: JSON.stringify({
-      from: `Chatelherault RC Website <${fromEmail}>`,
-      to: [recipientEmail],
-      reply_to: email,
-      subject: `Contact Form: ${subject}`,
-      text: plainText,
-      html: htmlBody,
-    }),
+  const buildPayload = (fromAddress) => ({
+    from: `Chatelherault RC Website <${fromAddress}>`,
+    to: [recipientEmail],
+    reply_to: email,
+    subject: `Contact Form: ${subject}`,
+    text: plainText,
+    html: htmlBody,
   })
+
+  const attemptSend = async (fromAddress) => {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${env.RESEND_API_KEY}`,
+        'content-type': 'application/json; charset=utf-8',
+      },
+      body: JSON.stringify(buildPayload(fromAddress)),
+    })
+
+    return response
+  }
+
+  let response = await attemptSend(fromEmail)
 
   if (!response.ok) {
     const details = await response.text().catch(() => '')
-    return { attempted: true, ok: false, provider: 'resend', details: `status=${response.status}; details=${details.slice(0, 500)}` }
+    const shouldUseOnboardingSender =
+      response.status === 403 && /domain is not verified/i.test(details)
+
+    if (shouldUseOnboardingSender) {
+      response = await attemptSend('onboarding@resend.dev')
+
+      if (response.ok) {
+        return {
+          attempted: true,
+          ok: true,
+          provider: 'resend',
+          details: 'Used resend onboarding sender because custom domain is not verified.',
+        }
+      }
+
+      const fallbackDetails = await response.text().catch(() => '')
+      return {
+        attempted: true,
+        ok: false,
+        provider: 'resend',
+        details: `status=${response.status}; details=${fallbackDetails.slice(0, 500)}`,
+      }
+    }
+
+    return {
+      attempted: true,
+      ok: false,
+      provider: 'resend',
+      details: `status=${response.status}; details=${details.slice(0, 500)}`,
+    }
   }
 
   return { attempted: true, ok: true, provider: 'resend', details: null }
