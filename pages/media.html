@@ -163,7 +163,6 @@
 <img alt="Autoplay reel image" class="w-full h-full object-contain opacity-100 transition-opacity duration-700" data-no-grayscale="true" id="loop-player-image" src="/assets/reel/optimized/chatelherault-reel-0001.jpg"/>
 <div class="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/60 to-transparent">
 <p class="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary">Auto Reel Player</p>
-<p class="font-body text-sm text-on-surface mt-1" id="loop-player-status">Starting reel playback...</p>
 </div>
 <div class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/75 to-transparent">
 <div class="h-1 w-full bg-white/20 rounded-full overflow-hidden">
@@ -314,11 +313,10 @@
 
   ;(() => {
     const imageEl = document.getElementById('loop-player-image')
-    const statusEl = document.getElementById('loop-player-status')
     const timerEl = document.getElementById('loop-player-timer')
     const progressEl = document.getElementById('loop-player-progress')
 
-    if (!imageEl || !statusEl || !timerEl || !progressEl) {
+    if (!imageEl || !timerEl || !progressEl) {
       return
     }
 
@@ -397,7 +395,6 @@
       imageEl.src = item.src
       imageEl.classList.remove('opacity-0')
       pushRecent(item.sequence, noRepeatWindow)
-      statusEl.textContent = `Now playing capture #${toSequence(item.sequence)} • No repeat within next ${noRepeatWindow}`
 
       const durationMs = randomInt(minDurationMs, maxDurationMs)
       startProgress(durationMs)
@@ -415,7 +412,6 @@
 
     function playNext() {
       if (!reelItems.length) {
-        statusEl.textContent = 'Unable to find reel images. Retrying...'
         timerEl.textContent = 'Next in 3s'
         nextTimeout = setTimeout(playNext, 3000)
         return
@@ -429,7 +425,6 @@
       reelItems = items
 
       if (!reelItems.length) {
-        statusEl.textContent = 'No reel captures are currently available.'
         timerEl.textContent = 'Waiting for uploads'
         return
       }
