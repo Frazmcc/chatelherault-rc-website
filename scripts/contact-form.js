@@ -25,6 +25,20 @@
     statusEl.classList.remove('hidden')
   }
 
+  async function waitForTurnstile(maxWaitMs = 8000) {
+    const start = Date.now()
+
+    while (Date.now() - start < maxWaitMs) {
+      if (window.turnstile && typeof window.turnstile.render === 'function') {
+        return true
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+
+    return false
+  }
+
   async function setupTurnstile() {
     if (!turnstileContainer) {
       return
@@ -41,7 +55,9 @@
         return
       }
 
-      if (!window.turnstile) {
+      const turnstileReady = await waitForTurnstile()
+
+      if (!turnstileReady) {
         setStatus('Unable to load security verification. Please refresh and try again.', 'error')
         return
       }
