@@ -5,6 +5,7 @@ const SUPPORTED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif']
 const DEFAULT_PREFIX = 'chatelherault-reel'
 const DEFAULT_SORT_THRESHOLD = 50000
 const DEFAULT_DRY_RUN_PREVIEW_LIMIT = 200
+const MANIFEST_FILE_NAME = 'reel-manifest.json'
 
 function parseArgs(argv) {
   const args = argv.slice(2)
@@ -184,6 +185,41 @@ function saveState(stateFile, prefix, lastSequence) {
   fs.writeFileSync(stateFile, `${JSON.stringify(payload, null, 2)}\n`, 'utf8')
 }
 
+function saveManifest(destinationDir, prefix) {
+  if (!fs.existsSync(destinationDir)) {
+    return
+  }
+
+  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const filePattern = new RegExp(`^${escapedPrefix}-(\\d+)\\.([^.]+)$`, 'i')
+
+  const items = fs
+    .readdirSync(destinationDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .map((name) => {
+      const match = name.match(filePattern)
+      if (!match) {
+        return null
+      }
+
+      return {
+        sequence: Number(match[1]),
+        src: `/assets/reel/optimized/${name}`,
+      }
+    })
+    .filter((entry) => entry && Number.isInteger(entry.sequence) && entry.sequence > 0)
+    .sort((a, b) => a.sequence - b.sequence || a.src.localeCompare(b.src))
+
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    count: items.length,
+    items,
+  }
+
+  fs.writeFileSync(path.join(destinationDir, MANIFEST_FILE_NAME), `${JSON.stringify(payload, null, 2)}\n`, 'utf8')
+}
+
 function buildTargetName(prefix, sourceName, startSequence, index) {
   const ext = path.extname(sourceName).toLowerCase()
   const sequence = String(startSequence + index + 1).padStart(4, '0')
@@ -192,6 +228,7 @@ function buildTargetName(prefix, sourceName, startSequence, index) {
 
 function runRename(sourceDir, destinationDir, stateFile, prefix, startSequence, files, dryRun, dryRunPreviewLimit) {
   if (!files.length) {
+    saveManifest(destinationDir, prefix)
     console.log('No supported image files found to rename.')
     return
   }
@@ -246,6 +283,7 @@ function runRename(sourceDir, destinationDir, stateFile, prefix, startSequence, 
   }
 
   saveState(stateFile, prefix, startSequence + files.length)
+  saveManifest(destinationDir, prefix)
 
   console.log(`Move complete. Last sequence is now ${String(startSequence + files.length).padStart(4, '0')}.`)
 }

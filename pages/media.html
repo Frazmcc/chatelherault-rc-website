@@ -206,6 +206,41 @@
 <script src="../scripts/panel-editor.js"></script>
 <script src="../scripts/url-title-lock.js"></script>
 <script>
+  const REEL_MANIFEST_URL = '/assets/reel/optimized/reel-manifest.json'
+
+  function toSequence(number) {
+    return String(number).padStart(4, '0')
+  }
+
+  let reelManifestPromise = null
+
+  function loadReelItems() {
+    if (reelManifestPromise) {
+      return reelManifestPromise
+    }
+
+    reelManifestPromise = fetch(REEL_MANIFEST_URL, { cache: 'no-cache' })
+      .then((response) => (response.ok ? response.json() : { items: [] }))
+      .then((payload) => {
+        const items = Array.isArray(payload?.items) ? payload.items : []
+        return items
+          .map((item) => {
+            const sequence = Number(item?.sequence)
+            const src = String(item?.src || '').trim()
+            if (!Number.isInteger(sequence) || sequence <= 0 || !src) {
+              return null
+            }
+
+            return { sequence, src }
+          })
+          .filter(Boolean)
+          .sort((a, b) => a.sequence - b.sequence)
+      })
+      .catch(() => [])
+
+    return reelManifestPromise
+  }
+
   (() => {
     const reelTrack = document.getElementById('reel-scroll-track')
     const reelMeta = document.getElementById('reel-meta')
@@ -219,19 +254,10 @@
 
     const maxItems = 160
     const widths = ['min-w-[280px]', 'min-w-[320px]', 'min-w-[360px]', 'min-w-[420px]', 'min-w-[500px]']
-    const extFallback = ['.jpg', '.jpeg', '.png', '.webp']
-    const loaded = new Set()
-
-    function toSequence(number) {
-      return String(number).padStart(4, '0')
-    }
-
-    function candidateSrc(sequence, extension) {
-      return `/assets/reel/optimized/chatelherault-reel-${sequence}${extension}`
-    }
+    let availableCount = 0
 
     function updateMeta() {
-      const count = loaded.size
+      const count = availableCount
       if (count > 0) {
         const label = count === 1 ? 'capture' : 'captures'
         reelMeta.textContent = `Latest meetup reel • ${new Intl.NumberFormat('en-GB').format(count)} ${label}`
@@ -240,50 +266,40 @@
       }
     }
 
-    for (let index = 1; index <= maxItems; index += 1) {
-      const sequence = toSequence(index)
-      const card = document.createElement('div')
-      card.className = `${widths[index % widths.length]} h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0`
+    loadReelItems().then((items) => {
+      const visibleItems = items.slice(0, maxItems)
+      availableCount = visibleItems.length
 
-      const image = document.createElement('img')
-      image.className = 'w-full h-full object-cover grayscale transition-all duration-500'
-      image.loading = 'lazy'
-      image.decoding = 'async'
-      image.alt = `Sunday reel capture ${sequence}`
-      image.dataset.sequence = sequence
-      image.dataset.extIndex = '0'
-      image.src = candidateSrc(sequence, extFallback[0])
+      visibleItems.forEach((item, index) => {
+        const sequence = toSequence(item.sequence)
+        const card = document.createElement('div')
+        card.className = `${widths[index % widths.length]} h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0`
 
-      image.addEventListener('error', () => {
-        const current = Number(image.dataset.extIndex || '0')
-        const next = current + 1
+        const image = document.createElement('img')
+        image.className = 'w-full h-full object-cover grayscale transition-all duration-500'
+        image.loading = 'lazy'
+        image.decoding = 'async'
+        image.alt = `Sunday reel capture ${sequence}`
+        image.src = item.src
 
-        if (next >= extFallback.length) {
+        image.addEventListener('error', () => {
           card.remove()
+          availableCount = Math.max(availableCount - 1, 0)
           updateMeta()
-          return
-        }
+        })
 
-        image.dataset.extIndex = String(next)
-        image.src = candidateSrc(sequence, extFallback[next])
+        const timeBadge = document.createElement('div')
+        timeBadge.className = 'absolute bottom-4 left-4 font-label text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded'
+        timeBadge.textContent = `#${sequence}`
+
+        card.appendChild(image)
+        card.appendChild(timeBadge)
+        reelTrack.appendChild(card)
       })
 
-      image.addEventListener('load', () => {
-        loaded.add(sequence)
-        updateMeta()
-      })
-
-      const timeBadge = document.createElement('div')
-      timeBadge.className = 'absolute bottom-4 left-4 font-label text-[10px] opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-2 py-1 rounded'
-      timeBadge.textContent = `#${sequence}`
-
-      card.appendChild(image)
-      card.appendChild(timeBadge)
-      reelTrack.appendChild(card)
-    }
-
-    updateMeta()
-    reelLoadingCard?.remove()
+      updateMeta()
+      reelLoadingCard?.remove()
+    })
 
     const scrollAmount = 420
 
@@ -296,7 +312,7 @@
     })
   })()
 
-  (() => {
+  ;(() => {
     const imageEl = document.getElementById('loop-player-image')
     const statusEl = document.getElementById('loop-player-status')
     const timerEl = document.getElementById('loop-player-timer')
@@ -308,65 +324,14 @@
 
     const minDurationMs = 5000
     const maxDurationMs = 7000
-    const noRepeatWindow = 100
-    const minSequence = 1
-    const maxSequence = 319
     const recent = []
     const startImageStorageKey = 'chrc-reel-last-start-image'
-    const defaultStartupSource = '/assets/reel/optimized/chatelherault-reel-0001.jpg'
 
     let nextTimeout = null
     let countdownInterval = null
-    let isFirstCycle = true
-
-    function toSequence(number) {
-      return String(number).padStart(4, '0')
-    }
 
     function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min
-    }
-
-    const sourceCache = new Map()
-    const extensionCandidates = ['.jpg', '.jpeg', '.png', '.webp']
-
-    function sourceCandidates(sequence) {
-      const seq = toSequence(sequence)
-      return extensionCandidates.map((ext) => `/assets/reel/optimized/chatelherault-reel-${seq}${ext}`)
-    }
-
-    function resolveFirstAvailableSource(sequence) {
-      const cached = sourceCache.get(sequence)
-      if (cached) {
-        return Promise.resolve(cached)
-      }
-
-      const candidates = sourceCandidates(sequence)
-
-      return new Promise((resolve) => {
-        const tryAt = (index) => {
-          if (index >= candidates.length) {
-            resolve(null)
-            return
-          }
-
-          const candidate = candidates[index]
-          const probe = new Image()
-
-          probe.onload = () => {
-            sourceCache.set(sequence, candidate)
-            resolve(candidate)
-          }
-
-          probe.onerror = () => {
-            tryAt(index + 1)
-          }
-
-          probe.src = candidate
-        }
-
-        tryAt(0)
-      })
     }
 
     function getStoredStartSequence() {
@@ -385,24 +350,9 @@
       }
     }
 
-    function chooseStartSequence() {
-      const previousStart = getStoredStartSequence()
-
-      let sequence = randomInt(minSequence, maxSequence)
-      if (Number.isInteger(previousStart) && previousStart >= minSequence && previousStart <= maxSequence) {
-        let guard = 0
-        while (sequence === previousStart && guard < 20) {
-          sequence = randomInt(minSequence, maxSequence)
-          guard += 1
-        }
-      }
-
-      return sequence
-    }
-
-    function pushRecent(sequence) {
+    function pushRecent(sequence, maxHistory) {
       recent.push(sequence)
-      if (recent.length > noRepeatWindow) {
+      while (recent.length > maxHistory) {
         recent.shift()
       }
     }
@@ -434,87 +384,20 @@
       })
     }
 
-    function chooseNextImage(extraBlocked = new Set()) {
-      const blocked = new Set(recent)
-      for (const blockedItem of extraBlocked) {
-        blocked.add(blockedItem)
-      }
-      let attempts = 0
-
-      while (attempts < 800) {
-        attempts += 1
-
-        const sequence = randomInt(minSequence, maxSequence)
-        if (blocked.has(sequence)) {
-          continue
-        }
-
-        return { sequence }
+    function pickRandomItem(items, blockedSequences) {
+      const candidates = items.filter((item) => !blockedSequences.has(item.sequence))
+      if (!candidates.length) {
+        return null
       }
 
-      return null
+      return candidates[randomInt(0, candidates.length - 1)]
     }
 
-    async function pickPlayableSequence(extraBlocked = new Set()) {
-      const attempted = new Set()
-
-      while (attempted.size < (maxSequence - minSequence + 1)) {
-        const selected = chooseNextImage(new Set([...extraBlocked, ...attempted]))
-        if (!selected) {
-          return null
-        }
-
-        const source = await resolveFirstAvailableSource(selected.sequence)
-        if (source) {
-          return { sequence: selected.sequence, source }
-        }
-
-        attempted.add(selected.sequence)
-      }
-
-      return null
-    }
-
-    async function playNext() {
-      if (isFirstCycle) {
-        const requestedStartSequence = chooseStartSequence()
-        const resolvedStart = await resolveFirstAvailableSource(requestedStartSequence)
-
-        const startSequence = resolvedStart ? requestedStartSequence : 1
-        const startSource = resolvedStart || defaultStartupSource
-
-        imageEl.src = startSource
-        imageEl.classList.remove('opacity-0')
-        pushRecent(startSequence)
-
-        setStoredStartSequence(startSequence)
-
-        statusEl.textContent = `Now playing capture #${toSequence(startSequence)} • No repeat within next ${noRepeatWindow}`
-
-        const firstDurationMs = randomInt(minDurationMs, maxDurationMs)
-        startProgress(firstDurationMs)
-        startCountdown(firstDurationMs)
-
-        isFirstCycle = false
-        nextTimeout = setTimeout(playNext, firstDurationMs)
-        return
-      }
-
-      const selected = await pickPlayableSequence(new Set())
-
-      if (!selected) {
-        statusEl.textContent = 'Unable to find reel images. Retrying...'
-        timerEl.textContent = 'Next in 3s'
-        nextTimeout = setTimeout(playNext, 3000)
-        return
-      }
-
-      imageEl.src = selected.source
-
+    function playItem(item, noRepeatWindow) {
+      imageEl.src = item.src
       imageEl.classList.remove('opacity-0')
-      pushRecent(selected.sequence)
-
-      statusEl.textContent = `Now playing capture #${toSequence(selected.sequence)} • No repeat within next ${noRepeatWindow}`
+      pushRecent(item.sequence, noRepeatWindow)
+      statusEl.textContent = `Now playing capture #${toSequence(item.sequence)} • No repeat within next ${noRepeatWindow}`
 
       const durationMs = randomInt(minDurationMs, maxDurationMs)
       startProgress(durationMs)
@@ -527,12 +410,47 @@
       nextTimeout = setTimeout(playNext, durationMs)
     }
 
-    // Paint a guaranteed frame instantly before any async selection logic.
-    imageEl.src = defaultStartupSource
-    imageEl.classList.remove('opacity-0')
-    statusEl.textContent = 'Starting reel playback...'
+    let reelItems = []
+    let noRepeatWindow = 50
 
-    playNext()
+    function playNext() {
+      if (!reelItems.length) {
+        statusEl.textContent = 'Unable to find reel images. Retrying...'
+        timerEl.textContent = 'Next in 3s'
+        nextTimeout = setTimeout(playNext, 3000)
+        return
+      }
+
+      const selected = pickRandomItem(reelItems, new Set(recent)) || reelItems[randomInt(0, reelItems.length - 1)]
+      playItem(selected, noRepeatWindow)
+    }
+
+    loadReelItems().then((items) => {
+      reelItems = items
+
+      if (!reelItems.length) {
+        statusEl.textContent = 'No reel captures are currently available.'
+        timerEl.textContent = 'Waiting for uploads'
+        return
+      }
+
+      noRepeatWindow = Math.min(100, Math.max(20, Math.floor(reelItems.length / 3)))
+
+      const bySequence = new Map(reelItems.map((item) => [item.sequence, item]))
+      const previousStart = getStoredStartSequence()
+      const fallbackStart = reelItems[0]
+
+      let startItem = bySequence.get(previousStart) || fallbackStart
+      if (reelItems.length > 1 && startItem.sequence === previousStart) {
+        const alternate = pickRandomItem(reelItems, new Set([previousStart]))
+        if (alternate) {
+          startItem = alternate
+        }
+      }
+
+      setStoredStartSequence(startItem.sequence)
+      playItem(startItem, noRepeatWindow)
+    })
   })()
 </script>
 <script src="/scripts/image-grayscale-hover.js"></script>
