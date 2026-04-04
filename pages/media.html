@@ -327,9 +327,46 @@
       return Math.floor(Math.random() * (max - min + 1)) + min
     }
 
-    function candidateSrc(sequence) {
-      const extension = sequence <= 254 ? '.jpg' : '.jpeg'
-      return `/assets/reel/optimized/chatelherault-reel-${toSequence(sequence)}${extension}`
+    const sourceCache = new Map()
+    const extensionCandidates = ['.jpg', '.jpeg', '.png', '.webp']
+
+    function sourceCandidates(sequence) {
+      const seq = toSequence(sequence)
+      return extensionCandidates.map((ext) => `/assets/reel/optimized/chatelherault-reel-${seq}${ext}`)
+    }
+
+    function resolveFirstAvailableSource(sequence) {
+      const cached = sourceCache.get(sequence)
+      if (cached) {
+        return Promise.resolve(cached)
+      }
+
+      const candidates = sourceCandidates(sequence)
+
+      return new Promise((resolve) => {
+        const tryAt = (index) => {
+          if (index >= candidates.length) {
+            resolve(null)
+            return
+          }
+
+          const candidate = candidates[index]
+          const probe = new Image()
+
+          probe.onload = () => {
+            sourceCache.set(sequence, candidate)
+            resolve(candidate)
+          }
+
+          probe.onerror = () => {
+            tryAt(index + 1)
+          }
+
+          probe.src = candidate
+        }
+
+        tryAt(0)
+      })
     }
 
     function getStoredStartSequence() {
@@ -418,10 +455,33 @@
       return null
     }
 
+    async function pickPlayableSequence(extraBlocked = new Set()) {
+      const attempted = new Set()
+
+      while (attempted.size < (maxSequence - minSequence + 1)) {
+        const selected = chooseNextImage(new Set([...extraBlocked, ...attempted]))
+        if (!selected) {
+          return null
+        }
+
+        const source = await resolveFirstAvailableSource(selected.sequence)
+        if (source) {
+          return { sequence: selected.sequence, source }
+        }
+
+        attempted.add(selected.sequence)
+      }
+
+      return null
+    }
+
     async function playNext() {
       if (isFirstCycle) {
-        const startSequence = chooseStartSequence()
-        const startSource = candidateSrc(startSequence)
+        const requestedStartSequence = chooseStartSequence()
+        const resolvedStart = await resolveFirstAvailableSource(requestedStartSequence)
+
+        const startSequence = resolvedStart ? requestedStartSequence : 1
+        const startSource = resolvedStart || defaultStartupSource
 
         imageEl.src = startSource
         imageEl.classList.remove('opacity-0')
@@ -440,7 +500,7 @@
         return
       }
 
-      const selected = chooseNextImage(new Set())
+      const selected = await pickPlayableSequence(new Set())
 
       if (!selected) {
         statusEl.textContent = 'Unable to find reel images. Retrying...'
@@ -449,7 +509,7 @@
         return
       }
 
-      imageEl.src = candidateSrc(selected.sequence)
+      imageEl.src = selected.source
 
       imageEl.classList.remove('opacity-0')
       pushRecent(selected.sequence)
