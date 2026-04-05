@@ -72,12 +72,31 @@
   }
 
   function renderSubmissionCard(submission) {
+    const status = String(submission.status || '').toLowerCase()
     const mediaItems = (() => {
       try {
         return JSON.parse(submission.media_items || '[]')
       } catch {
         return []
       }
+    })()
+
+    const actionButtons = (() => {
+      if (status === 'approved') {
+        return `
+          <button data-action="remove" class="bg-amber-600 text-white text-xs uppercase tracking-wider px-3 py-2 rounded">Remove from Members Rigs</button>
+          <button data-action="reject" class="bg-red-600 text-white text-xs uppercase tracking-wider px-3 py-2 rounded">Reject</button>
+        `
+      }
+
+      if (status === 'rejected') {
+        return `<button data-action="approve" class="bg-green-600 text-white text-xs uppercase tracking-wider px-3 py-2 rounded">Approve</button>`
+      }
+
+      return `
+        <button data-action="approve" class="bg-green-600 text-white text-xs uppercase tracking-wider px-3 py-2 rounded">Approve</button>
+        <button data-action="reject" class="bg-red-600 text-white text-xs uppercase tracking-wider px-3 py-2 rounded">Reject</button>
+      `
     })()
 
     return `
@@ -107,8 +126,7 @@
         </div>
 
         <div class="flex flex-wrap gap-2 pt-2 border-t border-white/10">
-          <button data-action="approve" class="bg-green-600 text-white text-xs uppercase tracking-wider px-3 py-2 rounded">Approve</button>
-          <button data-action="reject" class="bg-red-600 text-white text-xs uppercase tracking-wider px-3 py-2 rounded">Reject</button>
+          ${actionButtons}
         </div>
       </article>
     `
@@ -148,7 +166,7 @@
     listEl.innerHTML = rows.map(renderSubmissionCard).join('')
   }
 
-  async function decide(submissionId, decision) {
+  async function decide(submissionId, decision, actionLabel) {
     const note = prompt(`Optional note for ${decision}:`, '') || ''
 
     const response = await fetch(`/api/rig-submissions/${submissionId}/decision`, {
@@ -161,7 +179,7 @@
     const payload = await response.json().catch(() => ({}))
 
     if (!response.ok || !payload.ok) {
-      throw new Error(payload.message || `Failed to ${decision} submission.`)
+      throw new Error(payload.message || `Failed to ${actionLabel || decision} submission.`)
     }
   }
 
@@ -182,8 +200,34 @@
     button.disabled = true
 
     try {
-      await decide(submissionId, action === 'approve' ? 'approved' : 'rejected')
-      setStatus(`Submission ${submissionId} ${action}d successfully.`, 'success')
+      let decision = ''
+      let actionLabel = ''
+
+      if (action === 'approve') {
+        decision = 'approved'
+        actionLabel = 'approve'
+      } else if (action === 'reject') {
+        decision = 'rejected'
+        actionLabel = 'reject'
+      } else if (action === 'remove') {
+        const confirmed = window.confirm('Remove this rig from Members Rigs? This will unpublish it.')
+        if (!confirmed) {
+          return
+        }
+
+        decision = 'rejected'
+        actionLabel = 'remove'
+      } else {
+        return
+      }
+
+      await decide(submissionId, decision, actionLabel)
+
+      const successMessage = action === 'remove'
+        ? `Submission ${submissionId} removed from Members Rigs.`
+        : `Submission ${submissionId} ${action}d successfully.`
+
+      setStatus(successMessage, 'success')
       await loadSubmissions()
     } catch (error) {
       setStatus(error.message || 'Decision failed.', 'error')
