@@ -274,7 +274,7 @@
         card.className = `${cardWidthClass} h-[400px] bg-surface-container-high rounded-lg overflow-hidden snap-start relative group flex-shrink-0`
 
         const image = document.createElement('img')
-        image.className = 'w-full h-full object-contain grayscale transition-all duration-500 bg-surface-container-low'
+        image.className = 'w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-500 bg-surface-container-low'
         image.loading = 'lazy'
         image.decoding = 'async'
         image.alt = `Sunday reel capture ${sequence}`
