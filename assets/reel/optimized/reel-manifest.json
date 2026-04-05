@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-04-04T21:05:47.084Z",
-  "count": 319,
+  "generatedAt": "2026-04-05T16:11:53.070Z",
+  "count": 332,
   "items": [
     {
       "sequence": 1,
@@ -1277,6 +1277,58 @@
     {
       "sequence": 319,
       "src": "/assets/reel/optimized/chatelherault-reel-0319.jpeg"
+    },
+    {
+      "sequence": 320,
+      "src": "/assets/reel/optimized/chatelherault-reel-0320.jpg"
+    },
+    {
+      "sequence": 321,
+      "src": "/assets/reel/optimized/chatelherault-reel-0321.jpg"
+    },
+    {
+      "sequence": 322,
+      "src": "/assets/reel/optimized/chatelherault-reel-0322.jpg"
+    },
+    {
+      "sequence": 323,
+      "src": "/assets/reel/optimized/chatelherault-reel-0323.jpg"
+    },
+    {
+      "sequence": 324,
+      "src": "/assets/reel/optimized/chatelherault-reel-0324.jpg"
+    },
+    {
+      "sequence": 325,
+      "src": "/assets/reel/optimized/chatelherault-reel-0325.jpg"
+    },
+    {
+      "sequence": 326,
+      "src": "/assets/reel/optimized/chatelherault-reel-0326.jpg"
+    },
+    {
+      "sequence": 327,
+      "src": "/assets/reel/optimized/chatelherault-reel-0327.jpg"
+    },
+    {
+      "sequence": 328,
+      "src": "/assets/reel/optimized/chatelherault-reel-0328.jpg"
+    },
+    {
+      "sequence": 329,
+      "src": "/assets/reel/optimized/chatelherault-reel-0329.jpg"
+    },
+    {
+      "sequence": 330,
+      "src": "/assets/reel/optimized/chatelherault-reel-0330.jpg"
+    },
+    {
+      "sequence": 331,
+      "src": "/assets/reel/optimized/chatelherault-reel-0331.jpg"
+    },
+    {
+      "sequence": 332,
+      "src": "/assets/reel/optimized/chatelherault-reel-0332.jpg"
     }
   ]
 }

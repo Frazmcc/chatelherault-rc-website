@@ -250,7 +250,7 @@
       return
     }
 
-    const maxItems = 160
+    const maxItems = 13
     const cardWidthClass = 'min-w-[360px] w-[360px]'
     let availableCount = 0
 
@@ -265,7 +265,7 @@
     }
 
     loadReelItems().then((items) => {
-      const visibleItems = items.slice(0, maxItems)
+      const visibleItems = items.slice(-maxItems).reverse()
       availableCount = visibleItems.length
 
       visibleItems.forEach((item, index) => {
