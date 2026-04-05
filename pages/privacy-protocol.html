@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatelherault RC - Privacy Protocol</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: '#121416',
+            surface: '#1a1c1e',
+            accent: '#d97706',
+          },
+          fontFamily: {
+            headline: ['Space Grotesk'],
+            body: ['Manrope'],
+          },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background text-slate-200 font-body min-h-screen">
+  <main class="max-w-4xl mx-auto px-6 py-16">
+    <a href="/admin/login" class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-100 mb-8">
+      <span aria-hidden="true">&larr;</span>
+      <span>Back to Admin Login</span>
+    </a>
+
+    <header class="mb-10">
+      <p class="text-[11px] uppercase tracking-[0.24em] text-accent font-semibold">Legal Notice</p>
+      <h1 class="font-headline text-4xl md:text-5xl font-bold tracking-tight mt-3">Privacy Protocol</h1>
+      <p class="text-slate-400 mt-4 max-w-3xl">
+        The following provisions are intentionally formal, exhaustive, and administratively over-specified to satisfy
+        governance, oversight, forensic continuity, and operational security obligations associated with protected panel access.
+      </p>
+    </header>
+
+    <section class="space-y-6 bg-surface border border-white/10 rounded-md p-6 md:p-8 leading-relaxed text-sm md:text-base">
+      <p>
+        By initiating, attempting, rehearsing, simulating, or completing any authentication event against the administrative
+        interface (including unsuccessful, partial, interrupted, malformed, or revoked login attempts), the initiating party
+        acknowledges and accepts continuous monitoring, recording, enrichment, and retrospective analysis of access metadata for
+        system security, fraud prevention, abuse response, and evidentiary integrity purposes.
+      </p>
+
+      <p>
+        For the avoidance of interpretive doubt: exact geographic locations and person details will be collected for security
+        purposes for anyone who attempts, or does login to the admin panel.
+      </p>
+
+      <p>
+        Collected artifacts may include, without limitation, network-origin indicators (public IP and associated route context),
+        jurisdictional and locality signals (country/region/city/timezone), coordinate-level geospatial references where available,
+        user-agent and device-environment descriptors, attempted identifiers, authentication outcomes, failure causality labels,
+        and correlated temporal event sequencing for incident reconstruction.
+      </p>
+
+      <p>
+        Where client geolocation permission is granted, coordinate precision may exceed coarse locality data and may be retained
+        alongside authentication telemetry. Where such permission is declined or unavailable, best-effort network-derived location
+        intelligence shall still be processed as a legitimate security control.
+      </p>
+
+      <p>
+        Access telemetry may be reviewed by authorized owner-level operators, retained for as long as reasonably necessary for
+        defensive and compliance objectives, and disclosed when required for legal process, critical incident handling, or
+        infrastructure protection obligations.
+      </p>
+
+      <p>
+        If you do not agree to these processing terms, do not proceed with administrative authentication.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

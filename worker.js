@@ -816,9 +816,26 @@ async function ensureLoginAuditTable(env) {
       client_latitude REAL,
       client_longitude REAL,
       client_accuracy_m REAL,
+      outcome TEXT NOT NULL DEFAULT 'success',
+      failure_reason TEXT,
+      attempted_username TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`
   ).run()
+
+  const schemaMigrations = [
+    `ALTER TABLE login_audit ADD COLUMN outcome TEXT NOT NULL DEFAULT 'success'`,
+    `ALTER TABLE login_audit ADD COLUMN failure_reason TEXT`,
+    `ALTER TABLE login_audit ADD COLUMN attempted_username TEXT`,
+  ]
+
+  for (const sql of schemaMigrations) {
+    try {
+      await env.DB.prepare(sql).run()
+    } catch {
+      // Ignore duplicate-column errors on existing deployments.
+    }
+  }
 }
 
 function toFiniteNumber(value) {
@@ -826,7 +843,7 @@ function toFiniteNumber(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-async function writeLoginAudit(env, request, user, telemetry) {
+async function writeLoginAudit(env, request, entry, telemetry) {
   await ensureLoginAuditTable(env)
 
   const clientIp = getClientIp(request)
@@ -841,6 +858,11 @@ async function writeLoginAudit(env, request, user, telemetry) {
 
   const localAddress = String(t.publicAddress || t.localAddress || '').trim().slice(0, 120)
   const userAgent = String(request.headers.get('user-agent') || '').slice(0, 512)
+  const username = String(entry?.username || entry?.attemptedUsername || 'unknown').trim().slice(0, 64) || 'unknown'
+  const role = String(entry?.role || 'unknown').trim().slice(0, 32) || 'unknown'
+  const outcome = String(entry?.outcome || 'success').toLowerCase() === 'failed' ? 'failed' : 'success'
+  const failureReason = String(entry?.failureReason || '').trim().slice(0, 160)
+  const attemptedUsername = String(entry?.attemptedUsername || '').trim().slice(0, 64)
 
   await env.DB.prepare(
     `INSERT INTO login_audit (
@@ -857,12 +879,15 @@ async function writeLoginAudit(env, request, user, telemetry) {
       longitude,
       client_latitude,
       client_longitude,
-      client_accuracy_m
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      client_accuracy_m,
+      outcome,
+      failure_reason,
+      attempted_username
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
-      user.username,
-      user.role,
+      username,
+      role,
       clientIp,
       localAddress || null,
       userAgent || null,
@@ -874,7 +899,10 @@ async function writeLoginAudit(env, request, user, telemetry) {
       longitude,
       clientLatitude,
       clientLongitude,
-      clientAccuracy
+      clientAccuracy,
+      outcome,
+      failureReason || null,
+      attemptedUsername || null
     )
     .run()
 }
@@ -896,7 +924,27 @@ async function handleLogin(request, env, executionCtx) {
   const password = String(body?.password || '')
   const telemetry = body?.telemetry
 
+  async function recordAudit(entry) {
+    const job = writeLoginAudit(env, request, entry, telemetry).catch((error) => {
+      console.error('Login audit write failed:', error)
+    })
+
+    if (executionCtx?.waitUntil) {
+      executionCtx.waitUntil(job)
+      return
+    }
+
+    await job
+  }
+
   if (!username || !password) {
+    await recordAudit({
+      username: username || 'unknown',
+      role: 'unknown',
+      outcome: 'failed',
+      failureReason: 'missing credentials',
+      attemptedUsername: username || null,
+    })
     return json({ ok: false, message: 'Username and password are required.' }, { status: 400 })
   }
 
@@ -915,6 +963,13 @@ async function handleLogin(request, env, executionCtx) {
 
   if (!users || !users.length) {
     await fakeWork(password, env.AUTH_PEPPER)
+    await recordAudit({
+      username,
+      role: 'unknown',
+      outcome: 'failed',
+      failureReason: 'invalid credentials',
+      attemptedUsername: username,
+    })
     return json({ ok: false, message: 'Invalid credentials.' }, { status: 401 })
   }
 
@@ -929,6 +984,13 @@ async function handleLogin(request, env, executionCtx) {
   }
 
   if (!matchedUser) {
+    await recordAudit({
+      username,
+      role: 'unknown',
+      outcome: 'failed',
+      failureReason: 'invalid credentials',
+      attemptedUsername: username,
+    })
     return json({ ok: false, message: 'Invalid credentials.' }, { status: 401 })
   }
 
@@ -943,15 +1005,12 @@ async function handleLogin(request, env, executionCtx) {
       .run()
   }
 
-  const auditJob = writeLoginAudit(env, request, matchedUser, telemetry).catch((error) => {
-    console.error('Login audit write failed:', error)
+  await recordAudit({
+    username: matchedUser.username,
+    role: matchedUser.role,
+    outcome: 'success',
+    attemptedUsername: username,
   })
-
-  if (executionCtx?.waitUntil) {
-    executionCtx.waitUntil(auditJob)
-  } else {
-    await auditJob
-  }
 
   const token = await createSessionToken({ username: matchedUser.username, role: matchedUser.role }, env)
   const headers = new Headers()
@@ -1374,6 +1433,9 @@ async function handleListLoginAudit(request, env) {
       id,
       username,
       role,
+      outcome,
+      failure_reason,
+      attempted_username,
       ip_address,
       local_address,
       country,

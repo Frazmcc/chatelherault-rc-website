@@ -288,6 +288,11 @@
 
       list.innerHTML = entries.map((item) => {
         const { geoText, cfCoords, clientCoords } = formatLocationEntry(item)
+        const outcome = String(item.outcome || 'success').toLowerCase()
+        const outcomeTone = outcome === 'failed'
+          ? 'text-amber-300 border-amber-400/30 bg-amber-900/10'
+          : 'text-emerald-300 border-emerald-400/30 bg-emerald-900/10'
+
         return `
           <article class="bg-panel border border-white/5 rounded-md p-4 space-y-3">
             <div class="flex flex-wrap items-start justify-between gap-3">
@@ -295,14 +300,19 @@
                 <p class="font-bold">${escHtml(item.username || 'Unknown user')} <span class="text-xs text-slate-500 uppercase tracking-wider">(${escHtml(item.role || 'unknown')})</span></p>
                 <p class="text-[11px] text-slate-500 mt-1">${new Date(item.created_at).toLocaleString()}</p>
               </div>
-              <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded border text-slate-200 border-white/20 bg-white/5">${escHtml(item.ip_address || 'No IP')}</span>
+              <div class="flex gap-2 items-center">
+                <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded border ${outcomeTone}">${escHtml(outcome)}</span>
+                <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded border text-slate-200 border-white/20 bg-white/5">${escHtml(item.ip_address || 'No IP')}</span>
+              </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <p><span class="text-slate-400">Attempted Username:</span> ${escHtml(item.attempted_username || item.username || 'Unknown')}</p>
               <p><span class="text-slate-400">Public/Local Address:</span> ${escHtml(item.local_address || 'Unavailable')}</p>
               <p><span class="text-slate-400">Region:</span> ${escHtml(geoText)}</p>
               <p><span class="text-slate-400">Network Coords:</span> ${escHtml(cfCoords)}</p>
               <p><span class="text-slate-400">Client Coords:</span> ${escHtml(clientCoords)}</p>
             </div>
+            ${item.failure_reason ? `<p class="text-xs text-amber-300">Failure reason: ${escHtml(item.failure_reason)}</p>` : ''}
             ${item.timezone ? `<p class="text-xs text-slate-500">Timezone: ${escHtml(item.timezone)}</p>` : ''}
           </article>
         `
