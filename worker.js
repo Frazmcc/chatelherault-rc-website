@@ -10,7 +10,7 @@ import {
   verifySessionToken,
 } from './functions/_lib/auth.js'
 
-const PUBLIC_ADMIN_PATHS = new Set(['/admin/login.html', '/admin/root-login.html'])
+const PUBLIC_ADMIN_PATHS = new Set(['/admin/login', '/admin/login.html', '/admin/root-login.html'])
 const OWNER_ONLY_SITE_PATHS = new Set([
   '/pages/super-user.html',
   '/pages/super-user',
@@ -1430,13 +1430,13 @@ async function guardAdminRoute(request, env) {
   const token = cookies[getSessionCookieName()]
 
   if (!token) {
-    return redirect('/admin/login.html')
+    return redirect('/admin/login')
   }
 
   const session = await verifySessionToken(token, env)
 
   if (!session) {
-    return redirect('/admin/login.html', true)
+    return redirect('/admin/login', true)
   }
 
   return redirect('/index.html')
@@ -1453,13 +1453,13 @@ async function guardOwnerOnlySiteRoute(request, env) {
   const token = cookies[getSessionCookieName()]
 
   if (!token) {
-    return redirect('/admin/login.html')
+    return redirect('/admin/login')
   }
 
   const session = await verifySessionToken(token, env)
 
   if (!session) {
-    return redirect('/admin/login.html', true)
+    return redirect('/admin/login', true)
   }
 
   if (session.role !== 'owner') {
@@ -1499,7 +1499,7 @@ export default {
     let response
 
     if (url.pathname === '/admin/root-login.html') {
-      response = redirect('/admin/login.html')
+      response = redirect('/admin/login')
       return applySecurityHeaders(response)
     }
 

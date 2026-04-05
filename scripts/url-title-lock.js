@@ -7,6 +7,7 @@
     '/pages/contact.html',
     '/pages/super-user',
     '/pages/super-user.html',
+    '/admin/login',
     '/admin/login.html',
   ])
 

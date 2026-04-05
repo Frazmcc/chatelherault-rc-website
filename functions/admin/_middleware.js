@@ -5,7 +5,7 @@ import {
   verifySessionToken,
 } from '../_lib/auth.js'
 
-const PUBLIC_ADMIN_PATHS = new Set(['/admin/login.html', '/admin/root-login.html'])
+const PUBLIC_ADMIN_PATHS = new Set(['/admin/login', '/admin/login.html', '/admin/root-login.html'])
 
 function redirect(url, location, clearSession = false) {
   const headers = new Headers({ location })
@@ -30,13 +30,13 @@ export async function onRequest(context) {
   const token = cookies[getSessionCookieName()]
 
   if (!token) {
-    return redirect(url, '/admin/login.html')
+    return redirect(url, '/admin/login')
   }
 
   const session = await verifySessionToken(token, env)
 
   if (!session) {
-    return redirect(url, '/admin/login.html', true)
+    return redirect(url, '/admin/login', true)
   }
 
   return redirect(url, '/index.html')
