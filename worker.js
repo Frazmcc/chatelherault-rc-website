@@ -823,6 +823,7 @@ async function ensureLoginAuditTable(env) {
       client_fix_source TEXT,
       client_sample_count INTEGER,
       client_best_accuracy_m REAL,
+      browser_telemetry_json TEXT,
       outcome TEXT NOT NULL DEFAULT 'success',
       failure_reason TEXT,
       attempted_username TEXT,
@@ -841,6 +842,7 @@ async function ensureLoginAuditTable(env) {
     `ALTER TABLE login_audit ADD COLUMN client_fix_source TEXT`,
     `ALTER TABLE login_audit ADD COLUMN client_sample_count INTEGER`,
     `ALTER TABLE login_audit ADD COLUMN client_best_accuracy_m REAL`,
+    `ALTER TABLE login_audit ADD COLUMN browser_telemetry_json TEXT`,
   ]
 
   for (const sql of schemaMigrations) {
@@ -912,6 +914,15 @@ async function writeLoginAudit(env, request, entry, telemetry) {
   const clientFixSource = String(t.fixSource || '').trim().slice(0, 120)
   const clientSampleCount = toFiniteNumber(t.sampleCount)
   const clientBestAccuracy = toFiniteNumber(t.bestAccuracyM)
+  let browserTelemetryJson = null
+
+  if (t.browser && typeof t.browser === 'object') {
+    try {
+      browserTelemetryJson = JSON.stringify(t.browser).slice(0, 12000)
+    } catch {
+      browserTelemetryJson = null
+    }
+  }
 
   const preciseLocation = await reverseGeocodeClientLocation(clientLatitude, clientLongitude)
 
@@ -946,10 +957,11 @@ async function writeLoginAudit(env, request, entry, telemetry) {
       client_fix_source,
       client_sample_count,
       client_best_accuracy_m,
+      browser_telemetry_json,
       outcome,
       failure_reason,
       attempted_username
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       username,
@@ -973,6 +985,7 @@ async function writeLoginAudit(env, request, entry, telemetry) {
       clientFixSource || null,
       clientSampleCount,
       clientBestAccuracy,
+      browserTelemetryJson,
       outcome,
       failureReason || null,
       attemptedUsername || null
@@ -1527,6 +1540,7 @@ async function handleListLoginAudit(request, env) {
       client_fix_source,
       client_sample_count,
       client_best_accuracy_m,
+      browser_telemetry_json,
       created_at
      FROM login_audit
      ORDER BY id DESC

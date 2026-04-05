@@ -354,11 +354,104 @@
           }
         }
 
+        async function getPermissionState(name) {
+          try {
+            if (!navigator.permissions || !navigator.permissions.query) {
+              return ''
+            }
+
+            const status = await navigator.permissions.query({ name })
+            return String(status?.state || '')
+          } catch {
+            return ''
+          }
+        }
+
+        async function collectBrowserTelemetry() {
+          const nav = navigator || {}
+          const screenObj = window.screen || {}
+          const connection = nav.connection || nav.mozConnection || nav.webkitConnection || {}
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+
+          const browser = {
+            userAgent: String(nav.userAgent || ''),
+            platform: String(nav.platform || ''),
+            language: String(nav.language || ''),
+            languages: Array.isArray(nav.languages) ? nav.languages.slice(0, 10) : [],
+            cookieEnabled: Boolean(nav.cookieEnabled),
+            doNotTrack: String(nav.doNotTrack || ''),
+            hardwareConcurrency: Number(nav.hardwareConcurrency) || null,
+            deviceMemoryGb: Number(nav.deviceMemory) || null,
+            maxTouchPoints: Number(nav.maxTouchPoints) || 0,
+            online: Boolean(nav.onLine),
+            webdriver: Boolean(nav.webdriver),
+            timezone: tz,
+            locale: String(nav.language || ''),
+            screen: {
+              width: Number(screenObj.width) || null,
+              height: Number(screenObj.height) || null,
+              availWidth: Number(screenObj.availWidth) || null,
+              availHeight: Number(screenObj.availHeight) || null,
+              colorDepth: Number(screenObj.colorDepth) || null,
+              pixelDepth: Number(screenObj.pixelDepth) || null,
+              pixelRatio: Number(window.devicePixelRatio) || null,
+            },
+            viewport: {
+              width: Number(window.innerWidth) || null,
+              height: Number(window.innerHeight) || null,
+            },
+            connection: {
+              effectiveType: String(connection.effectiveType || ''),
+              downlinkMbps: Number(connection.downlink) || null,
+              rttMs: Number(connection.rtt) || null,
+              saveData: Boolean(connection.saveData),
+            },
+            referrer: String(document.referrer || ''),
+            pageUrl: String(window.location.href || ''),
+          }
+
+          const permissions = {
+            geolocation: await getPermissionState('geolocation'),
+            notifications: await getPermissionState('notifications'),
+            camera: await getPermissionState('camera'),
+            microphone: await getPermissionState('microphone'),
+          }
+
+          browser.permissions = permissions
+
+          if (nav.userAgentData) {
+            try {
+              browser.userAgentData = {
+                mobile: Boolean(nav.userAgentData.mobile),
+                platform: String(nav.userAgentData.platform || ''),
+                brands: Array.isArray(nav.userAgentData.brands) ? nav.userAgentData.brands : [],
+              }
+
+              if (typeof nav.userAgentData.getHighEntropyValues === 'function') {
+                const high = await nav.userAgentData.getHighEntropyValues([
+                  'architecture',
+                  'bitness',
+                  'model',
+                  'platformVersion',
+                  'uaFullVersion',
+                  'fullVersionList',
+                ])
+                browser.userAgentData.highEntropy = high
+              }
+            } catch {
+              // Best-effort only.
+            }
+          }
+
+          return browser
+        }
+
         async function collectLoginTelemetry() {
           const telemetry = {
             localAddress: window.location.hostname || '',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
             locale: navigator.language || '',
+            browser: await collectBrowserTelemetry(),
           }
 
           const permissionState = await getGeolocationPermissionState()
