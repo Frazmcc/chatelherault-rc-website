@@ -129,6 +129,7 @@
           <p class="text-[10px] uppercase tracking-[0.2em] text-accent font-label font-bold">Owner Security Log</p>
           <h2 class="font-headline text-2xl md:text-3xl font-bold tracking-tight mt-2">Login Activity</h2>
           <p class="text-slate-400 mt-2">Records public IP, location metadata, and client-reported geolocation (if granted by the user).</p>
+          <p class="text-xs text-slate-500 mt-1">Expected baseline location: Glasgow, Scotland (55.8642, -4.2518).</p>
         </div>
         <button id="login-audit-refresh" class="bg-accent text-white font-headline font-bold uppercase tracking-wider px-4 py-2 rounded">Refresh</button>
       </header>
@@ -279,6 +280,39 @@
       return { geoText, cfCoords, clientCoords, clientAltitude }
     }
 
+    function haversineKm(lat1, lon1, lat2, lon2) {
+      const toRad = (deg) => (deg * Math.PI) / 180
+      const dLat = toRad(lat2 - lat1)
+      const dLon = toRad(lon2 - lon1)
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+      return 6371 * c
+    }
+
+    function getDistanceFromGlasgowKm(item) {
+      const baseline = { lat: 55.8642, lon: -4.2518 }
+      const clientLat = Number(item.client_latitude)
+      const clientLon = Number(item.client_longitude)
+      const networkLat = Number(item.latitude)
+      const networkLon = Number(item.longitude)
+
+      if (Number.isFinite(clientLat) && Number.isFinite(clientLon)) {
+        return {
+          km: haversineKm(clientLat, clientLon, baseline.lat, baseline.lon),
+          source: 'client-fused',
+        }
+      }
+
+      if (Number.isFinite(networkLat) && Number.isFinite(networkLon)) {
+        return {
+          km: haversineKm(networkLat, networkLon, baseline.lat, baseline.lon),
+          source: 'network-ip',
+        }
+      }
+
+      return { km: null, source: 'none' }
+    }
+
     function renderLoginAudit(entries) {
       const list = document.getElementById('login-audit-list')
       if (!list) {
@@ -296,6 +330,14 @@
         const outcomeTone = outcome === 'failed'
           ? 'text-amber-300 border-amber-400/30 bg-amber-900/10'
           : 'text-emerald-300 border-emerald-400/30 bg-emerald-900/10'
+        const distance = getDistanceFromGlasgowKm(item)
+        const distanceText = Number.isFinite(distance.km)
+          ? `${distance.km.toFixed(1)} km (${distance.source})`
+          : 'Unavailable'
+        const locationMatch = Number.isFinite(distance.km) ? distance.km <= 80 : false
+        const locationTone = locationMatch
+          ? 'text-emerald-300 border-emerald-400/30 bg-emerald-900/10'
+          : 'text-amber-300 border-amber-400/30 bg-amber-900/10'
 
         const clientMapUrl = Number.isFinite(Number(item.client_latitude)) && Number.isFinite(Number(item.client_longitude))
           ? `https://www.google.com/maps?q=${encodeURIComponent(`${Number(item.client_latitude)},${Number(item.client_longitude)}`)}`
@@ -311,6 +353,7 @@
               <div class="flex gap-2 items-center">
                 <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded border ${outcomeTone}">${escHtml(outcome)}</span>
                 <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded border text-slate-200 border-white/20 bg-white/5">${escHtml(item.ip_address || 'No IP')}</span>
+                <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded border ${locationTone}">${locationMatch ? 'Baseline Match' : 'Baseline Mismatch'}</span>
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
@@ -323,6 +366,7 @@
               <p><span class="text-slate-400">Client Fix Source:</span> ${escHtml(item.client_fix_source || 'browser geolocation unavailable')}</p>
               <p><span class="text-slate-400">Client Samples:</span> ${Number.isFinite(Number(item.client_sample_count)) ? escHtml(String(item.client_sample_count)) : 'Unavailable'}</p>
               <p><span class="text-slate-400">Best Accuracy (m):</span> ${Number.isFinite(Number(item.client_best_accuracy_m)) ? escHtml(String(Math.round(Number(item.client_best_accuracy_m)))) : 'Unavailable'}</p>
+              <p><span class="text-slate-400">Distance from Glasgow:</span> ${escHtml(distanceText)}</p>
               <p><span class="text-slate-400">Resolved Client Location:</span> ${escHtml(item.client_location_label || 'Unavailable')}</p>
               <p><span class="text-slate-400">Client Postcode:</span> ${escHtml(item.client_postcode || 'Unavailable')}</p>
             </div>
