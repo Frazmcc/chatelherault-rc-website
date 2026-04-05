@@ -259,6 +259,7 @@
             }
 
             let best = null
+            let sampleCount = 0
             let watchId = null
             let settled = false
 
@@ -274,7 +275,11 @@
               }
 
               if (best?.coords) {
-                resolve(best)
+                resolve({
+                  position: best,
+                  sampleCount,
+                  strategy: 'watch',
+                })
                 return
               }
 
@@ -291,6 +296,8 @@
                 if (!position?.coords) {
                   return
                 }
+
+                sampleCount += 1
 
                 if (!best) {
                   best = position
@@ -325,7 +332,12 @@
           try {
             return await watchBestPosition({ durationMs: 7000 })
           } catch {
-            return getCurrentPosition()
+            const single = await getCurrentPosition()
+            return {
+              position: single,
+              sampleCount: 1,
+              strategy: 'single',
+            }
           }
         }
 
@@ -360,12 +372,18 @@
           }
 
           try {
-            const position = await getBestPositionSample()
+            const sample = await getBestPositionSample()
+            const position = sample?.position
             telemetry.latitude = position?.coords?.latitude
             telemetry.longitude = position?.coords?.longitude
             telemetry.accuracy = position?.coords?.accuracy
             telemetry.altitude = position?.coords?.altitude
             telemetry.altitudeAccuracy = position?.coords?.altitudeAccuracy
+            telemetry.fixSource = sample?.strategy === 'watch'
+              ? 'browser-fused-gps-wifi-cell (watch-converged)'
+              : 'browser-fused-gps-wifi-cell (single-fix)'
+            telemetry.sampleCount = sample?.sampleCount || 1
+            telemetry.bestAccuracyM = position?.coords?.accuracy
           } catch {
             // Permission denied or unavailable; keep best-effort metadata only.
           }

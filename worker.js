@@ -820,6 +820,9 @@ async function ensureLoginAuditTable(env) {
       client_altitude_accuracy_m REAL,
       client_location_label TEXT,
       client_postcode TEXT,
+      client_fix_source TEXT,
+      client_sample_count INTEGER,
+      client_best_accuracy_m REAL,
       outcome TEXT NOT NULL DEFAULT 'success',
       failure_reason TEXT,
       attempted_username TEXT,
@@ -835,6 +838,9 @@ async function ensureLoginAuditTable(env) {
     `ALTER TABLE login_audit ADD COLUMN client_altitude_accuracy_m REAL`,
     `ALTER TABLE login_audit ADD COLUMN client_location_label TEXT`,
     `ALTER TABLE login_audit ADD COLUMN client_postcode TEXT`,
+    `ALTER TABLE login_audit ADD COLUMN client_fix_source TEXT`,
+    `ALTER TABLE login_audit ADD COLUMN client_sample_count INTEGER`,
+    `ALTER TABLE login_audit ADD COLUMN client_best_accuracy_m REAL`,
   ]
 
   for (const sql of schemaMigrations) {
@@ -903,6 +909,9 @@ async function writeLoginAudit(env, request, entry, telemetry) {
   const clientAccuracy = toFiniteNumber(t.accuracy)
   const clientAltitude = toFiniteNumber(t.altitude)
   const clientAltitudeAccuracy = toFiniteNumber(t.altitudeAccuracy)
+  const clientFixSource = String(t.fixSource || '').trim().slice(0, 120)
+  const clientSampleCount = toFiniteNumber(t.sampleCount)
+  const clientBestAccuracy = toFiniteNumber(t.bestAccuracyM)
 
   const preciseLocation = await reverseGeocodeClientLocation(clientLatitude, clientLongitude)
 
@@ -934,10 +943,13 @@ async function writeLoginAudit(env, request, entry, telemetry) {
       client_altitude_accuracy_m,
       client_location_label,
       client_postcode,
+      client_fix_source,
+      client_sample_count,
+      client_best_accuracy_m,
       outcome,
       failure_reason,
       attempted_username
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       username,
@@ -958,6 +970,9 @@ async function writeLoginAudit(env, request, entry, telemetry) {
       clientAltitudeAccuracy,
       preciseLocation.label,
       preciseLocation.postcode,
+      clientFixSource || null,
+      clientSampleCount,
+      clientBestAccuracy,
       outcome,
       failureReason || null,
       attemptedUsername || null
@@ -1509,6 +1524,9 @@ async function handleListLoginAudit(request, env) {
       client_altitude_accuracy_m,
       client_location_label,
       client_postcode,
+      client_fix_source,
+      client_sample_count,
+      client_best_accuracy_m,
       created_at
      FROM login_audit
      ORDER BY id DESC

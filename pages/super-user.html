@@ -320,6 +320,9 @@
               <p><span class="text-slate-400">Network Coords:</span> ${escHtml(cfCoords)}</p>
               <p><span class="text-slate-400">Client Coords:</span> ${escHtml(clientCoords)}</p>
               <p><span class="text-slate-400">Client Altitude:</span> ${escHtml(clientAltitude)}</p>
+              <p><span class="text-slate-400">Client Fix Source:</span> ${escHtml(item.client_fix_source || 'browser geolocation unavailable')}</p>
+              <p><span class="text-slate-400">Client Samples:</span> ${Number.isFinite(Number(item.client_sample_count)) ? escHtml(String(item.client_sample_count)) : 'Unavailable'}</p>
+              <p><span class="text-slate-400">Best Accuracy (m):</span> ${Number.isFinite(Number(item.client_best_accuracy_m)) ? escHtml(String(Math.round(Number(item.client_best_accuracy_m)))) : 'Unavailable'}</p>
               <p><span class="text-slate-400">Resolved Client Location:</span> ${escHtml(item.client_location_label || 'Unavailable')}</p>
               <p><span class="text-slate-400">Client Postcode:</span> ${escHtml(item.client_postcode || 'Unavailable')}</p>
             </div>
