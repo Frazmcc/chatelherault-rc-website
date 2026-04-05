@@ -40,30 +40,6 @@
     return panels
   }
 
-  function ensureSuperUserTab(session) {
-    if (!session?.ok || session.role !== 'owner') {
-      return
-    }
-
-    const navRows = Array.from(document.querySelectorAll('nav .order-3, nav .font-headline')).filter((node) =>
-      node.querySelector('a[href*="meetups"]')
-    )
-
-    const navRow = navRows[0]
-
-    if (!navRow || navRow.querySelector('[data-super-user-link]')) {
-      return
-    }
-
-    const base = window.location.pathname.startsWith('/pages/') ? '../pages/super-user' : 'pages/super-user'
-    const link = document.createElement('a')
-    link.href = base
-    link.className = 'font-headline tracking-tight uppercase transition-colors text-slate-400 hover:text-slate-100'
-    link.dataset.superUserLink = 'true'
-    link.textContent = 'Super User Dashboard'
-    navRow.appendChild(link)
-  }
-
   function createEditorModal() {
     const modal = document.createElement('div')
     modal.className = 'hidden fixed inset-0 z-[240] bg-black/60 px-4 py-6 overflow-y-auto'
@@ -142,10 +118,6 @@
 
   async function init(session) {
     const canEdit = Boolean(session?.ok && ALLOWED_ROLES.has(session.role))
-
-    if (canEdit) {
-      ensureSuperUserTab(session)
-    }
 
     const pageId = getPageId()
     const panels = findPanels()
