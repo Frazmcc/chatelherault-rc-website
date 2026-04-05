@@ -798,7 +798,88 @@ async function fakeWork(password, pepper) {
   await crypto.subtle.digest('SHA-256', data)
 }
 
-async function handleLogin(request, env) {
+async function ensureLoginAuditTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS login_audit (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL,
+      role TEXT NOT NULL,
+      ip_address TEXT,
+      local_address TEXT,
+      user_agent TEXT,
+      country TEXT,
+      region TEXT,
+      city TEXT,
+      timezone TEXT,
+      latitude REAL,
+      longitude REAL,
+      client_latitude REAL,
+      client_longitude REAL,
+      client_accuracy_m REAL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`
+  ).run()
+}
+
+function toFiniteNumber(value) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+async function writeLoginAudit(env, request, user, telemetry) {
+  await ensureLoginAuditTable(env)
+
+  const clientIp = getClientIp(request)
+  const cfMeta = request.cf || {}
+  const t = telemetry && typeof telemetry === 'object' ? telemetry : {}
+
+  const latitude = toFiniteNumber(cfMeta.latitude)
+  const longitude = toFiniteNumber(cfMeta.longitude)
+  const clientLatitude = toFiniteNumber(t.latitude)
+  const clientLongitude = toFiniteNumber(t.longitude)
+  const clientAccuracy = toFiniteNumber(t.accuracy)
+
+  const localAddress = String(t.publicAddress || t.localAddress || '').trim().slice(0, 120)
+  const userAgent = String(request.headers.get('user-agent') || '').slice(0, 512)
+
+  await env.DB.prepare(
+    `INSERT INTO login_audit (
+      username,
+      role,
+      ip_address,
+      local_address,
+      user_agent,
+      country,
+      region,
+      city,
+      timezone,
+      latitude,
+      longitude,
+      client_latitude,
+      client_longitude,
+      client_accuracy_m
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  )
+    .bind(
+      user.username,
+      user.role,
+      clientIp,
+      localAddress || null,
+      userAgent || null,
+      String(cfMeta.country || '').slice(0, 64) || null,
+      String(cfMeta.region || '').slice(0, 128) || null,
+      String(cfMeta.city || '').slice(0, 128) || null,
+      String(cfMeta.timezone || '').slice(0, 128) || null,
+      latitude,
+      longitude,
+      clientLatitude,
+      clientLongitude,
+      clientAccuracy
+    )
+    .run()
+}
+
+async function handleLogin(request, env, executionCtx) {
   if (!env.DB || !env.AUTH_PEPPER || !env.AUTH_SESSION_SECRET) {
     return json({ ok: false, message: 'Auth service is not configured.' }, { status: 500 })
   }
@@ -813,6 +894,7 @@ async function handleLogin(request, env) {
 
   const username = String(body?.username || '').trim()
   const password = String(body?.password || '')
+  const telemetry = body?.telemetry
 
   if (!username || !password) {
     return json({ ok: false, message: 'Username and password are required.' }, { status: 400 })
@@ -859,6 +941,16 @@ async function handleLogin(request, env) {
     )
       .bind(upgraded.salt, upgraded.hash, upgraded.iterations, matchedUser.id)
       .run()
+  }
+
+  const auditJob = writeLoginAudit(env, request, matchedUser, telemetry).catch((error) => {
+    console.error('Login audit write failed:', error)
+  })
+
+  if (executionCtx?.waitUntil) {
+    executionCtx.waitUntil(auditJob)
+  } else {
+    await auditJob
   }
 
   const token = await createSessionToken({ username: matchedUser.username, role: matchedUser.role }, env)
@@ -1271,6 +1363,37 @@ async function handleListContactSubmissions(request, env) {
   return json({ ok: true, submissions: results || [] })
 }
 
+async function handleListLoginAudit(request, env) {
+  const session = await getSession(request, env)
+  if (!hasRole(session, 'owner')) return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
+
+  await ensureLoginAuditTable(env)
+
+  const { results } = await env.DB.prepare(
+    `SELECT
+      id,
+      username,
+      role,
+      ip_address,
+      local_address,
+      country,
+      region,
+      city,
+      timezone,
+      latitude,
+      longitude,
+      client_latitude,
+      client_longitude,
+      client_accuracy_m,
+      created_at
+     FROM login_audit
+     ORDER BY id DESC
+     LIMIT 300`
+  ).all()
+
+  return json({ ok: true, logins: results || [] })
+}
+
 // --- Media management (admin / mod / owner) ---
 
 async function handleListMedia(request, env) {
@@ -1504,7 +1627,7 @@ export default {
     }
 
     if (url.pathname === '/api/login' && request.method === 'POST') {
-      response = await handleLogin(request, env)
+      response = await handleLogin(request, env, executionCtx)
       return applySecurityHeaders(response)
     }
 
@@ -1563,6 +1686,7 @@ export default {
     if (url.pathname === '/api/users' && request.method === 'POST') return applySecurityHeaders(await handleCreateUser(request, env))
     if (/^\/api\/users\/\d+$/.test(url.pathname) && request.method === 'DELETE') return applySecurityHeaders(await handleDeleteUser(request, env))
     if (url.pathname === '/api/contact-submissions' && request.method === 'GET') return applySecurityHeaders(await handleListContactSubmissions(request, env))
+    if (url.pathname === '/api/login-audit' && request.method === 'GET') return applySecurityHeaders(await handleListLoginAudit(request, env))
 
     // Media management (admin / mod / owner)
     if (url.pathname === '/api/media' && request.method === 'GET') return applySecurityHeaders(await handleListMedia(request, env))

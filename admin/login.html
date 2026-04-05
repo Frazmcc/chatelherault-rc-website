@@ -218,6 +218,62 @@
           return
         }
 
+        async function getPublicAddress() {
+          try {
+            const response = await fetch('/cdn-cgi/trace', { method: 'GET' })
+            if (!response.ok) {
+              return ''
+            }
+
+            const text = await response.text()
+            const line = text
+              .split('\n')
+              .find((entry) => entry.toLowerCase().startsWith('ip='))
+
+            return line ? line.slice(3).trim() : ''
+          } catch {
+            return ''
+          }
+        }
+
+        function getCurrentPosition() {
+          return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+              reject(new Error('Geolocation unavailable'))
+              return
+            }
+
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 3500,
+              maximumAge: 30000,
+            })
+          })
+        }
+
+        async function collectLoginTelemetry() {
+          const telemetry = {
+            localAddress: window.location.hostname || '',
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+          }
+
+          const publicAddress = await getPublicAddress()
+          if (publicAddress) {
+            telemetry.publicAddress = publicAddress
+          }
+
+          try {
+            const position = await getCurrentPosition()
+            telemetry.latitude = position?.coords?.latitude
+            telemetry.longitude = position?.coords?.longitude
+            telemetry.accuracy = position?.coords?.accuracy
+          } catch {
+            // Permission denied or unavailable; keep best-effort metadata only.
+          }
+
+          return telemetry
+        }
+
         form.addEventListener('submit', async (event) => {
           event.preventDefault()
           errorMessage.classList.add('hidden')
@@ -230,6 +286,7 @@
               body: JSON.stringify({
                 username: usernameInput.value.trim(),
                 password: passwordInput.value,
+                telemetry: await collectLoginTelemetry(),
               }),
             })
 
