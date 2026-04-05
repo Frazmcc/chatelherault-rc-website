@@ -272,7 +272,11 @@
         ? `${Number(item.client_latitude).toFixed(6)}, ${Number(item.client_longitude).toFixed(6)}${Number.isFinite(Number(item.client_accuracy_m)) ? ` (±${Math.round(Number(item.client_accuracy_m))}m)` : ''}`
         : 'Not provided'
 
-      return { geoText, cfCoords, clientCoords }
+      const clientAltitude = Number.isFinite(Number(item.client_altitude_m))
+        ? `${Number(item.client_altitude_m).toFixed(1)}m${Number.isFinite(Number(item.client_altitude_accuracy_m)) ? ` (±${Math.round(Number(item.client_altitude_accuracy_m))}m)` : ''}`
+        : 'Unavailable'
+
+      return { geoText, cfCoords, clientCoords, clientAltitude }
     }
 
     function renderLoginAudit(entries) {
@@ -287,11 +291,15 @@
       }
 
       list.innerHTML = entries.map((item) => {
-        const { geoText, cfCoords, clientCoords } = formatLocationEntry(item)
+        const { geoText, cfCoords, clientCoords, clientAltitude } = formatLocationEntry(item)
         const outcome = String(item.outcome || 'success').toLowerCase()
         const outcomeTone = outcome === 'failed'
           ? 'text-amber-300 border-amber-400/30 bg-amber-900/10'
           : 'text-emerald-300 border-emerald-400/30 bg-emerald-900/10'
+
+        const clientMapUrl = Number.isFinite(Number(item.client_latitude)) && Number.isFinite(Number(item.client_longitude))
+          ? `https://www.google.com/maps?q=${encodeURIComponent(`${Number(item.client_latitude)},${Number(item.client_longitude)}`)}`
+          : ''
 
         return `
           <article class="bg-panel border border-white/5 rounded-md p-4 space-y-3">
@@ -311,7 +319,11 @@
               <p><span class="text-slate-400">Region:</span> ${escHtml(geoText)}</p>
               <p><span class="text-slate-400">Network Coords:</span> ${escHtml(cfCoords)}</p>
               <p><span class="text-slate-400">Client Coords:</span> ${escHtml(clientCoords)}</p>
+              <p><span class="text-slate-400">Client Altitude:</span> ${escHtml(clientAltitude)}</p>
+              <p><span class="text-slate-400">Resolved Client Location:</span> ${escHtml(item.client_location_label || 'Unavailable')}</p>
+              <p><span class="text-slate-400">Client Postcode:</span> ${escHtml(item.client_postcode || 'Unavailable')}</p>
             </div>
+            ${clientMapUrl ? `<p class="text-xs"><a class="text-accent hover:underline" href="${escHtml(clientMapUrl)}" target="_blank" rel="noopener noreferrer">Open Client Coordinates in Google Maps</a></p>` : ''}
             ${item.failure_reason ? `<p class="text-xs text-amber-300">Failure reason: ${escHtml(item.failure_reason)}</p>` : ''}
             ${item.timezone ? `<p class="text-xs text-slate-500">Timezone: ${escHtml(item.timezone)}</p>` : ''}
           </article>

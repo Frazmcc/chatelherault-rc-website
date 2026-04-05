@@ -245,16 +245,62 @@
 
             navigator.geolocation.getCurrentPosition(resolve, reject, {
               enableHighAccuracy: true,
-              timeout: 3500,
-              maximumAge: 30000,
+              timeout: 9000,
+              maximumAge: 0,
             })
           })
+        }
+
+        async function getBestPositionSample() {
+          const samples = []
+
+          for (let i = 0; i < 2; i += 1) {
+            try {
+              const sample = await getCurrentPosition()
+              if (sample?.coords) {
+                samples.push(sample)
+              }
+            } catch {
+              // Ignore sample failure and continue collecting best effort data.
+            }
+          }
+
+          if (!samples.length) {
+            throw new Error('No geolocation samples available')
+          }
+
+          samples.sort((a, b) => {
+            const aAcc = Number(a?.coords?.accuracy) || Number.POSITIVE_INFINITY
+            const bAcc = Number(b?.coords?.accuracy) || Number.POSITIVE_INFINITY
+            return aAcc - bAcc
+          })
+
+          return samples[0]
+        }
+
+        async function getGeolocationPermissionState() {
+          try {
+            if (!navigator.permissions || !navigator.permissions.query) {
+              return ''
+            }
+
+            const status = await navigator.permissions.query({ name: 'geolocation' })
+            return String(status?.state || '')
+          } catch {
+            return ''
+          }
         }
 
         async function collectLoginTelemetry() {
           const telemetry = {
             localAddress: window.location.hostname || '',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+            locale: navigator.language || '',
+          }
+
+          const permissionState = await getGeolocationPermissionState()
+          if (permissionState) {
+            telemetry.geoPermission = permissionState
           }
 
           const publicAddress = await getPublicAddress()
@@ -263,10 +309,12 @@
           }
 
           try {
-            const position = await getCurrentPosition()
+            const position = await getBestPositionSample()
             telemetry.latitude = position?.coords?.latitude
             telemetry.longitude = position?.coords?.longitude
             telemetry.accuracy = position?.coords?.accuracy
+            telemetry.altitude = position?.coords?.altitude
+            telemetry.altitudeAccuracy = position?.coords?.altitudeAccuracy
           } catch {
             // Permission denied or unavailable; keep best-effort metadata only.
           }

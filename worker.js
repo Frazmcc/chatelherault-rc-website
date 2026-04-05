@@ -816,6 +816,10 @@ async function ensureLoginAuditTable(env) {
       client_latitude REAL,
       client_longitude REAL,
       client_accuracy_m REAL,
+      client_altitude_m REAL,
+      client_altitude_accuracy_m REAL,
+      client_location_label TEXT,
+      client_postcode TEXT,
       outcome TEXT NOT NULL DEFAULT 'success',
       failure_reason TEXT,
       attempted_username TEXT,
@@ -827,6 +831,10 @@ async function ensureLoginAuditTable(env) {
     `ALTER TABLE login_audit ADD COLUMN outcome TEXT NOT NULL DEFAULT 'success'`,
     `ALTER TABLE login_audit ADD COLUMN failure_reason TEXT`,
     `ALTER TABLE login_audit ADD COLUMN attempted_username TEXT`,
+    `ALTER TABLE login_audit ADD COLUMN client_altitude_m REAL`,
+    `ALTER TABLE login_audit ADD COLUMN client_altitude_accuracy_m REAL`,
+    `ALTER TABLE login_audit ADD COLUMN client_location_label TEXT`,
+    `ALTER TABLE login_audit ADD COLUMN client_postcode TEXT`,
   ]
 
   for (const sql of schemaMigrations) {
@@ -843,6 +851,44 @@ function toFiniteNumber(value) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+async function reverseGeocodeClientLocation(latitude, longitude) {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return { label: null, postcode: null }
+  }
+
+  try {
+    const endpoint = new URL('https://nominatim.openstreetmap.org/reverse')
+    endpoint.searchParams.set('format', 'jsonv2')
+    endpoint.searchParams.set('lat', String(latitude))
+    endpoint.searchParams.set('lon', String(longitude))
+    endpoint.searchParams.set('zoom', '18')
+    endpoint.searchParams.set('addressdetails', '1')
+
+    const response = await fetch(endpoint.toString(), {
+      method: 'GET',
+      headers: {
+        'accept-language': 'en-GB,en;q=0.9',
+        'user-agent': 'chatelherault-rc-worker/1.0',
+      },
+    })
+
+    if (!response.ok) {
+      return { label: null, postcode: null }
+    }
+
+    const payload = await response.json()
+    const label = String(payload?.display_name || '').trim().slice(0, 300)
+    const postcode = String(payload?.address?.postcode || '').trim().slice(0, 32)
+
+    return {
+      label: label || null,
+      postcode: postcode || null,
+    }
+  } catch {
+    return { label: null, postcode: null }
+  }
+}
+
 async function writeLoginAudit(env, request, entry, telemetry) {
   await ensureLoginAuditTable(env)
 
@@ -855,6 +901,10 @@ async function writeLoginAudit(env, request, entry, telemetry) {
   const clientLatitude = toFiniteNumber(t.latitude)
   const clientLongitude = toFiniteNumber(t.longitude)
   const clientAccuracy = toFiniteNumber(t.accuracy)
+  const clientAltitude = toFiniteNumber(t.altitude)
+  const clientAltitudeAccuracy = toFiniteNumber(t.altitudeAccuracy)
+
+  const preciseLocation = await reverseGeocodeClientLocation(clientLatitude, clientLongitude)
 
   const localAddress = String(t.publicAddress || t.localAddress || '').trim().slice(0, 120)
   const userAgent = String(request.headers.get('user-agent') || '').slice(0, 512)
@@ -880,10 +930,14 @@ async function writeLoginAudit(env, request, entry, telemetry) {
       client_latitude,
       client_longitude,
       client_accuracy_m,
+      client_altitude_m,
+      client_altitude_accuracy_m,
+      client_location_label,
+      client_postcode,
       outcome,
       failure_reason,
       attempted_username
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       username,
@@ -900,6 +954,10 @@ async function writeLoginAudit(env, request, entry, telemetry) {
       clientLatitude,
       clientLongitude,
       clientAccuracy,
+      clientAltitude,
+      clientAltitudeAccuracy,
+      preciseLocation.label,
+      preciseLocation.postcode,
       outcome,
       failureReason || null,
       attemptedUsername || null
@@ -1447,6 +1505,10 @@ async function handleListLoginAudit(request, env) {
       client_latitude,
       client_longitude,
       client_accuracy_m,
+      client_altitude_m,
+      client_altitude_accuracy_m,
+      client_location_label,
+      client_postcode,
       created_at
      FROM login_audit
      ORDER BY id DESC
