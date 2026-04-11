@@ -139,6 +139,7 @@
       });
   }
 
-  render(null);
-  startVisitSession();
+  fetchRawCount().finally(function () {
+    startVisitSession();
+  });
 })();
