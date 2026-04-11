@@ -1,6 +1,6 @@
 {
   "name": "chatelherault-rc-website",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This repository contains a normalized, static-site structure generated from Stitch exports.",
   "main": "server/server.js",
   "scripts": {
@@ -9,6 +9,12 @@
     "cf:user-sql": "node scripts/cloudflare-user-sql.js",
     "reel:rename": "node scripts/rename-reel-images.js",
     "reel:rename:dry": "node scripts/rename-reel-images.js --dry-run",
+    "snapshot": "node scripts/create-snapshot.js",
+    "verify:seo": "node scripts/verify-seo.js",
+    "verify": "npm run verify:seo",
+    "version:patch": "npm version patch --no-git-tag-version && npm run verify && npm run snapshot",
+    "version:minor": "npm version minor --no-git-tag-version && npm run verify && npm run snapshot",
+    "version:major": "npm version major --no-git-tag-version && npm run verify && npm run snapshot",
     "build": "echo Static site: no build step required",
     "deploy": "echo Deploy is handled by Cloudflare Pages",
     "test": "echo \"No tests configured\""
