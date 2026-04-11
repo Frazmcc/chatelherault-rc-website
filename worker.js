@@ -45,6 +45,13 @@ function applySecurityHeaders(response) {
     headers.set(key, value)
   }
 
+  const contentType = String(headers.get('content-type') || '').toLowerCase()
+  if (contentType.includes('text/html')) {
+    headers.set('cache-control', 'no-store, no-cache, must-revalidate')
+    headers.set('pragma', 'no-cache')
+    headers.set('expires', '0')
+  }
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
