@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-04-11
+
+### Changed
+- Release v1.0.4.
+
+
 ## [1.0.3] - 2026-04-11
 
 ### Changed

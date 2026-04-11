@@ -1,6 +1,6 @@
 {
   "name": "chatelherault-rc-website",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "This repository contains a normalized, static-site structure generated from Stitch exports.",
   "main": "server/server.js",
   "scripts": {
