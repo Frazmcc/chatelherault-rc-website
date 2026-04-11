@@ -793,6 +793,118 @@ function redirect(location, clearSession = false) {
   return new Response(null, { status: 302, headers })
 }
 
+function permanentRedirect(location) {
+  return new Response(null, {
+    status: 301,
+    headers: { location },
+  })
+}
+
+async function ensureSiteStatsTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS site_stats (
+      key TEXT PRIMARY KEY,
+      value INTEGER NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`
+  ).run()
+}
+
+async function incrementSiteHitCount(env) {
+  await ensureSiteStatsTable(env)
+
+  await env.DB.prepare(
+    `INSERT INTO site_stats (key, value, updated_at)
+     VALUES ('site_hits', 1, datetime('now'))
+     ON CONFLICT(key) DO UPDATE SET
+       value = site_stats.value + 1,
+       updated_at = datetime('now')`
+  ).run()
+}
+
+async function getSiteHitCount(env) {
+  await ensureSiteStatsTable(env)
+
+  const row = await env.DB.prepare(`SELECT value FROM site_stats WHERE key = 'site_hits'`).first()
+  return Number(row?.value || 0)
+}
+
+function shouldTrackHit(request, response, url) {
+  const pathname = url.pathname
+
+  if (request.method !== 'GET') return false
+  if (pathname.startsWith('/api/')) return false
+  if (pathname.startsWith('/assets/')) return false
+
+  if (url.hostname.toLowerCase() !== 'chatelheraultrc.com') return false
+
+  if (request.cf?.botManagement?.verifiedBot) return false
+
+  const userAgent = String(request.headers.get('user-agent') || '').toLowerCase()
+  if (!userAgent) return false
+
+  const obviousBotUa = /(bot|crawler|spider|slurp|lighthouse|headless|facebookexternalhit|whatsapp|discordbot|telegrambot|linkedinbot|curl|wget|python-requests)/i
+  if (obviousBotUa.test(userAgent)) return false
+
+  const secFetchDest = String(request.headers.get('sec-fetch-dest') || '').toLowerCase()
+  if (secFetchDest && secFetchDest !== 'document') return false
+
+  const secFetchMode = String(request.headers.get('sec-fetch-mode') || '').toLowerCase()
+  if (secFetchMode && secFetchMode !== 'navigate') return false
+
+  const purposeHeaders = [
+    String(request.headers.get('purpose') || ''),
+    String(request.headers.get('x-purpose') || ''),
+    String(request.headers.get('sec-purpose') || ''),
+  ]
+    .join(' ')
+    .toLowerCase()
+
+  if (purposeHeaders.includes('prefetch') || purposeHeaders.includes('preview')) return false
+
+  const contentType = String(response.headers.get('content-type') || '').toLowerCase()
+  if (!contentType.includes('text/html')) return false
+
+  return response.status >= 200 && response.status < 300
+}
+
+function getCanonicalPublicPath(pathname) {
+  const normalized = pathname.toLowerCase()
+  const canonicalMap = {
+    '/index.html': '/',
+    '/pages/contact': '/contact',
+    '/pages/contact.html': '/contact',
+    '/pages/media': '/media',
+    '/pages/media.html': '/media',
+    '/pages/meetups': '/meetups',
+    '/pages/meetups.html': '/meetups',
+    '/pages/spotlight': '/spotlight',
+    '/pages/spotlight.html': '/spotlight',
+    '/pages/register-rig': '/register-rig',
+    '/pages/register-rig.html': '/register-rig',
+    '/pages/members-rigs': '/members-rigs',
+    '/pages/members-rigs.html': '/members-rigs',
+    '/pages/rig-approvals': '/rig-approvals',
+    '/pages/rig-approvals.html': '/rig-approvals',
+    '/pages/super-user': '/super-user',
+    '/pages/super-user.html': '/super-user',
+    '/pages/grounds': '/grounds',
+    '/pages/grounds.html': '/grounds',
+    '/pages/sponsors': '/sponsors',
+    '/pages/sponsors.html': '/sponsors',
+    '/pages/privacy-policy': '/privacy-policy',
+    '/pages/privacy-policy.html': '/privacy-policy',
+    '/pages/privacy-protocol': '/privacy-protocol',
+    '/pages/privacy-protocol.html': '/privacy-protocol',
+    '/pages/safety-guidelines': '/safety-guidelines',
+    '/pages/safety-guidelines.html': '/safety-guidelines',
+    '/pages/terms-of-service': '/terms-of-service',
+    '/pages/terms-of-service.html': '/terms-of-service',
+  }
+
+  return canonicalMap[normalized] || null
+}
+
 async function fakeWork(password, pepper) {
   const data = new TextEncoder().encode(`${password}${pepper || ''}`)
   await crypto.subtle.digest('SHA-256', data)
@@ -1767,6 +1879,18 @@ function mapRootPagePath(pathname) {
     '/rig-approvals.html': '/pages/rig-approvals.html',
     '/super-user': '/pages/super-user.html',
     '/super-user.html': '/pages/super-user.html',
+    '/grounds': '/pages/grounds.html',
+    '/grounds.html': '/pages/grounds.html',
+    '/sponsors': '/pages/sponsors.html',
+    '/sponsors.html': '/pages/sponsors.html',
+    '/privacy-policy': '/pages/privacy-policy.html',
+    '/privacy-policy.html': '/pages/privacy-policy.html',
+    '/privacy-protocol': '/pages/privacy-protocol.html',
+    '/privacy-protocol.html': '/pages/privacy-protocol.html',
+    '/safety-guidelines': '/pages/safety-guidelines.html',
+    '/safety-guidelines.html': '/pages/safety-guidelines.html',
+    '/terms-of-service': '/pages/terms-of-service.html',
+    '/terms-of-service.html': '/pages/terms-of-service.html',
   }
 
   return pageMap[normalized] || null
@@ -1776,6 +1900,18 @@ export default {
   async fetch(request, env, executionCtx) {
     const url = new URL(request.url)
     let response
+
+    if (url.hostname.toLowerCase() === 'www.chatelheraultrc.com') {
+      const apex = new URL(url.toString())
+      apex.hostname = 'chatelheraultrc.com'
+      return applySecurityHeaders(permanentRedirect(apex.toString()))
+    }
+
+    const canonicalPath = getCanonicalPublicPath(url.pathname)
+    if (canonicalPath && canonicalPath !== url.pathname) {
+      const target = `${url.origin}${canonicalPath}${url.search}`
+      return applySecurityHeaders(permanentRedirect(target))
+    }
 
     if (url.pathname === '/admin/root-login.html') {
       response = redirect('/admin/login')
@@ -1814,6 +1950,19 @@ export default {
 
     if (url.pathname === '/api/facebook-group-members' && request.method === 'GET') {
       response = await handleFacebookGroupMembers(request)
+      return applySecurityHeaders(response)
+    }
+
+    if (url.pathname === '/api/hit-counter' && request.method === 'GET') {
+      const count = await getSiteHitCount(env)
+      response = json(
+        { ok: true, count },
+        {
+          headers: {
+            'cache-control': 'no-store, no-cache, must-revalidate',
+          },
+        }
+      )
       return applySecurityHeaders(response)
     }
 
@@ -1874,10 +2023,26 @@ export default {
       const rewrittenUrl = new URL(request.url)
       rewrittenUrl.pathname = mappedPath
       response = await env.ASSETS.fetch(new Request(rewrittenUrl.toString(), request))
+
+      if (shouldTrackHit(request, response, url)) {
+        const hitPromise = incrementSiteHitCount(env).catch((error) => {
+          console.error('Failed to increment site hit counter:', error)
+        })
+        if (executionCtx?.waitUntil) executionCtx.waitUntil(hitPromise)
+      }
+
       return applySecurityHeaders(response)
     }
 
     response = await env.ASSETS.fetch(request)
+
+    if (shouldTrackHit(request, response, url)) {
+      const hitPromise = incrementSiteHitCount(env).catch((error) => {
+        console.error('Failed to increment site hit counter:', error)
+      })
+      if (executionCtx?.waitUntil) executionCtx.waitUntil(hitPromise)
+    }
+
     return applySecurityHeaders(response)
   },
 }
