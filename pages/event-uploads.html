@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Photo Uploads | Chatelherault RC</title>
+  <meta name="description" content="Upload meetup and event photos to the Chatelherault RC moderation queue for admin approval and media reel publishing."/>
+  <link rel="canonical" href="https://chatelheraultrc.com/pages/event-uploads"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: '#121416',
+            surface: '#1e2022',
+            panel: '#282a2c',
+            tertiary: '#d97706',
+            text: '#e2e2e5',
+            muted: '#9fa4ab'
+          },
+          fontFamily: {
+            headline: ['Space Grotesk'],
+            body: ['Manrope'],
+            label: ['Inter']
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-text font-body">
+  <nav class="fixed top-0 w-full z-50 bg-[#121416]/70 backdrop-blur-xl bg-gradient-to-b from-[#1a1c1e] to-transparent h-20">
+    <div class="flex flex-wrap md:flex-nowrap justify-between items-center max-w-7xl mx-auto px-4 md:px-6 h-full py-3 md:py-0 gap-y-2">
+      <img src="../assets/chat%20RC%20logo.png" alt="Chatelherault RC" class="h-8 md:h-9 w-auto" />
+      <div class="order-3 md:order-none flex w-full md:w-auto justify-center items-center gap-5 md:gap-8 font-headline tracking-tight uppercase text-[11px] md:text-sm overflow-x-auto whitespace-nowrap pb-1 md:pb-0">
+        <a class="text-slate-400 hover:text-slate-100 transition-colors" href="/">Home</a>
+        <a class="text-slate-400 hover:text-slate-100 transition-colors" href="/meetups">Meetups</a>
+        <a class="text-slate-400 hover:text-slate-100 transition-colors" href="/media">Media</a>
+        <a class="text-[#d97706] border-b-2 border-[#d97706] pb-1" href="/event-uploads">Event Uploads</a>
+        <a class="text-slate-400 hover:text-slate-100 transition-colors" href="/members-rigs">Members Rigs</a>
+        <a class="text-slate-400 hover:text-slate-100 transition-colors" href="/contact">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-32 pb-20 px-6 max-w-5xl mx-auto">
+    <header class="mb-12">
+      <div class="border-l-4 border-tertiary pl-5 md:pl-6">
+        <p class="text-[11px] uppercase tracking-[0.24em] text-tertiary font-semibold">Public Uploads</p>
+        <h1 class="font-headline text-4xl md:text-6xl font-bold tracking-tight mt-3">Meetup Photo Submission</h1>
+        <p class="text-muted mt-3 max-w-3xl">Anyone can submit event images. Every upload is quarantined and reviewed by admin before appearing in the media reel.</p>
+      </div>
+    </header>
+
+    <section class="bg-surface rounded-lg border border-white/10 p-6 md:p-8">
+      <form id="event-photo-upload-form" class="space-y-6" novalidate>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <label class="block">
+            <span class="block text-xs uppercase tracking-widest text-muted mb-2">Name (optional)</span>
+            <input name="name" class="w-full bg-panel border border-white/10 rounded px-3 py-2" placeholder="Your name" maxlength="80"/>
+          </label>
+          <label class="block">
+            <span class="block text-xs uppercase tracking-widest text-muted mb-2">Meet / Event Note (optional)</span>
+            <input name="note" class="w-full bg-panel border border-white/10 rounded px-3 py-2" placeholder="Example: Sunday climb session" maxlength="180"/>
+          </label>
+        </div>
+
+        <label class="block">
+          <span class="block text-xs uppercase tracking-widest text-muted mb-2">Upload Images</span>
+          <input id="event-photo-input" name="photos" multiple type="file" accept="image/jpeg,image/png,image/webp,image/avif" class="w-full bg-panel border border-white/10 rounded px-3 py-2"/>
+          <p class="text-xs text-muted mt-2">Maximum 10 images per submission. Images are resized and optimized in-browser where supported.</p>
+        </label>
+
+        <input name="website" id="event-photo-honeypot" type="text" autocomplete="off" tabindex="-1" class="hidden" aria-hidden="true"/>
+
+        <div id="event-photo-turnstile-wrap" class="hidden">
+          <p class="text-xs uppercase tracking-widest text-muted mb-2">Security Check</p>
+          <div id="event-photo-turnstile"></div>
+        </div>
+
+        <div id="event-photo-submit-status" class="hidden text-sm rounded border px-3 py-2"></div>
+
+        <div class="flex justify-end">
+          <button id="event-photo-submit-button" type="submit" class="bg-tertiary text-black font-headline font-bold uppercase tracking-wider px-6 py-3 rounded hover:opacity-90">Submit Photos</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="bg-[#1a1c1e] w-full py-12 px-6 border-t-0 font-['Manrope'] text-sm text-slate-400">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+      <div class="space-y-4">
+        <div class="font-['Space_Grotesk'] font-bold text-slate-200 text-xl uppercase tracking-tight">Chatelherault RC</div>
+        <p class="max-w-xs leading-relaxed">Defined by terrain, engineered for performance. The premier Scottish RC crawler collective.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col space-y-2">
+          <a class="text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="/pages/privacy-policy.html">Privacy Policy</a>
+          <a class="text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="/pages/terms-of-service.html">Terms of Service</a>
+        </div>
+        <div class="flex flex-col space-y-2">
+          <a class="text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="/pages/safety-guidelines.html">Safety Guidelines</a>
+          <a class="text-slate-500 hover:text-[#d97706] transition-colors opacity-80 hover:opacity-100" href="/pages/sponsors.html">Sponsors and Partners</a>
+        </div>
+      </div>
+      <div class="flex flex-col md:items-end justify-between">
+        <div class="flex gap-4 mb-8 md:mb-0">
+          <a aria-label="Facebook Group" class="text-slate-300 hover:text-[#d97706] transition-colors font-label uppercase tracking-wider text-[11px]" href="https://www.facebook.com/groups/281937597729380/" rel="noopener noreferrer" target="_blank">Facebook Group</a>
+        </div>
+        <div class="text-[10px] tracking-widest uppercase font-label mb-2">Site Visits: <span data-hit-counter>--</span></div>
+        <div class="text-[10px] tracking-widest uppercase font-label">© 2026 Chatelherault RC. Engineered for the Terrain.</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  <script src="../scripts/account-menu.js?v=20260405b"></script>
+  <script src="../scripts/url-title-lock.js"></script>
+  <script src="../scripts/event-uploads.js"></script>
+  <script src="/scripts/image-grayscale-hover.js"></script>
+  <script src="/scripts/hit-counter.js?v=3"></script>
+</body>
+</html>

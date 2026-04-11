@@ -21,6 +21,16 @@ const LOGIN_RATE_LIMIT_WINDOW_SECONDS = 5 * 60
 const LOGIN_RATE_LIMIT_MAX_REQUESTS = 10
 const RIG_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
 const RIG_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 6
+const EVENT_PHOTO_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
+const EVENT_PHOTO_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 3
+const EVENT_PHOTO_MAX_FILES = 10
+const EVENT_PHOTO_MAX_FILE_BYTES = 8 * 1024 * 1024
+const EVENT_PHOTO_MAX_TOTAL_BYTES = 30 * 1024 * 1024
+
+const REEL_FILE_PREFIX = 'chatelherault-reel'
+const REEL_MANIFEST_REPO_PATH = 'assets/reel/optimized/reel-manifest.json'
+const REEL_STATE_REPO_PATH = 'assets/reel/.rename-state.json'
+const REEL_OPTIMIZED_REPO_DIR = 'assets/reel/optimized'
 
 const SECURITY_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -129,6 +139,31 @@ function toBase64Utf8(value) {
   return btoa(binary)
 }
 
+function toBase64Bytes(bytes) {
+  let binary = ''
+
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  }
+
+  return btoa(binary)
+}
+
+function decodeBase64Utf8(base64Value) {
+  const normalized = String(base64Value || '').replace(/\s+/g, '')
+  if (!normalized) {
+    return ''
+  }
+
+  const binary = atob(normalized)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+
+  return new TextDecoder().decode(bytes)
+}
+
 async function githubApiRequest(env, path, init = {}) {
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPO_OWNER || !env.GITHUB_REPO_NAME) {
     throw new Error('GitHub sync is not configured.')
@@ -172,12 +207,36 @@ async function getRepoFileSha(env, path, branch) {
   }
 }
 
-async function upsertRepoFile(env, path, content, message, branch) {
+async function getRepoFile(env, path, branch) {
+  try {
+    return await githubApiRequest(
+      env,
+      `/repos/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/contents/${path}?ref=${encodeURIComponent(branch)}`,
+      { method: 'GET' }
+    )
+  } catch (error) {
+    if (String(error).includes('failed (404)')) {
+      return null
+    }
+    throw error
+  }
+}
+
+async function getRepoFileText(env, path, branch) {
+  const file = await getRepoFile(env, path, branch)
+  if (!file?.content) {
+    return null
+  }
+
+  return decodeBase64Utf8(file.content)
+}
+
+async function upsertRepoFileBase64(env, path, contentBase64, message, branch) {
   const sha = await getRepoFileSha(env, path, branch)
 
   const payload = {
     message,
-    content: toBase64Utf8(content),
+    content: contentBase64,
     branch,
   }
 
@@ -194,6 +253,10 @@ async function upsertRepoFile(env, path, content, message, branch) {
       body: JSON.stringify(payload),
     }
   )
+}
+
+async function upsertRepoFile(env, path, content, message, branch) {
+  await upsertRepoFileBase64(env, path, toBase64Utf8(content), message, branch)
 }
 
 async function syncLiveEditsToGit(env, meta = {}) {
@@ -213,11 +276,22 @@ async function syncLiveEditsToGit(env, meta = {}) {
   ])
 
   let rigRows = { results: [] }
+  let eventPhotoRows = { results: [] }
 
   try {
     rigRows = await env.DB.prepare(
       `SELECT id, owner_name, chassis_model, battery, upgrades, blog_text, media_items, status, submitted_at, reviewed_by, reviewed_at, review_note
        FROM rig_submissions
+       ORDER BY datetime(submitted_at) DESC`
+    ).all()
+  } catch {
+    // Table may not exist yet in older deployments.
+  }
+
+  try {
+    eventPhotoRows = await env.DB.prepare(
+      `SELECT id, submitter_name, note, media_items, status, submitted_at, reviewed_by, reviewed_at, review_note
+       FROM event_photo_submissions
        ORDER BY datetime(submitted_at) DESC`
     ).all()
   } catch {
@@ -282,6 +356,40 @@ async function syncLiveEditsToGit(env, meta = {}) {
     2
   )
 
+  const eventPhotoSnapshotRows = (eventPhotoRows.results || []).map((row) => {
+    let media = []
+
+    try {
+      const parsed = JSON.parse(row.media_items || '[]')
+      media = Array.isArray(parsed)
+        ? parsed.map((item) => ({
+            name: item?.name || '',
+            type: item?.type || '',
+            size: item?.size || 0,
+          }))
+        : []
+    } catch {
+      media = []
+    }
+
+    return {
+      ...row,
+      media_items: media,
+    }
+  })
+
+  const eventPhotoSnapshot = JSON.stringify(
+    [
+      {
+        results: eventPhotoSnapshotRows,
+        generated_at: new Date().toISOString(),
+        source: 'cloudflare-d1-live',
+      },
+    ],
+    null,
+    2
+  )
+
   const actor = meta.actor || 'unknown'
   const operation = meta.operation || 'edit'
   const pageOrScope = meta.scope || 'site'
@@ -291,6 +399,7 @@ async function syncLiveEditsToGit(env, meta = {}) {
     upsertRepoFile(env, 'data/live-content-overrides.json', contentSnapshot, message, branch),
     upsertRepoFile(env, 'data/live-media-overrides.json', mediaSnapshot, message, branch),
     upsertRepoFile(env, 'data/live-rig-submissions.json', rigSnapshot, message, branch),
+    upsertRepoFile(env, 'data/live-event-photo-submissions.json', eventPhotoSnapshot, message, branch),
   ])
 }
 
@@ -790,6 +899,520 @@ async function handleRigSubmissionDecision(request, env, executionCtx) {
   return json({ ok: true })
 }
 
+function sanitizeSubmitterName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .slice(0, 80)
+}
+
+function sanitizeSubmissionNote(value, maxLength = 600) {
+  return String(value || '').trim().replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]+/g, '').slice(0, maxLength)
+}
+
+function buildReelFilename(sequence, extension) {
+  return `${REEL_FILE_PREFIX}-${String(sequence).padStart(4, '0')}.${extension}`
+}
+
+function extensionFromImageMime(type) {
+  const normalized = String(type || '').toLowerCase()
+  const map = {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/avif': 'avif',
+  }
+
+  return map[normalized] || null
+}
+
+function parseDataUrlImage(dataUrl) {
+  const raw = String(dataUrl || '')
+  const match = raw.match(/^data:(image\/[a-z0-9.+-]+);base64,([a-z0-9+/=\s]+)$/i)
+  if (!match) {
+    return null
+  }
+
+  return {
+    type: match[1].toLowerCase(),
+    base64: match[2].replace(/\s+/g, ''),
+  }
+}
+
+async function loadReelStateFromRepo(env, branch) {
+  const stateText = await getRepoFileText(env, REEL_STATE_REPO_PATH, branch)
+  if (!stateText) {
+    return { lastSequence: 0 }
+  }
+
+  try {
+    const parsed = JSON.parse(stateText)
+    return {
+      lastSequence: Math.max(0, Number(parsed?.lastSequence || 0)),
+    }
+  } catch {
+    return { lastSequence: 0 }
+  }
+}
+
+async function loadReelManifestFromRepo(env, branch) {
+  const manifestText = await getRepoFileText(env, REEL_MANIFEST_REPO_PATH, branch)
+  if (!manifestText) {
+    return { generatedAt: new Date().toISOString(), count: 0, items: [] }
+  }
+
+  try {
+    const parsed = JSON.parse(manifestText)
+    const items = Array.isArray(parsed?.items) ? parsed.items : []
+    return {
+      generatedAt: String(parsed?.generatedAt || new Date().toISOString()),
+      count: Number(parsed?.count || items.length || 0),
+      items,
+    }
+  } catch {
+    return { generatedAt: new Date().toISOString(), count: 0, items: [] }
+  }
+}
+
+async function publishSubmissionMediaToReel(env, submission, actor) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO_OWNER || !env.GITHUB_REPO_NAME) {
+    throw new Error('GitHub sync is not configured for publishing approved photos.')
+  }
+
+  const branch = env.GITHUB_BRANCH || 'main'
+  const safeActor = sanitizeSubmitterName(actor) || 'unknown'
+  const message = `Publish approved event photos by ${safeActor}`
+
+  let mediaItems = []
+  try {
+    const parsed = JSON.parse(submission?.media_items || '[]')
+    mediaItems = Array.isArray(parsed) ? parsed : []
+  } catch {
+    mediaItems = []
+  }
+
+  const imageItems = mediaItems
+    .map((item) => {
+      const parsed = parseDataUrlImage(item?.dataUrl)
+      const extension = extensionFromImageMime(item?.type || parsed?.type)
+      return {
+        parsed,
+        extension,
+      }
+    })
+    .filter((item) => Boolean(item.parsed && item.extension))
+
+  if (!imageItems.length) {
+    throw new Error('No valid image media found to publish.')
+  }
+
+  const reelState = await loadReelStateFromRepo(env, branch)
+  const reelManifest = await loadReelManifestFromRepo(env, branch)
+
+  const maxManifestSequence = (reelManifest.items || []).reduce((maxValue, item) => {
+    const sequence = Number(item?.sequence || 0)
+    return sequence > maxValue ? sequence : maxValue
+  }, 0)
+
+  let nextSequence = Math.max(Number(reelState.lastSequence || 0), maxManifestSequence)
+  const publishedItems = []
+
+  for (const image of imageItems) {
+    nextSequence += 1
+    const fileName = buildReelFilename(nextSequence, image.extension)
+    const repoPath = `${REEL_OPTIMIZED_REPO_DIR}/${fileName}`
+
+    await upsertRepoFileBase64(env, repoPath, image.parsed.base64, message, branch)
+
+    publishedItems.push({
+      sequence: nextSequence,
+      src: `/assets/reel/optimized/${fileName}`,
+    })
+  }
+
+  const manifestMap = new Map()
+  for (const item of reelManifest.items || []) {
+    const sequence = Number(item?.sequence || 0)
+    const src = String(item?.src || '')
+    if (!Number.isFinite(sequence) || sequence <= 0 || !src) {
+      continue
+    }
+    manifestMap.set(sequence, { sequence, src })
+  }
+
+  for (const item of publishedItems) {
+    manifestMap.set(item.sequence, item)
+  }
+
+  const manifestItems = Array.from(manifestMap.values()).sort((a, b) => a.sequence - b.sequence)
+  const manifestPayload = JSON.stringify(
+    {
+      generatedAt: new Date().toISOString(),
+      count: manifestItems.length,
+      items: manifestItems,
+    },
+    null,
+    2
+  )
+
+  const reelStatePayload = JSON.stringify(
+    {
+      lastSequence: nextSequence,
+      prefix: REEL_FILE_PREFIX,
+      updatedAt: new Date().toISOString(),
+    },
+    null,
+    2
+  )
+
+  await Promise.all([
+    upsertRepoFile(env, REEL_MANIFEST_REPO_PATH, manifestPayload, message, branch),
+    upsertRepoFile(env, REEL_STATE_REPO_PATH, reelStatePayload, message, branch),
+  ])
+
+  return publishedItems
+}
+
+async function ensureEventPhotoSubmissionTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS event_photo_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      submitter_name TEXT,
+      note TEXT,
+      media_items TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+      submitted_by_ip TEXT,
+      submitted_user_agent TEXT,
+      reviewed_by TEXT,
+      reviewed_at TEXT,
+      review_note TEXT
+    )`
+  ).run()
+}
+
+async function handleCreateEventPhotoSubmission(request, env, executionCtx) {
+  await ensureEventPhotoSubmissionTable(env)
+
+  const rateLimit = await enforceRateLimit(
+    env,
+    `event-photo-submit:${getClientIp(request)}`,
+    EVENT_PHOTO_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS,
+    EVENT_PHOTO_SUBMISSION_RATE_LIMIT_MAX_REQUESTS
+  )
+
+  if (!rateLimit.allowed) {
+    const headers = new Headers({ 'retry-after': String(rateLimit.retryAfter) })
+    return json(
+      {
+        ok: false,
+        message: 'Too many submissions from this network. Please try again later.',
+      },
+      { status: 429, headers }
+    )
+  }
+
+  const form = await request.formData()
+  const website = String(form.get('website') || '').trim()
+  if (website) {
+    return json({ ok: false, message: 'Submission rejected.' }, { status: 400 })
+  }
+
+  const turnstileToken = String(form.get('turnstileToken') || '').trim()
+  const turnstile = await verifyTurnstileToken(turnstileToken, request, env)
+  if (!turnstile.ok) {
+    return json({ ok: false, message: turnstile.message || 'Security check failed.' }, { status: 400 })
+  }
+
+  const submitterName = sanitizeSubmitterName(form.get('name') || '')
+  const note = sanitizeSubmissionNote(form.get('note') || '', 1200)
+  const files = form.getAll('photos').filter((entry) => entry instanceof File)
+
+  if (!files.length) {
+    return json({ ok: false, message: 'Please upload at least one image.' }, { status: 400 })
+  }
+
+  if (files.length > EVENT_PHOTO_MAX_FILES) {
+    return json({ ok: false, message: `Maximum ${EVENT_PHOTO_MAX_FILES} images per submission.` }, { status: 400 })
+  }
+
+  const mediaItems = []
+  let totalBytes = 0
+
+  for (const file of files) {
+    const mimeType = String(file.type || '').toLowerCase()
+    const extension = extensionFromImageMime(mimeType)
+
+    if (!extension) {
+      return json({ ok: false, message: `Unsupported image type: ${mimeType || 'unknown'}` }, { status: 400 })
+    }
+
+    if (!Number.isFinite(Number(file.size)) || Number(file.size) <= 0) {
+      return json({ ok: false, message: 'One or more uploaded images are empty.' }, { status: 400 })
+    }
+
+    if (Number(file.size) > EVENT_PHOTO_MAX_FILE_BYTES) {
+      return json(
+        {
+          ok: false,
+          message: `Each image must be ${Math.round(EVENT_PHOTO_MAX_FILE_BYTES / (1024 * 1024))}MB or smaller.`,
+        },
+        { status: 413 }
+      )
+    }
+
+    totalBytes += Number(file.size)
+    if (totalBytes > EVENT_PHOTO_MAX_TOTAL_BYTES) {
+      return json(
+        {
+          ok: false,
+          message: `Combined upload must stay under ${Math.round(EVENT_PHOTO_MAX_TOTAL_BYTES / (1024 * 1024))}MB.`,
+        },
+        { status: 413 }
+      )
+    }
+
+    const buffer = await file.arrayBuffer()
+    const base64 = encodeArrayBufferBase64(buffer)
+
+    mediaItems.push({
+      name: String(file.name || 'upload-image').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120),
+      type: mimeType,
+      size: Number(file.size),
+      dataUrl: `data:${mimeType};base64,${base64}`,
+    })
+  }
+
+  const result = await env.DB.prepare(
+    `INSERT INTO event_photo_submissions (submitter_name, note, media_items, status, submitted_by_ip, submitted_user_agent)
+     VALUES (?, ?, ?, 'pending', ?, ?)`
+  )
+    .bind(
+      submitterName || null,
+      note || null,
+      JSON.stringify(mediaItems),
+      getClientIp(request),
+      String(request.headers.get('user-agent') || '').slice(0, 300)
+    )
+    .run()
+
+  const syncJob = syncLiveEditsToGit(env, {
+    actor: submitterName || 'anonymous',
+    operation: 'event photo submission',
+    scope: 'media',
+  }).catch((error) => console.error('Git sync failed after event photo submission:', error))
+
+  if (executionCtx?.waitUntil) {
+    executionCtx.waitUntil(syncJob)
+  }
+
+  return json({ ok: true, id: result.meta.last_row_id, status: 'pending' })
+}
+
+async function handleListEventPhotoSubmissions(request, env) {
+  await ensureEventPhotoSubmissionTable(env)
+
+  const session = await getSession(request, env)
+  if (!hasRole(session, 'owner', 'admin', 'mod')) {
+    return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
+  }
+
+  const status = new URL(request.url).searchParams.get('status')
+  const allowedStatuses = new Set(['pending', 'approved', 'rejected'])
+
+  const query = status && allowedStatuses.has(status)
+    ? env.DB.prepare(
+        `SELECT id, submitter_name, note, media_items, status, submitted_at, reviewed_by, reviewed_at, review_note
+         FROM event_photo_submissions
+         WHERE status = ?
+         ORDER BY datetime(submitted_at) DESC`
+      ).bind(status)
+    : env.DB.prepare(
+        `SELECT id, submitter_name, note, media_items, status, submitted_at, reviewed_by, reviewed_at, review_note
+         FROM event_photo_submissions
+         ORDER BY datetime(submitted_at) DESC`
+      )
+
+  const { results } = await query.all()
+  return json({ ok: true, submissions: results || [] })
+}
+
+async function applyEventPhotoDecision(env, submissionId, decision, reviewNote, actor) {
+  const existing = await env.DB.prepare(
+    `SELECT id, status, media_items FROM event_photo_submissions WHERE id = ?`
+  )
+    .bind(submissionId)
+    .first()
+
+  if (!existing) {
+    return { id: submissionId, ok: false, state: 'failed', message: 'Submission not found.' }
+  }
+
+  const existingStatus = String(existing.status || '').toLowerCase()
+
+  if (existingStatus === decision) {
+    return { id: submissionId, ok: true, state: 'skipped', message: `Already ${decision}.` }
+  }
+
+  if (decision === 'approved') {
+    await publishSubmissionMediaToReel(env, existing, actor)
+  }
+
+  await env.DB.prepare(
+    `UPDATE event_photo_submissions
+     SET status = ?, reviewed_by = ?, reviewed_at = datetime('now'), review_note = ?
+     WHERE id = ?`
+  )
+    .bind(decision, actor, reviewNote, submissionId)
+    .run()
+
+  return { id: submissionId, ok: true, state: decision }
+}
+
+async function handleEventPhotoSubmissionDecision(request, env, executionCtx) {
+  await ensureEventPhotoSubmissionTable(env)
+
+  const session = await getSession(request, env)
+  if (!hasRole(session, 'owner', 'admin', 'mod')) {
+    return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
+  }
+
+  const id = Number.parseInt(new URL(request.url).pathname.split('/').slice(-2)[0], 10)
+  if (!Number.isFinite(id) || id <= 0) {
+    return json({ ok: false, message: 'Invalid submission id.' }, { status: 400 })
+  }
+
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 })
+  }
+
+  const decision = String(body?.decision || '').toLowerCase()
+  const reviewNote = sanitizeSubmissionNote(body?.note || '', 600)
+
+  if (!['approved', 'rejected'].includes(decision)) {
+    return json({ ok: false, message: 'Decision must be approved or rejected.' }, { status: 400 })
+  }
+
+  try {
+    const result = await applyEventPhotoDecision(env, id, decision, reviewNote, session.username)
+
+    if (!result.ok) {
+      return json({ ok: false, message: result.message || 'Decision failed.' }, { status: 404 })
+    }
+
+    const syncJob = syncLiveEditsToGit(env, {
+      actor: session.username,
+      operation: `event photo ${decision}`,
+      scope: 'media',
+    }).catch((error) => console.error('Git sync failed after event photo review:', error))
+
+    if (executionCtx?.waitUntil) {
+      executionCtx.waitUntil(syncJob)
+    }
+
+    return json({ ok: true, result })
+  } catch (error) {
+    return json({ ok: false, message: error?.message || 'Decision failed.' }, { status: 500 })
+  }
+}
+
+async function handleEventPhotoSubmissionBatchDecision(request, env, executionCtx) {
+  await ensureEventPhotoSubmissionTable(env)
+
+  const session = await getSession(request, env)
+  if (!hasRole(session, 'owner', 'admin', 'mod')) {
+    return json({ ok: false, message: 'Forbidden.' }, { status: 403 })
+  }
+
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 })
+  }
+
+  const decision = String(body?.decision || '').toLowerCase()
+  const reviewNote = sanitizeSubmissionNote(body?.note || '', 600)
+  const scopeStatus = String(body?.scopeStatus || '').toLowerCase()
+
+  if (!['approved', 'rejected'].includes(decision)) {
+    return json({ ok: false, message: 'Decision must be approved or rejected.' }, { status: 400 })
+  }
+
+  let ids = Array.isArray(body?.ids)
+    ? body.ids
+        .map((value) => Number.parseInt(String(value), 10))
+        .filter((value) => Number.isFinite(value) && value > 0)
+    : []
+
+  if (!ids.length && scopeStatus) {
+    if (!['pending', 'approved', 'rejected', 'all'].includes(scopeStatus)) {
+      return json({ ok: false, message: 'Invalid scope status.' }, { status: 400 })
+    }
+
+    const query = scopeStatus === 'all'
+      ? env.DB.prepare(`SELECT id FROM event_photo_submissions ORDER BY datetime(submitted_at) DESC`)
+      : env.DB.prepare(
+          `SELECT id FROM event_photo_submissions WHERE status = ? ORDER BY datetime(submitted_at) DESC`
+        ).bind(scopeStatus)
+
+    const rows = await query.all()
+    ids = (rows.results || []).map((row) => Number(row.id)).filter((value) => Number.isFinite(value) && value > 0)
+  }
+
+  if (!ids.length) {
+    return json({ ok: false, message: 'No submission ids provided.' }, { status: 400 })
+  }
+
+  const uniqueIds = Array.from(new Set(ids)).slice(0, 300)
+  const results = []
+
+  for (const id of uniqueIds) {
+    try {
+      const result = await applyEventPhotoDecision(env, id, decision, reviewNote, session.username)
+      results.push(result)
+    } catch (error) {
+      results.push({
+        id,
+        ok: false,
+        state: 'failed',
+        message: error?.message || 'Decision failed.',
+      })
+    }
+  }
+
+  const changedCount = results.filter((item) => item.ok && (item.state === 'approved' || item.state === 'rejected')).length
+  const failedCount = results.filter((item) => !item.ok).length
+
+  if (changedCount > 0) {
+    const syncJob = syncLiveEditsToGit(env, {
+      actor: session.username,
+      operation: `event photo batch ${decision}`,
+      scope: 'media',
+    }).catch((error) => console.error('Git sync failed after event photo batch review:', error))
+
+    if (executionCtx?.waitUntil) {
+      executionCtx.waitUntil(syncJob)
+    }
+  }
+
+  return json({
+    ok: true,
+    summary: {
+      total: uniqueIds.length,
+      changed: changedCount,
+      failed: failedCount,
+      skipped: results.length - changedCount - failedCount,
+    },
+    results,
+  })
+}
+
 function redirect(location, clearSession = false) {
   const headers = new Headers({ location })
 
@@ -884,6 +1507,7 @@ function getCanonicalPublicPath(pathname) {
     '/meetups.html': '/meetups',
     '/spotlight.html': '/spotlight',
     '/register-rig.html': '/register-rig',
+    '/event-uploads.html': '/event-uploads',
     '/members-rigs.html': '/members-rigs',
     '/rig-approvals.html': '/rig-approvals',
     '/super-user.html': '/super-user',
@@ -903,6 +1527,8 @@ function getCanonicalPublicPath(pathname) {
     '/pages/spotlight.html': '/spotlight',
     '/pages/register-rig': '/register-rig',
     '/pages/register-rig.html': '/register-rig',
+    '/pages/event-uploads': '/event-uploads',
+    '/pages/event-uploads.html': '/event-uploads',
     '/pages/members-rigs': '/members-rigs',
     '/pages/members-rigs.html': '/members-rigs',
     '/pages/rig-approvals': '/rig-approvals',
@@ -1894,6 +2520,8 @@ function mapRootPagePath(pathname) {
     '/spotlight.html': '/pages/spotlight',
     '/register-rig': '/pages/register-rig',
     '/register-rig.html': '/pages/register-rig',
+    '/event-uploads': '/pages/event-uploads',
+    '/event-uploads.html': '/pages/event-uploads',
     '/members-rigs': '/pages/members-rigs',
     '/members-rigs.html': '/pages/members-rigs',
     '/rig-approvals': '/pages/rig-approvals',
@@ -1997,6 +2625,16 @@ export default {
       return applySecurityHeaders(response)
     }
 
+    if (url.pathname === '/api/event-photo-submissions' && request.method === 'POST') {
+      response = await handleCreateEventPhotoSubmission(request, env, executionCtx)
+      return applySecurityHeaders(response)
+    }
+
+    if (url.pathname === '/api/event-photo-submissions' && request.method === 'GET') {
+      response = await handleListEventPhotoSubmissions(request, env)
+      return applySecurityHeaders(response)
+    }
+
     if (url.pathname === '/api/rig-submissions-public' && request.method === 'GET') {
       response = await handleListPublicApprovedRigs(env)
       return applySecurityHeaders(response)
@@ -2004,6 +2642,16 @@ export default {
 
     if (/^\/api\/rig-submissions\/\d+\/decision$/.test(url.pathname) && request.method === 'POST') {
       response = await handleRigSubmissionDecision(request, env, executionCtx)
+      return applySecurityHeaders(response)
+    }
+
+    if (/^\/api\/event-photo-submissions\/\d+\/decision$/.test(url.pathname) && request.method === 'POST') {
+      response = await handleEventPhotoSubmissionDecision(request, env, executionCtx)
+      return applySecurityHeaders(response)
+    }
+
+    if (url.pathname === '/api/event-photo-submissions/batch-decision' && request.method === 'POST') {
+      response = await handleEventPhotoSubmissionBatchDecision(request, env, executionCtx)
       return applySecurityHeaders(response)
     }
 
