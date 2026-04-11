@@ -2025,10 +2025,9 @@ export default {
       response = await env.ASSETS.fetch(new Request(rewrittenUrl.toString(), request))
 
       if (shouldTrackHit(request, response, url)) {
-        const hitPromise = incrementSiteHitCount(env).catch((error) => {
+        await incrementSiteHitCount(env).catch((error) => {
           console.error('Failed to increment site hit counter:', error)
         })
-        if (executionCtx?.waitUntil) executionCtx.waitUntil(hitPromise)
       }
 
       return applySecurityHeaders(response)
@@ -2037,10 +2036,9 @@ export default {
     response = await env.ASSETS.fetch(request)
 
     if (shouldTrackHit(request, response, url)) {
-      const hitPromise = incrementSiteHitCount(env).catch((error) => {
+      await incrementSiteHitCount(env).catch((error) => {
         console.error('Failed to increment site hit counter:', error)
       })
-      if (executionCtx?.waitUntil) executionCtx.waitUntil(hitPromise)
     }
 
     return applySecurityHeaders(response)
