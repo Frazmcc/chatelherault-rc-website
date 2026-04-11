@@ -23,10 +23,13 @@
 
     inFlight = true;
 
-    fetch('/api/hit-counter', {
+    fetch('/api/hit-counter?ts=' + Date.now(), {
       method: 'GET',
       cache: 'no-store',
       credentials: 'same-origin',
+      headers: {
+        'cache-control': 'no-cache',
+      },
     })
       .then(function (response) {
         if (!response.ok) {
@@ -43,15 +46,15 @@
           return;
         }
 
-        if (!Number.isFinite(count) && lastValue !== null) {
-          lastValue = null;
-          render(null);
+        if (!Number.isFinite(count) && lastValue === null) {
+          lastValue = 0;
+          render(0);
         }
       })
       .catch(function () {
-        if (lastValue !== null) {
-          lastValue = null;
-          render(null);
+        if (lastValue === null) {
+          lastValue = 0;
+          render(0);
         }
       })
       .finally(function () {
