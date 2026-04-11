@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-04-11
+
+### Changed
+- Release v1.0.2.
+
+
 ### Added
 - Automated route health verification script for canonical and redirect paths.
 - Automated GitHub release workflow with semantic bump, tag, notes, and deploy.
