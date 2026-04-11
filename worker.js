@@ -731,7 +731,12 @@ async function handleCreateRigSubmission(request, env, executionCtx) {
     )
   }
 
-  const form = await request.formData()
+  let form
+  try {
+    form = await request.formData()
+  } catch {
+    return json({ ok: false, message: 'Invalid upload payload.' }, { status: 400 })
+  }
   const ownerName = String(form.get('owner') || '').trim()
   const chassisModel = String(form.get('chassisModel') || '').trim()
   const battery = String(form.get('battery') || '').trim()
