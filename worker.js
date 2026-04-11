@@ -21,6 +21,7 @@ const LOGIN_RATE_LIMIT_WINDOW_SECONDS = 5 * 60
 const LOGIN_RATE_LIMIT_MAX_REQUESTS = 10
 const RIG_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
 const RIG_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 6
+const VISIT_SESSION_WINDOW_SECONDS = 30 * 60
 const EVENT_PHOTO_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
 const EVENT_PHOTO_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 6
 const EVENT_PHOTO_MAX_FILES = 10
@@ -1469,28 +1470,62 @@ async function getSiteHitCount(env) {
   return Number(row?.value || 0)
 }
 
-function shouldTrackHit(request, response, url) {
-  const pathname = url.pathname
+async function ensureSiteVisitSessionTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS site_visit_sessions (
+      session_id TEXT PRIMARY KEY,
+      created_at INTEGER NOT NULL,
+      last_seen_at INTEGER NOT NULL,
+      entry_path TEXT,
+      client_ip TEXT,
+      user_agent TEXT
+    )`
+  ).run()
+}
 
-  if (request.method !== 'GET') return false
-  if (pathname.startsWith('/api/')) return false
-  if (pathname.startsWith('/assets/')) return false
+function isLikelyHumanVisitRequest(request) {
+  if (request.method !== 'POST') {
+    return false
+  }
 
-  if (url.hostname.toLowerCase() !== 'chatelheraultrc.com') return false
-
-  if (request.cf?.botManagement?.verifiedBot) return false
+  if (request.cf?.botManagement?.verifiedBot) {
+    return false
+  }
 
   const userAgent = String(request.headers.get('user-agent') || '').toLowerCase()
-  if (!userAgent) return false
+  if (!userAgent) {
+    return false
+  }
 
   const obviousBotUa = /(bot|crawler|spider|slurp|lighthouse|headless|facebookexternalhit|whatsapp|discordbot|telegrambot|linkedinbot|curl|wget|python-requests)/i
-  if (obviousBotUa.test(userAgent)) return false
+  if (obviousBotUa.test(userAgent)) {
+    return false
+  }
 
-  const secFetchDest = String(request.headers.get('sec-fetch-dest') || '').toLowerCase()
-  if (secFetchDest && secFetchDest !== 'document') return false
+  const origin = String(request.headers.get('origin') || '').trim()
+  const referer = String(request.headers.get('referer') || '').trim()
+  const allowedHosts = new Set(['chatelheraultrc.com', 'www.chatelheraultrc.com'])
 
-  const secFetchMode = String(request.headers.get('sec-fetch-mode') || '').toLowerCase()
-  if (secFetchMode && secFetchMode !== 'navigate') return false
+  const matchesAllowedHost = (value) => {
+    if (!value) {
+      return false
+    }
+
+    try {
+      return allowedHosts.has(new URL(value).hostname.toLowerCase())
+    } catch {
+      return false
+    }
+  }
+
+  if (!matchesAllowedHost(origin) && !matchesAllowedHost(referer)) {
+    return false
+  }
+
+  const secFetchSite = String(request.headers.get('sec-fetch-site') || '').toLowerCase()
+  if (secFetchSite && !['same-origin', 'same-site'].includes(secFetchSite)) {
+    return false
+  }
 
   const purposeHeaders = [
     String(request.headers.get('purpose') || ''),
@@ -1500,12 +1535,89 @@ function shouldTrackHit(request, response, url) {
     .join(' ')
     .toLowerCase()
 
-  if (purposeHeaders.includes('prefetch') || purposeHeaders.includes('preview')) return false
+  return !purposeHeaders.includes('prefetch') && !purposeHeaders.includes('preview')
+}
 
-  const contentType = String(response.headers.get('content-type') || '').toLowerCase()
-  if (!contentType.includes('text/html')) return false
+function isValidVisitSessionId(value) {
+  return /^[a-z0-9-]{20,120}$/i.test(String(value || ''))
+}
 
-  return response.status >= 200 && response.status < 300
+async function handleStartVisitSession(request, env) {
+  await ensureSiteStatsTable(env)
+  await ensureSiteVisitSessionTable(env)
+
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return json({ ok: false, message: 'Invalid request body.' }, { status: 400 })
+  }
+
+  const sessionId = String(body?.sessionId || '').trim()
+  const page = String(body?.page || '').trim().slice(0, 160)
+
+  if (!isValidVisitSessionId(sessionId)) {
+    return json({ ok: false, message: 'Invalid session id.' }, { status: 400 })
+  }
+
+  if (!isLikelyHumanVisitRequest(request)) {
+    const count = await getSiteHitCount(env)
+    return json({ ok: true, counted: false, count })
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  const existing = await env.DB.prepare(
+    `SELECT session_id, last_seen_at FROM site_visit_sessions WHERE session_id = ?`
+  )
+    .bind(sessionId)
+    .first()
+
+  let counted = false
+
+  if (!existing) {
+    await env.DB.prepare(
+      `INSERT INTO site_visit_sessions (session_id, created_at, last_seen_at, entry_path, client_ip, user_agent)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        sessionId,
+        now,
+        now,
+        page || null,
+        getClientIp(request),
+        String(request.headers.get('user-agent') || '').slice(0, 512)
+      )
+      .run()
+
+    await incrementSiteHitCount(env)
+    counted = true
+  } else {
+    await env.DB.prepare(
+      `UPDATE site_visit_sessions
+       SET last_seen_at = ?, entry_path = COALESCE(?, entry_path), client_ip = ?, user_agent = ?
+       WHERE session_id = ?`
+    )
+      .bind(
+        now,
+        page || null,
+        getClientIp(request),
+        String(request.headers.get('user-agent') || '').slice(0, 512),
+        sessionId
+      )
+      .run()
+  }
+
+  await env.DB.prepare(`DELETE FROM site_visit_sessions WHERE last_seen_at < ?`)
+    .bind(now - 90 * 24 * 60 * 60)
+    .run()
+
+  const count = await getSiteHitCount(env)
+  return json({
+    ok: true,
+    counted,
+    count,
+    sessionWindowSeconds: VISIT_SESSION_WINDOW_SECONDS,
+  })
 }
 
 function getCanonicalPublicPath(pathname) {
@@ -2625,6 +2737,11 @@ export default {
       return applySecurityHeaders(response)
     }
 
+    if (url.pathname === '/api/hit-counter/session' && request.method === 'POST') {
+      response = await handleStartVisitSession(request, env)
+      return applySecurityHeaders(response)
+    }
+
     if (url.pathname === '/api/rig-submissions' && request.method === 'POST') {
       response = await handleCreateRigSubmission(request, env, executionCtx)
       return applySecurityHeaders(response)
@@ -2703,22 +2820,10 @@ export default {
       rewrittenUrl.pathname = mappedPath
       response = await env.ASSETS.fetch(new Request(rewrittenUrl.toString(), request))
 
-      if (shouldTrackHit(request, response, url)) {
-        await incrementSiteHitCount(env).catch((error) => {
-          console.error('Failed to increment site hit counter:', error)
-        })
-      }
-
       return applySecurityHeaders(response)
     }
 
     response = await env.ASSETS.fetch(request)
-
-    if (shouldTrackHit(request, response, url)) {
-      await incrementSiteHitCount(env).catch((error) => {
-        console.error('Failed to increment site hit counter:', error)
-      })
-    }
 
     return applySecurityHeaders(response)
   },
