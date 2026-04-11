@@ -1901,7 +1901,7 @@ export default {
     const url = new URL(request.url)
     let response
 
-    if (url.hostname.toLowerCase() === 'www.chatelheraultrc.com') {
+    if (url.hostname.toLowerCase() !== 'chatelheraultrc.com') {
       const apex = new URL(url.toString())
       apex.hostname = 'chatelheraultrc.com'
       return applySecurityHeaders(permanentRedirect(apex.toString()))
@@ -1953,7 +1953,7 @@ export default {
       return applySecurityHeaders(response)
     }
 
-    if (url.pathname === '/api/hit-counter' && request.method === 'GET') {
+    if (/^\/api\/hit-counter\/?$/.test(url.pathname) && request.method === 'GET') {
       const count = await getSiteHitCount(env)
       response = json(
         { ok: true, count },
