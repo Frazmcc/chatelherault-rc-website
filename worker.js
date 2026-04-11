@@ -22,7 +22,7 @@ const LOGIN_RATE_LIMIT_MAX_REQUESTS = 10
 const RIG_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
 const RIG_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 6
 const EVENT_PHOTO_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS = 60 * 60
-const EVENT_PHOTO_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 3
+const EVENT_PHOTO_SUBMISSION_RATE_LIMIT_MAX_REQUESTS = 6
 const EVENT_PHOTO_MAX_FILES = 10
 const EVENT_PHOTO_MAX_FILE_BYTES = 8 * 1024 * 1024
 const EVENT_PHOTO_MAX_TOTAL_BYTES = 30 * 1024 * 1024
@@ -1101,25 +1101,12 @@ async function ensureEventPhotoSubmissionTable(env) {
 async function handleCreateEventPhotoSubmission(request, env, executionCtx) {
   await ensureEventPhotoSubmissionTable(env)
 
-  const rateLimit = await enforceRateLimit(
-    env,
-    `event-photo-submit:${getClientIp(request)}`,
-    EVENT_PHOTO_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS,
-    EVENT_PHOTO_SUBMISSION_RATE_LIMIT_MAX_REQUESTS
-  )
-
-  if (!rateLimit.allowed) {
-    const headers = new Headers({ 'retry-after': String(rateLimit.retryAfter) })
-    return json(
-      {
-        ok: false,
-        message: 'Too many submissions from this network. Please try again later.',
-      },
-      { status: 429, headers }
-    )
+  let form
+  try {
+    form = await request.formData()
+  } catch {
+    return json({ ok: false, message: 'Invalid upload payload.' }, { status: 400 })
   }
-
-  const form = await request.formData()
   const website = String(form.get('website') || '').trim()
   if (website) {
     return json({ ok: false, message: 'Submission rejected.' }, { status: 400 })
@@ -1141,6 +1128,24 @@ async function handleCreateEventPhotoSubmission(request, env, executionCtx) {
 
   if (files.length > EVENT_PHOTO_MAX_FILES) {
     return json({ ok: false, message: `Maximum ${EVENT_PHOTO_MAX_FILES} images per submission.` }, { status: 400 })
+  }
+
+  const rateLimit = await enforceRateLimit(
+    env,
+    `event-photo-submit:${getClientIp(request)}`,
+    EVENT_PHOTO_SUBMISSION_RATE_LIMIT_WINDOW_SECONDS,
+    EVENT_PHOTO_SUBMISSION_RATE_LIMIT_MAX_REQUESTS
+  )
+
+  if (!rateLimit.allowed) {
+    const headers = new Headers({ 'retry-after': String(rateLimit.retryAfter) })
+    return json(
+      {
+        ok: false,
+        message: 'Too many submissions from this network. Please try again later.',
+      },
+      { status: 429, headers }
+    )
   }
 
   const mediaItems = []
