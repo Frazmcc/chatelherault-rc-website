@@ -51,20 +51,25 @@
   </nav>
 
   <main class="pt-32 pb-20 px-6 max-w-7xl mx-auto">
-    <header class="mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-      <div>
-        <p class="text-[11px] uppercase tracking-[0.24em] text-tertiary font-semibold">Moderation</p>
-        <h1 class="font-headline text-4xl md:text-6xl font-bold tracking-tight mt-3">Rig Approval Queue</h1>
-        <p class="text-muted mt-2">Review submissions from the Register Your Rig form.</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <select id="rig-filter-status" class="bg-panel border border-white/10 rounded px-3 py-2 text-sm">
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="all">All</option>
-        </select>
-        <button id="rig-refresh" class="bg-tertiary text-black font-headline font-bold uppercase tracking-wider px-4 py-2 rounded">Refresh</button>
+    <header class="mb-12">
+      <div class="grid grid-cols-1 md:grid-cols-[96px,1fr] gap-5 md:gap-6 items-start">
+        <img src="../assets/chat%20RC%20logo.png" alt="Chatelherault RC logo" class="h-16 md:h-20 w-auto object-contain" />
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 border-l-4 border-tertiary pl-5 md:pl-6">
+          <div>
+            <p class="text-[11px] uppercase tracking-[0.24em] text-tertiary font-semibold">Moderation</p>
+            <h1 class="font-headline text-4xl md:text-6xl font-bold tracking-tight mt-3">Rig Approval Queue</h1>
+            <p class="text-muted mt-2">Review submissions from the Register Your Rig form.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <select id="rig-filter-status" class="bg-panel border border-white/10 rounded px-3 py-2 text-sm">
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="all">All</option>
+            </select>
+            <button id="rig-refresh" class="bg-tertiary text-black font-headline font-bold uppercase tracking-wider px-4 py-2 rounded">Refresh</button>
+          </div>
+        </div>
       </div>
     </header>
 
