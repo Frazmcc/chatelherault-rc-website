@@ -12,6 +12,7 @@
 ## Commands
 
 - `npm run verify`: Run SEO correctness checks.
+- `npm run verify:routes`: Run live route and redirect health checks.
 - `npm run snapshot`: Create a point-in-time repository snapshot.
 - `npm run version:patch`: Bump patch version, run verification, then snapshot.
 - `npm run version:minor`: Bump minor version, run verification, then snapshot.

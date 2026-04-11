@@ -6,6 +6,9 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 
 ## [Unreleased]
 
+### Added
+- Automated route health verification script for canonical and redirect paths.
+
 ## [1.0.1] - 2026-04-11
 
 ### Added
