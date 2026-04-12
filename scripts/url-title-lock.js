@@ -9,6 +9,7 @@
     '/pages/super-user.html',
     '/admin/login',
     '/admin/login.html',
+    '/crc-portal',
   ])
 
   function normalizeNavLinks() {

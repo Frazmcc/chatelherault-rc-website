@@ -3,7 +3,7 @@
     try {
       const response = await fetch('/api/session', { credentials: 'include' })
       if (!response.ok) {
-        window.location.replace('/admin/login')
+        window.location.replace('/crc-portal')
         return
       }
 
@@ -15,7 +15,7 @@
 
       document.documentElement.classList.remove('owner-guard-hidden')
     } catch {
-      window.location.replace('/admin/login')
+      window.location.replace('/crc-portal')
     }
   }
 

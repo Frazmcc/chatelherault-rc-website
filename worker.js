@@ -10,7 +10,7 @@ import {
   verifySessionToken,
 } from './functions/_lib/auth.js'
 
-const PUBLIC_ADMIN_PATHS = new Set(['/admin/login', '/admin/login.html', '/admin/root-login.html'])
+const PUBLIC_ADMIN_PATHS = new Set([])
 const OWNER_ONLY_SITE_PATHS = new Set([
   '/pages/super-user.html',
   '/pages/super-user',
@@ -2590,13 +2590,13 @@ async function guardAdminRoute(request, env) {
   const token = cookies[getSessionCookieName()]
 
   if (!token) {
-    return redirect('/admin/login')
+    return redirect('/crc-portal')
   }
 
   const session = await verifySessionToken(token, env)
 
   if (!session) {
-    return redirect('/admin/login', true)
+    return redirect('/crc-portal', true)
   }
 
   return redirect('/index.html')
@@ -2613,13 +2613,13 @@ async function guardOwnerOnlySiteRoute(request, env) {
   const token = cookies[getSessionCookieName()]
 
   if (!token) {
-    return redirect('/admin/login')
+    return redirect('/crc-portal')
   }
 
   const session = await verifySessionToken(token, env)
 
   if (!session) {
-    return redirect('/admin/login', true)
+    return redirect('/crc-portal', true)
   }
 
   if (session.role !== 'owner') {
@@ -2684,8 +2684,16 @@ export default {
       return applySecurityHeaders(permanentRedirect(target))
     }
 
-    if (url.pathname === '/admin/root-login.html') {
-      response = redirect('/admin/login')
+    // Old admin login paths → 404 (do not redirect; do not reveal the current access path)
+    if (['/admin/login', '/admin/login.html', '/admin/root-login', '/admin/root-login.html'].includes(url.pathname)) {
+      return applySecurityHeaders(new Response('Not found.', { status: 404 }))
+    }
+
+    // Hidden admin access portal — served at obscure path, not linked from any public page
+    if (url.pathname === '/crc-portal') {
+      const portalAssetUrl = new URL(request.url)
+      portalAssetUrl.pathname = '/admin/login.html'
+      response = await env.ASSETS.fetch(new Request(portalAssetUrl.toString(), request))
       return applySecurityHeaders(response)
     }
 

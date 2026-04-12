@@ -37,6 +37,7 @@
     button.type = 'button'
     button.setAttribute('data-account-menu-trigger', 'true')
     button.className = 'inline-flex items-center gap-2 rounded-sm border border-white/15 bg-black/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-200 hover:border-white/30 hover:bg-black/45 transition-colors'
+    button.style.display = 'none'
     button.innerHTML = `
       <span data-account-session-dot class="inline-block h-2 w-2 rounded-full bg-slate-500"></span>
       <span data-account-session-label>Login</span>
@@ -117,12 +118,15 @@
     ensureOwnerQuickLink(controlsContainer, isLoggedIn, role)
 
     if (triggerLabel) {
-      triggerLabel.textContent = isLoggedIn ? `${username || 'Member'} (${role})` : 'Login'
+      triggerLabel.textContent = `${username || 'Member'} (${role})`
     }
 
     if (triggerDot) {
       triggerDot.className = `inline-block h-2 w-2 rounded-full ${isLoggedIn ? 'bg-emerald-400' : 'bg-slate-500'}`
     }
+
+    // Hide the trigger entirely for unauthenticated visitors — login is not linked from public pages
+    trigger.style.display = isLoggedIn ? '' : 'none'
 
     approvalsItem?.classList.toggle('hidden', !(isLoggedIn && ['owner', 'admin', 'mod'].includes(role)))
     superUserItem?.classList.toggle('hidden', !(isLoggedIn && role === 'owner'))
@@ -202,22 +206,12 @@
     event.preventDefault()
     event.stopPropagation()
 
-    if (!sessionState.ok) {
-      window.location.href = '/admin/login'
-      return
-    }
-
     toggleMenu()
   })
 
   trigger.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
-      if (!sessionState.ok) {
-        window.location.href = '/admin/login'
-        return
-      }
-
       toggleMenu()
     }
 
