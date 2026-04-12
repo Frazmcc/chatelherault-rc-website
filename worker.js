@@ -2692,7 +2692,7 @@ export default {
     // Hidden admin access portal — served at obscure path, not linked from any public page
     if (url.pathname === '/crc-portal') {
       const portalAssetUrl = new URL(request.url)
-      portalAssetUrl.pathname = '/admin/login.html'
+      portalAssetUrl.pathname = '/admin/login'
       response = await env.ASSETS.fetch(new Request(portalAssetUrl.toString(), request))
       return applySecurityHeaders(response)
     }
