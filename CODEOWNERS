@@ -1,0 +1,8 @@
+# The repository owner must review every proposed change.
+* @Frazmcc
+
+# Explicit protection for repository governance and workflows.
+.github/ @Frazmcc
+.github/workflows/ @Frazmcc
+.github/CODEOWNERS @Frazmcc
+.github/SECURITY.md @Frazmcc
