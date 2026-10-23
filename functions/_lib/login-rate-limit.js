@@ -1,6 +1,7 @@
 // Durable, concurrency-safe Cloudflare D1 login throttling.
 // IP buckets prevent username rotation; account+IP buckets slow targeted attempts.
 let schemaPromise
+let lastPruneWindow = -1
 async function initialize(db) {
   if (!schemaPromise) {
     schemaPromise = db.prepare(
@@ -29,6 +30,15 @@ async function sha256(value) {
 export async function allowLoginAttempt(request, env, username) {
   await initialize(env.DB)
   const window = Math.floor(Date.now() / (10 * 60 * 1000))
+  // Remove abandoned account/IP buckets periodically. Otherwise rotating
+  // usernames creates permanent D1 rows and can exhaust database storage.
+  // Do not purge active quota windows; retain a full day of recent buckets.
+  if (window - lastPruneWindow >= 6) {
+    await env.DB.prepare('DELETE FROM auth_rate_window WHERE bucket < ?')
+      .bind(window - 144)
+      .run()
+    lastPruneWindow = window
+  }
   // CF-Connecting-IP is assigned by Cloudflare's edge. Never trust user
   // provided X-Forwarded-For to choose a separate rate-limit bucket.
   const remote = request.headers.get('CF-Connecting-IP') || 'unknown'
