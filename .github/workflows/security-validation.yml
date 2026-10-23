@@ -20,5 +20,6 @@ jobs:
       - run: node --input-type=module --check < functions/_lib/login-rate-limit.js
       - run: node --input-type=module --check < functions/api/login.js
       - run: node --test tests/login-rate-limit.test.mjs
+      - run: node --test tests/worker-login-security.test.mjs
       - run: npm run verify
       - run: npm audit --audit-level=low
