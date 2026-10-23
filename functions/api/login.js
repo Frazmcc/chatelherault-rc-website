@@ -5,6 +5,7 @@ import {
   shouldUpgradePasswordRecord,
   verifyPassword,
 } from '../_lib/auth.js'
+import { allowLoginAttempt } from '../_lib/login-rate-limit.js'
 
 function json(data, init = {}) {
   const headers = new Headers(init.headers || {})
@@ -37,6 +38,10 @@ export async function onRequestPost(context) {
 
   if (!username || !password) {
     return json({ ok: false, message: 'Username and password are required.' }, { status: 400 })
+  }
+
+  if (!(await allowLoginAttempt(request, env, username))) {
+    return json({ ok: false, message: 'Too many login attempts. Try again later.' }, { status: 429, headers: { 'Retry-After': '600' } })
   }
 
   const user = await env.DB.prepare(
