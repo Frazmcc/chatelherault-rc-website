@@ -14,7 +14,7 @@ test('D1-backed login limiter enforces account and IP quotas atomically', async 
       return {
         run: async () => statement.run(),
         bind(...params) {
-          return { first: async () => statement.get(...params) }
+          return { first: async () => statement.get(...params), run: async () => statement.run(...params) }
         },
       }
     },
