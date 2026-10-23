@@ -1,7 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { DatabaseSync } from 'node:sqlite'
-import { allowLoginAttempt } from '../functions/_lib/login-rate-limit.js'
+import { readFile } from 'node:fs/promises'
+// Pages Functions are ES modules even though the site's Node package is CommonJS.
+const source = await readFile(new URL('../functions/_lib/login-rate-limit.js', import.meta.url), 'utf8')
+const { allowLoginAttempt } = await import('data:text/javascript,' + encodeURIComponent(source))
 
 test('D1-backed login limiter enforces account and IP quotas atomically', async () => {
   const sqlite = new DatabaseSync(':memory:')
