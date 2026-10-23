@@ -9,6 +9,7 @@ import {
   verifyPassword,
   verifySessionToken,
 } from './functions/_lib/auth.js'
+import { allowLoginAttempt } from './functions/_lib/login-rate-limit.js'
 
 const PUBLIC_ADMIN_PATHS = new Set([])
 const OWNER_ONLY_SITE_PATHS = new Set([
@@ -1913,6 +1914,22 @@ async function handleLogin(request, env, executionCtx) {
       attemptedUsername: username || null,
     })
     return json({ ok: false, message: 'Username and password are required.' }, { status: 400 })
+  }
+
+  // This Worker is the deployed /api/login route. Enforce the D1-backed
+  // quota before looking up accounts or performing costly password hashing.
+  // The legacy functions/api/login.js route is not used by this Worker.
+  if (!(await allowLoginAttempt(request, env, username))) {
+    return json(
+      { ok: false, message: 'Too many login attempts. Try again later.' },
+      {
+        status: 429,
+        headers: {
+          'retry-after': '600',
+          'cache-control': 'no-store',
+        },
+      }
+    )
   }
 
   const { results: users } = await env.DB.prepare(
