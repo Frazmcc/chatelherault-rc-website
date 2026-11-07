@@ -32,7 +32,7 @@ h1 span{color:var(--accent)}
 .offer-domain{font-size:19px;font-weight:750;margin:12px 0 0}
 .price{font-size:clamp(50px,5vw,67px);font-weight:800;letter-spacing:-.07em;line-height:1.1;margin:10px 0}
 .firm{display:inline-block;color:var(--accent);border:1px solid rgba(195,244,222,.3);border-radius:99px;padding:5px 10px;background:rgba(195,244,222,.06);font-size:12px;font-weight:800;text-transform:uppercase}
-.contact{display:flex;align-items:center;justify-content:center;text-decoration:none;color:#101b23;background:var(--accent);border-radius:11px;padding:14px 18px;font-size:15px;font-weight:800;margin-top:18px}
+.contact{display:flex;width:100%;border:0;cursor:pointer;font-family:inherit;align-items:center;justify-content:center;text-decoration:none;color:#101b23;background:var(--accent);border-radius:11px;padding:14px 18px;font-size:15px;font-weight:800;margin-top:18px}
 .contact:hover{background:#dcffed}
 .contact:focus-visible{outline:3px solid white;outline-offset:3px}
 .detail{font-size:14px;color:var(--muted);margin:25px 0 0}
@@ -59,14 +59,14 @@ footer{border-top:1px solid var(--line);color:#8fa0b1;font-size:12px;padding:23p
 <p class="offer-domain">chatelheraultrc.com</p>
 <div class="price">£1,000</div>
 <span class="firm">Fixed price · No offers</span>
-<a class="contact" id="contactCom" href="mailto:chatelheraultrc@outlook.com?subject=Enquiry%3A%20chatelheraultrc.com%20domain">Enquire about .com ↗</a>
+<button class="contact" id="contactCom" type="button" onclick="window.location.href='mailto:chatelheraultrc@outlook.com?subject=Enquiry%3A%20chatelheraultrc.com%20domain'">Enquire about .com ↗</button>
 </div>
 <div class="offer">
 <div class="panel-heading">Domain 02</div>
 <p class="offer-domain">chatelheraultrc.co.uk</p>
 <div class="price">£1,000</div>
 <span class="firm">Fixed price · No offers</span>
-<a class="contact" id="contactUk" href="mailto:chatelheraultrc@outlook.com?subject=Enquiry%3A%20chatelheraultrc.co.uk%20domain">Enquire about .co.uk ↗</a>
+<button class="contact" id="contactUk" type="button" onclick="window.location.href='mailto:chatelheraultrc@outlook.com?subject=Enquiry%3A%20chatelheraultrc.co.uk%20domain'">Enquire about .co.uk ↗</button>
 </div>
 <p class="detail">Prices are per domain. Domain names only. Transfers are subject to ownership verification and the registrar's usual process.</p>
 </aside>
