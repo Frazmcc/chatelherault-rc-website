@@ -2684,10 +2684,28 @@ function mapRootPagePath(pathname) {
   return pageMap[normalized] || null
 }
 
+function isInternalAssetPath(pathname) {
+  let path;
+  try {
+    path = decodeURIComponent(pathname).toLowerCase();
+  } catch {
+    return true;
+  }
+  const segments = path.split('/').filter(Boolean);
+  if (segments.some(segment => segment.startsWith('.') && segment !== '.well-known')) return true;
+  if (/^\/(?:server|functions|tests|migrations|snapshots|stitch-archive|docs)(?:\/|$)/.test(path)) return true;
+  if (/^\/(?:worker\.js|wrangler\.[^/]+|package(?:-lock)?\.json|codeowners)$/.test(path)) return true;
+  return /^\/data\/live-(?:rig|event-photo)-submissions\.json$/.test(path);
+}
+
 export default {
   async fetch(request, env, executionCtx) {
     const url = new URL(request.url)
     let response
+
+    if (isInternalAssetPath(url.pathname)) {
+      return applySecurityHeaders(new Response('Not found.', { status: 404 }))
+    }
 
     if (url.hostname.toLowerCase() !== 'chatelheraultrc.com') {
       const apex = new URL(url.toString())
