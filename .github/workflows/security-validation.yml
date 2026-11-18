@@ -20,8 +20,21 @@ jobs:
       - run: node --input-type=module --check < functions/_lib/login-rate-limit.js
       - run: node --input-type=module --check < functions/api/login.js
       - run: node --test tests/login-rate-limit.test.mjs
-      - run: node --test tests/worker-login-security.test.mjs
-      - run: npm run verify
+      - run: node --test tests/worker-login-security.test.mjs tests/internal-assets.test.mjs
+      - run: npm run verify:seo
       - run: node scripts/security-audit.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
+
+  production-smoke:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24.22.3'
+      - name: Verify the production routes after merge
+        run: npm run verify:routes
